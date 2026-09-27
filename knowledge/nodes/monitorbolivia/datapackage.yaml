@@ -1,0 +1,32 @@
+name: monitorbolivia
+title: Monitor de Disponibilidad de Portales Web del Estado Boliviano
+resources:
+- name: uptime_summary
+  type: table
+  path: https://github.com/andres-chirinos/monitorbolivia/raw/master/history/summary.parquet
+  scheme: file
+  format: parquet
+  mediatype: application/parquet
+  schema:
+    fields:
+    - name: site_name
+      type: string
+      description: Nombre de la institución o sistema público
+    - name: url
+      type: string
+      description: URL oficial del portal (.gob.bo)
+    - name: status
+      type: string
+      description: Estado del servicio (up, down, degraded)
+    - name: status_code
+      type: integer
+      description: Código de respuesta HTTP
+    - name: response_time_ms
+      type: number
+      description: Latencia de respuesta en milisegundos
+    - name: timestamp
+      type: datetime
+      description: Momento exacto del sondeo
+    - name: uptime_percentage
+      type: number
+      description: Disponibilidad porcentual histórica

@@ -1,0 +1,89 @@
+{
+  "name": "estadisticas-agetic",
+  "resources": [
+    {
+      "name": "Estadisticas Ciudadania Digital",
+      "path": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSp9n8ENh1spKCUJ_fdqDpcdo2mCNDTLi0UL8xLlFvvfoY5VZFDjM69hujmNfniMM_4ZX5vMazJO1Jk/pub?gid=762714425&single=true&output=csv",
+      "format": "csv",
+      "schema": {
+        "fields": [
+          {
+            "name": "annio",
+            "type": "integer"
+          },
+          {
+            "name": "registros",
+            "type": "integer"
+          },
+          {
+            "name": "autentificaciones",
+            "type": "integer"
+          },
+          {
+            "name": "aprobacion_documentos",
+            "type": "integer"
+          },
+          {
+            "name": "notificaciones_electronicas",
+            "type": "integer"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Estadisticas Interoperabilidad",
+      "path": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSp9n8ENh1spKCUJ_fdqDpcdo2mCNDTLi0UL8xLlFvvfoY5VZFDjM69hujmNfniMM_4ZX5vMazJO1Jk/pub?gid=751947932&single=true&output=csv",
+      "format": "csv",
+      "schema": {
+        "fields": [
+          {
+            "name": "entidad",
+            "type": "string"
+          },
+          {
+            "name": "tipo",
+            "type": "string"
+          },
+          {
+            "name": "sigla",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Estadisticas Emision Facturas",
+      "path": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSp9n8ENh1spKCUJ_fdqDpcdo2mCNDTLi0UL8xLlFvvfoY5VZFDjM69hujmNfniMM_4ZX5vMazJO1Jk/pub?gid=2038574110&single=true&output=csv",
+      "format": "csv",
+      "schema": {
+        "fields": [
+          {
+            "name": "annio",
+            "type": "integer"
+          },
+          {
+            "name": "facturas_emision",
+            "type": "integer"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Estadisticas Pasarela de Pagos",
+      "path": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSp9n8ENh1spKCUJ_fdqDpcdo2mCNDTLi0UL8xLlFvvfoY5VZFDjM69hujmNfniMM_4ZX5vMazJO1Jk/pub?gid=1066248476&single=true&output=csv",
+      "format": "csv",
+      "schema": {
+        "fields": [
+          {
+            "name": "annio",
+            "type": "integer"
+          },
+          {
+            "name": "pagos_procesados",
+            "type": "integer"
+          }
+        ]
+      }
+    }
+  ]
+}

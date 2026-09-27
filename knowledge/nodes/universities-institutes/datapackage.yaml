@@ -1,0 +1,73 @@
+resources:
+  - name: Universidades y Carreras
+    type: table
+    path: https://docs.google.com/spreadsheets/d/e/2PACX-1vSSUQH2KMj4lCWQNX_WLsuuYuYLeoCnmxvpB2WJgc_JGpzFeol3GeO5MrGeiNcVKLRXOO4x6ZOGEYQg/pub?gid=894349519&single=true&output=csv
+    scheme: file
+    format: csv
+    mediatype: text/csv
+    encoding: utf-8
+    schema:
+      fields:
+        - name: UNI ID
+          type: integer
+          description: "Identificador único de la universidad"
+        - name: UNIVERSIDAD
+          type: string
+          description: "Nombre de la universidad o instituto"
+        - name: SEDE ID
+          type: integer
+          description: "Identificador único de la sede"
+        - name: SEDE
+          type: string
+          description: "Nombre de la sede académica"
+        - name: CARRERA ID
+          type: integer
+          description: "Identificador único de la carrera"
+        - name: CARRERA ASIGNADA
+          type: string
+          description: "Nombre de la carrera asignada"
+        - name: PLAZAS DISPONIBLES
+          type: integer
+          description: "Cantidad de plazas disponibles para la carrera"
+        - name: page
+          type: integer
+          description: "Número de página del documento original"
+        - name: table_num
+          type: integer
+          description: "Número de tabla dentro de la página del documento original"
+  - name: Institutos y Carreras
+    type: table
+    path: https://docs.google.com/spreadsheets/d/e/2PACX-1vSSUQH2KMj4lCWQNX_WLsuuYuYLeoCnmxvpB2WJgc_JGpzFeol3GeO5MrGeiNcVKLRXOO4x6ZOGEYQg/pub?gid=103409649&single=true&output=csv
+    scheme: file
+    format: csv
+    mediatype: text/csv
+    encoding: utf-8
+    schema:
+      fields:
+        - name: INSTITUTO ID
+          type: integer
+          description: "Identificador único del instituto"
+        - name: INSTITUTO
+          type: string
+          description: "Nombre del instituto"
+        - name: DEPARTAMENTO ID
+          type: integer
+          description: "Identificador único del departamento"
+        - name: DEPARTAMENTO
+          type: string
+          description: "Nombre del departamento geográfico"
+        - name: CARRERA ID
+          type: integer
+          description: "Identificador único de la carrera"
+        - name: CARRERA ASIGNADA
+          type: string
+          description: "Nombre de la carrera asignada"
+        - name: PLAZAS DISPONIBLES
+          type: integer
+          description: "Cantidad de plazas disponibles para la carrera"
+        - name: page
+          type: integer
+          description: "Número de página del documento original"
+        - name: table_num
+          type: integer
+          description: "Número de tabla dentro de la página del documento original"

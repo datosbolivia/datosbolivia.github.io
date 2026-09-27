@@ -1,0 +1,53 @@
+name: elecciones-bolivia
+title: Atlas Electoral y Elecciones Generales de Bolivia
+resources:
+- name: elecciones_generales_2020
+  type: table
+  path: https://github.com/datosbolivia/elecciones2025/raw/main/resultados_historicos/2020/elecciones_generales_2020.parquet
+  scheme: file
+  format: parquet
+  mediatype: application/parquet
+  schema:
+    fields:
+    - name: pais
+      type: string
+      description: País donde se sufragó
+    - name: departamento
+      type: string
+      description: Departamento
+    - name: provincia
+      type: string
+      description: Provincia
+    - name: municipio
+      type: string
+      description: Municipio
+    - name: localidad
+      type: string
+      description: Localidad o asiento electoral
+    - name: recinto
+      type: string
+      description: Nombre del recinto de votación
+    - name: numero_mesa
+      type: integer
+      description: Identificador de la mesa de sufragio
+    - name: codigo_mesa
+      type: string
+      description: Código alfanumérico único
+    - name: inscritos
+      type: integer
+      description: Total de ciudadanos inscritos en el padrón de la mesa
+    - name: validos
+      type: integer
+      description: Votos válidos emitidos
+    - name: blancos
+      type: integer
+      description: Votos en blanco
+    - name: nulos
+      type: integer
+      description: Votos nulos
+    - name: partido
+      type: string
+      description: Sigla de la fuerza política
+    - name: votos
+      type: integer
+      description: Cantidad de votos obtenidos

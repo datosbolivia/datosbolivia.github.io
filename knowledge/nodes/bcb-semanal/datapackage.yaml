@@ -1,0 +1,48 @@
+name: bcb-semanal
+title: Reservas Internacionales y Reportes Semanales del Banco Central de Bolivia
+resources:
+- name: bcb_reservas
+  type: table
+  path: https://raw.githubusercontent.com/mauforonda/bcb_semanal/master/reservas.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: fecha
+      type: date
+      description: Fecha del corte semanal
+    - name: tipo
+      type: string
+      description: Componente de reserva (Divisas, Oro, DEG, Posición con el FMI)
+    - name: valor
+      type: number
+      description: Monto valorado en millones de dólares estadounidenses (USD)
+- name: bcb_semanal
+  type: table
+  path: https://raw.githubusercontent.com/mauforonda/bcb_semanal/master/datos.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: fecha
+      type: date
+      description: Fecha del registro semanal
+    - name: unidad
+      type: string
+      description: Unidad de medida (Millones de Bs, Millones de USD, Porcentaje)
+    - name: categoria
+      type: string
+      description: Categoría macroeconómica
+    - name: variable
+      type: string
+      description: Variable del balance o liquidez monetaria
+    - name: subvariable
+      type: string
+      description: Detalle de la cuenta
+    - name: valor
+      type: number
+      description: Valor monetario o tasa registrada

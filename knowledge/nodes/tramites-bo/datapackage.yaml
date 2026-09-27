@@ -1,0 +1,81 @@
+name: tramites-bo
+title: Directorio de Trámites del Estado Boliviano (gob.bo)
+resources:
+- name: tramites
+  type: table
+  path: https://raw.githubusercontent.com/datosbolivia/tramites-bo/main/tramites.jsonl
+  scheme: file
+  format: jsonl
+  mediatype: application/jsonl
+  encoding: utf-8
+  schema:
+    fields:
+    - name: id
+      type: integer
+      description: Identificador único del trámite en gob.bo
+    - name: estado
+      type: string
+      description: Estado del trámite (publicado, borrador, inactivo)
+    - name: fechaActualización
+      type: date
+      description: Fecha de última modificación oficial
+    - name: nombre
+      type: string
+      description: Nombre descriptivo del trámite
+    - name: slug
+      type: string
+      description: Identificador URI normalizado
+    - name: sigla
+      type: string
+      description: Sigla de la institución pública responsable
+    - name: descripcion
+      type: string
+      description: Resumen del propósito y alcance del trámite
+    - name: marcoLegal
+      type: string
+      description: Base normativa que respalda el procedimiento
+- name: adiciones
+  type: table
+  path: https://raw.githubusercontent.com/datosbolivia/tramites-bo/main/adiciones.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: id
+      type: integer
+      description: Identificador del trámite
+    - name: fecha
+      type: date
+      description: Fecha en que fue catalogado
+    - name: nombre
+      type: string
+      description: Nombre del trámite incorporado
+    - name: sigla
+      type: string
+      description: Sigla de la institución
+- name: modificaciones
+  type: table
+  path: https://raw.githubusercontent.com/datosbolivia/tramites-bo/main/modificaciones.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: id
+      type: integer
+      description: Identificador del trámite
+    - name: fecha
+      type: date
+      description: Fecha del cambio
+    - name: campo
+      type: string
+      description: Atributo modificado
+    - name: valor_anterior
+      type: string
+      description: Contenido previo
+    - name: valor_nuevo
+      type: string
+      description: Contenido actualizado

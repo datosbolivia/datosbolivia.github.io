@@ -1,0 +1,30 @@
+name: anh-dispatch-reports
+title: Despacho y Distribución de Combustibles (ANH Bolivia)
+resources:
+- name: anh_dispatch
+  type: table
+  path: https://www.kaggle.com/datasets/sociest/anh-dispatch-report/download
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: fecha
+      type: date
+      description: Fecha del despacho reportado por ANH
+    - name: departamento
+      type: string
+      description: Departamento destino
+    - name: estacion_servicio
+      type: string
+      description: Nombre de la estación de servicio asignada
+    - name: producto
+      type: string
+      description: Tipo de combustible (Gasolina Especial, Diésel Oíl)
+    - name: volumen_despachado_litros
+      type: number
+      description: Volumen en litros entregado
+    - name: planta_origen
+      type: string
+      description: Planta de almacenamiento de YPFB

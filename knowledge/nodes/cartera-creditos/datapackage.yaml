@@ -1,0 +1,45 @@
+name: cartera-creditos
+title: Cartera de Créditos del Sistema Financiero Boliviano
+resources:
+- name: creditos
+  type: table
+  path: https://raw.githubusercontent.com/mauforonda/cartera_de_creditos_en_bolivia/master/data/creditos.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: departamento
+      type: string
+      description: Departamento
+    - name: municipio
+      type: string
+      description: Municipio
+    - name: cod_ine
+      type: integer
+      description: Código de municipio INE
+    - name: sector
+      type: string
+      description: Sector (productivo, comercio, servicios)
+    - name: categoria
+      type: string
+      description: Categoría económica general
+    - name: categoria_codigo
+      type: string
+      description: Código de categoría CAEDEC
+    - name: subclase_codigo
+      type: string
+      description: Código de subclase económica
+    - name: subclase
+      type: string
+      description: Descripción de la actividad específica
+    - name: year
+      type: integer
+      description: Año de reporte de la cartera
+    - name: cartera
+      type: number
+      description: Monto total de crédito colocado
+    - name: prestatarios
+      type: number
+      description: Cantidad de personas o unidades económicas prestatarias

@@ -1,0 +1,81 @@
+name: bo-mortalidad
+title: Mortalidad y Hechos Vitales de Bolivia (SERECÍ / SNIS)
+resources:
+- name: registro_civil
+  type: table
+  path: https://raw.githubusercontent.com/sociedatos/bo-mortalidad/main/registro.civil.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: cod_ine
+      type: integer
+      description: Código de municipio según INE
+    - name: rango_edad
+      type: string
+      description: Grupo etario del fallecido
+    - name: sexo
+      type: string
+      description: Sexo del difunto (F/M)
+    - name: fecha
+      type: date
+      description: Fecha del deceso
+    - name: decesos
+      type: integer
+      description: Cantidad de actas de defunción emitidas
+- name: hechos_vitales_covid
+  type: table
+  path: https://raw.githubusercontent.com/sociedatos/bo-mortalidad/main/hechos.vitales.covid.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: departamento
+      type: string
+      description: Departamento
+    - name: municipio
+      type: string
+      description: Municipio
+    - name: edad
+      type: string
+      description: Rango de edad
+    - name: sexo
+      type: string
+      description: Sexo
+    - name: fecha_deceso
+      type: date
+      description: Fecha en que ocurrió el fallecimiento
+    - name: fecha_registro
+      type: date
+      description: Fecha de asiento oficial en el registro
+    - name: decesos
+      type: integer
+      description: Número de fallecidos
+- name: sistema_informacion_salud
+  type: table
+  path: https://raw.githubusercontent.com/sociedatos/bo-mortalidad/main/sistema.informacion.salud.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: cod_ine
+      type: integer
+      description: Código de municipio INE
+    - name: rango_edad
+      type: string
+      description: Rango de edad
+    - name: sexo
+      type: string
+      description: Sexo
+    - name: fecha
+      type: date
+      description: Fecha del reporte epidemiológico
+    - name: decesos
+      type: integer
+      description: Número de defunciones hospitalarias reportadas

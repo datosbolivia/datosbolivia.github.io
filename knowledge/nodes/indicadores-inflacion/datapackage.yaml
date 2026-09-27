@@ -1,0 +1,111 @@
+name: indicadores-inflacion
+title: Índice de Precios al Consumidor e Inflación (INE)
+resources:
+- name: ine_ipc_nacional
+  type: table
+  path: https://raw.githubusercontent.com/mauforonda/indicadores_inflacion/master/ine_ipc_nacional.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: fecha
+      type: date
+      description: Fecha de medición mensual
+    - name: indice_mensual
+      type: number
+      description: Índice general mensual base 100
+    - name: variacion_mensual
+      type: number
+      description: Variación porcentual respecto al mes anterior
+    - name: variacion_acumulada
+      type: number
+      description: Variación porcentual acumulada en la gestión
+    - name: variacion_12_meses
+      type: number
+      description: Tasa de inflación interanual a 12 meses
+- name: ine_ipc_nacional_divisiones
+  type: table
+  path: https://raw.githubusercontent.com/mauforonda/indicadores_inflacion/master/ine_ipc_nacional_divisiones.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: fecha
+      type: date
+      description: Fecha mensual
+    - name: categoria_codigo
+      type: string
+      description: Código de la división de gasto COICOP
+    - name: categoria
+      type: string
+      description: Nombre de la división (Alimentos, Vivienda, Transporte, etc.)
+    - name: indice_mensual
+      type: number
+      description: Nivel de índice
+    - name: variacion_mensual
+      type: number
+      description: Variación porcentual mensual
+    - name: variacion_acumulada
+      type: number
+      description: Variación acumulada del año
+    - name: variacion_12_meses
+      type: number
+      description: Variación interanual
+- name: ine_ipc_producto_ciudad
+  type: table
+  path: https://raw.githubusercontent.com/mauforonda/indicadores_inflacion/master/ine_ipc_producto_ciudad.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: ciudad
+      type: string
+      description: Ciudad capital o conurbación metropolitana
+    - name: codigo
+      type: string
+      description: Código del producto en la canasta familiar
+    - name: producto
+      type: string
+      description: Descripción del bien o servicio
+    - name: fecha
+      type: date
+      description: Fecha del registro
+    - name: indice
+      type: number
+      description: Índice de precio registrado
+- name: ine_ipc_rapido
+  type: table
+  path: https://raw.githubusercontent.com/mauforonda/indicadores_inflacion/master/ine_ipc_rapido.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: fecha
+      type: date
+      description: Fecha del monitoreo
+    - name: departamento
+      type: string
+      description: Departamento
+    - name: producto
+      type: string
+      description: Producto básico monitoreado
+    - name: id_producto
+      type: string
+      description: ID interno
+    - name: precio
+      type: number
+      description: Precio observado en el mercado
+    - name: unidad
+      type: string
+      description: Unidad de medida (kg, litro, arroba)
+    - name: cantidad
+      type: number
+      description: Cantidad física observada

@@ -1,0 +1,102 @@
+name: despacho-carga
+title: Despacho de Carga y Operación Eléctrica Nacional (CNDC)
+resources:
+- name: eventos_mayores
+  type: table
+  path: https://raw.githubusercontent.com/datosbolivia/despacho_de_carga/main/data/eventos_mayores.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: fecha
+      type: date
+      description: Fecha del evento operativo
+    - name: descripcion
+      type: string
+      description: Descripción de la contingencia o corte
+    - name: area
+      type: string
+      description: Área del SIN afectada (Norte, Central, Sur, Oriental)
+    - name: agente_afectado
+      type: string
+      description: Empresa de generación/distribución vinculada
+    - name: cat
+      type: string
+      description: Categoría de la instalación
+    - name: de_hrs
+      type: string
+      description: Hora de inicio del incidente
+    - name: a_hrs
+      type: string
+      description: Hora de normalización
+    - name: mw_desc
+      type: number
+      description: Megavatios (MW) desconectados
+- name: fallas_durante_la_operacion
+  type: table
+  path: https://raw.githubusercontent.com/datosbolivia/despacho_de_carga/main/data/fallas_durante_la_operacion.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: fecha
+      type: date
+      description: Fecha de la falla
+    - name: agente
+      type: string
+      description: Agente eléctrico
+    - name: cat
+      type: string
+      description: Categoría del componente
+    - name: componente
+      type: string
+      description: Nombre de subestación, línea o generador
+    - name: de_hrs
+      type: string
+      description: Hora de inicio
+    - name: a_hrs
+      type: string
+      description: Hora de fin
+    - name: causa
+      type: string
+      description: Causa reportada de la falla
+    - name: tipo
+      type: string
+      description: Tipo de interrupción
+- name: instalaciones_en_mantenimiento
+  type: table
+  path: https://raw.githubusercontent.com/datosbolivia/despacho_de_carga/main/data/instalaciones_en_mantenimiento.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: fecha
+      type: date
+      description: Fecha del mantenimiento
+    - name: agente
+      type: string
+      description: Operador
+    - name: cat
+      type: string
+      description: Tipo de componente
+    - name: componente
+      type: string
+      description: Línea o central
+    - name: de_hrs
+      type: string
+      description: Hora programada inicio
+    - name: a_hrs
+      type: string
+      description: Hora programada conclusión
+    - name: tipo
+      type: string
+      description: Mantenimiento preventivo, correctivo o forzado
+    - name: trabajo
+      type: string
+      description: Detalle técnico de los trabajos realizados

@@ -1,0 +1,66 @@
+name: meteorologia-bolivia
+title: Red de Estaciones Meteorológicas de Bolivia (SENAMHI)
+resources:
+- name: estaciones_meteorologicas
+  type: table
+  path: https://raw.githubusercontent.com/sociedatos/bo-meteorologia/main/stations.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: id
+      type: integer
+      description: ID numérico de la estación meteorológica
+    - name: code
+      type: string
+      description: Código oficial asignado por SENAMHI
+    - name: station
+      type: string
+      description: Nombre de la estación
+    - name: active
+      type: boolean
+      description: Estado operativo (activo / inactivo)
+    - name: stationType
+      type: string
+      description: Tipo de estación (Convencional, Automática)
+    - name: nameDepartment
+      type: string
+      description: Departamento
+    - name: nameProvince
+      type: string
+      description: Provincia
+    - name: nameMunicipality
+      type: string
+      description: Municipio
+    - name: nameBasin
+      type: string
+      description: Cuenca hidrográfica
+    - name: macroregion
+      type: string
+      description: Macroregión (Altiplano, Valles, Llanos)
+    - name: latitude
+      type: number
+      description: Latitud geográfica
+    - name: longitude
+      type: number
+      description: Longitud geográfica
+    - name: altitude
+      type: number
+      description: Altitud sobre el nivel del mar (msnm)
+    - name: owner
+      type: string
+      description: Propietario o institución administradora
+    - name: start
+      type: date
+      description: Fecha de inicio de operaciones
+    - name: operator
+      type: string
+      description: Operador en campo
+    - name: stationCategory
+      type: string
+      description: Categoría (Meteorológica, Pluviométrica, Climatológica)
+    - name: status
+      type: string
+      description: Condición operativa actual

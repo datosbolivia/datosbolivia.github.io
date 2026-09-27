@@ -1,0 +1,33 @@
+name: catalogo-ine
+title: Catálogo e Inventario de Datos Estadísticos del INE Bolivia
+resources:
+- name: catalogo
+  type: table
+  path: https://raw.githubusercontent.com/mauforonda/catalogo-ine/master/catalogo.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: modificado
+      type: string
+      description: Fecha de última modificación en servidor INE
+    - name: nombre
+      type: string
+      description: Nombre de la publicación, tabla o reporte estadístico
+    - name: pagina
+      type: string
+      description: Sección temática en el portal del INE
+    - name: tipo
+      type: string
+      description: Tipo de contenido o archivo
+    - name: kb
+      type: number
+      description: Tamaño del archivo en kilobytes
+    - name: link
+      type: string
+      description: URL directa de descarga en el servidor Nimbus/INE
+    - name: disponible
+      type: boolean
+      description: Indica si el enlace se encuentra activo y accesible

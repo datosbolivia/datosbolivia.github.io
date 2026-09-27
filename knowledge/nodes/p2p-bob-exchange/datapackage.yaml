@@ -1,0 +1,38 @@
+name: p2p-bob-exchange
+title: Mercado Cambiario P2P BOB / USDT (Binance Bolivia)
+resources:
+- name: advertiser
+  type: table
+  path: https://github.com/andres-chirinos/p2p-bob-exchange/raw/main/test/b/advertiser.parquet
+  scheme: file
+  format: parquet
+  mediatype: application/parquet
+  schema:
+    fields:
+    - name: advertiser_userno
+      type: string
+      description: Identificador único anonimizado del comerciante
+    - name: advertiser_nickname
+      type: string
+      description: Seudónimo del anunciante
+    - name: advertiser_monthordercount
+      type: number
+      description: Órdenes ejecutadas en los últimos 30 días
+    - name: advertiser_monthfinishrate
+      type: number
+      description: Tasa de cumplimiento de órdenes (%)
+    - name: advertiser_positiverate
+      type: number
+      description: Porcentaje de comentarios positivos
+    - name: advertiser_usertype
+      type: string
+      description: Tipo de comerciante (user, merchant)
+    - name: advertiser_viplevel
+      type: number
+      description: Nivel VIP de la cuenta
+    - name: timestamp
+      type: datetime
+      description: Momento de captura de la cotización
+    - name: source
+      type: string
+      description: Plataforma de origen (Binance P2P)

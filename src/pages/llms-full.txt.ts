@@ -11,11 +11,9 @@ export const GET: APIRoute = async () => {
     `URL: ${config.site.url}`,
     `Fecha: ${new Date().toISOString()}`,
     ``,
-    `=== WHITEPAPER FUNDACIONAL ===`,
-    `Título: ${config.whitepaper.title}`,
-    `Autor: ${config.whitepaper.author}`,
-    `DOI: ${config.whitepaper.doi}`,
-    `Resumen: ${config.whitepaper.abstract}`,
+    `=== ESPECIFICACIÓN NORMATIVA Y GOBERNANZA ===`,
+    `Estándar: Open Knowledge Format (OKF v0.2) / Frictionless DataPackage`,
+    `Política: Zero-Microdata y Soberanía Orientada al Dominio`,
     ``,
     `=== CATÁLOGO DE DATASETS (${datasets.length} NODOS FEDERADOS) ===`,
     ``
@@ -24,7 +22,7 @@ export const GET: APIRoute = async () => {
   for (const d of datasets) {
     lines.push(`--------------------------------------------------------------------------------`);
     lines.push(`DATASET: ${d.title} (slug: ${d.slug})`);
-    lines.push(`Categoría: ${d.category}`);
+    lines.push(`Dominio: ${d.category}`);
     lines.push(`Descripción: ${d.description}`);
     if (d.dimensions.length > 0) {
       lines.push(`Dimensiones: ${d.dimensions.join(', ')}`);

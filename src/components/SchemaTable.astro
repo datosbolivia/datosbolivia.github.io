@@ -12,7 +12,7 @@ const fields = resource.schema?.fields || [];
 <div style="margin-bottom: 2rem;">
   <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
     <div>
-      <h4 style="font-size: 1.1rem; margin-bottom: 0.25rem;">
+      <h4 style="font-size: 1.05rem; margin-bottom: 0.25rem;">
         {resource.name}
       </h4>
       {resource.path && (
@@ -20,8 +20,7 @@ const fields = resource.schema?.fields || [];
           href={resource.path} 
           target="_blank" 
           rel="noopener noreferrer" 
-          class="badge" 
-          style="font-family: var(--font-mono); font-size: 0.725rem; max-width: 500px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block;"
+          style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-primary); word-break: break-all;"
         >
           {resource.path}
         </a>
@@ -29,7 +28,7 @@ const fields = resource.schema?.fields || [];
     </div>
 
     {resource.policy && (
-      <span class="badge badge-success" style="font-size: 0.7rem; font-family: var(--font-mono);">
+      <span style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-success);">
         policy: {resource.policy}
       </span>
     )}
@@ -52,9 +51,9 @@ const fields = resource.schema?.fields || [];
                 <code style="font-weight: 600; color: var(--color-primary);">{f.name}</code>
               </td>
               <td>
-                <span class="badge" style="font-family: var(--font-mono); font-size: 0.7rem;">
+                <code style="font-size: 0.75rem; color: var(--color-text-muted); background: transparent; padding: 0;">
                   {f.type || 'string'}
-                </span>
+                </code>
               </td>
               <td style="color: var(--color-text-muted);">
                 {f.description || '—'}

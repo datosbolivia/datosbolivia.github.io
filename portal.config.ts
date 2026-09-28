@@ -13,24 +13,6 @@ export interface PortalConfig {
     url: string;
     base: string;
   };
-  whitepaper: {
-    title: string;
-    author: string;
-    doi: string;
-    doiUrl: string;
-    pdfUrl: string;
-    abstract: string;
-  };
-  community: {
-    talks: Array<{
-      title: string;
-      date: string;
-      speaker: string;
-      repoUrl: string;
-      videoUrl: string;
-      description: string;
-    }>;
-  };
   pwa: {
     enabled: boolean;
     name: string;
@@ -46,6 +28,7 @@ export interface PortalConfig {
   };
   nav: Array<{
     label: string;
+    key?: string;
     path: string;
   }>;
 }
@@ -56,7 +39,7 @@ export const config: PortalConfig = {
     slug: "datos-bolivia",
     url: "https://datos-bolivia.github.io",
     github: "https://github.com/andres-chirinos/catalogo-datamesh",
-    description: "Iniciativa colaborativa y abierta de datos abiertos de Bolivia."
+    description: "Iniciativa colaborativa y abierta de datos federados de Bolivia."
   },
   site: {
     title: "Datos Bolivia",
@@ -79,10 +62,10 @@ export const config: PortalConfig = {
     enableLocalProcessing: true
   },
   nav: [
-    { label: "Inicio", path: "/" },
-    { label: "Datasets", path: "/datasets" },
-    { label: "Acerca de", path: "/about" },
-    { label: "Docs", path: "/docs" },
-    { label: "Descargas", path: "/download" }
+    { label: "Inicio", key: "nav.home", path: "/" },
+    { label: "Datasets", key: "nav.datasets", path: "/datasets" },
+    { label: "Acerca de", key: "nav.about", path: "/about" },
+    { label: "Docs", key: "nav.docs", path: "/docs" },
+    { label: "Descargas", key: "nav.download", path: "/download" }
   ]
 };

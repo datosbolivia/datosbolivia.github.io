@@ -33,7 +33,8 @@ const VALID_OKF_TYPES = new Set([
   'service',
   'indicator',
   'document',
-  'page'
+  'page',
+  'blog'
 ]);
 
 const VALID_FRICTIONLESS_TYPES = new Set([

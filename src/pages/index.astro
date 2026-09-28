@@ -1,73 +1,71 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import DatasetCard from '../components/DatasetCard.astro';
-import { getAllDatasets, getEditorialPage } from '../lib/catalog';
+import { getAllDatasets, getBlogPosts, getEditorialPage } from '../lib/catalog';
 import { config } from '../../portal.config';
 
 const homeContent = getEditorialPage('home');
 const allDatasets = getAllDatasets();
 const featuredDatasets = allDatasets.slice(0, 6);
+const blogPosts = getBlogPosts();
 
-// Estadísticas rápidas
+// Estadísticas del catálogo
 const totalDatasets = allDatasets.length;
 const totalResources = allDatasets.reduce((acc, d) => acc + (d.datapackage?.resources?.length || 1), 0);
 const categoriesCount = new Set(allDatasets.map((d) => d.category)).size;
 ---
 
 <BaseLayout title={homeContent.title}>
+  <!-- Hero Editorial y Neutro -->
   <section class="hero">
-    <h1 class="hero-title">
+    <h1 class="hero-title" data-i18n="hero.title">
       {homeContent.title}
     </h1>
 
-    <p class="hero-tagline">
+    <p class="hero-tagline" data-i18n="hero.subtitle">
       {homeContent.description || config.site.tagline}
     </p>
 
-    <p class="hero-tagline">
-      Ofrecido por {config.organization.name}
-    </p>
-
-    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-      <a href="/datasets" class="btn btn-primary">
-        Explorar
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.25rem;">
+      <a href="/datasets" class="btn btn-primary" data-i18n="hero.explore">
+        Explorar Datasets &rarr;
       </a>
-      <a href="/about" class="btn btn-secondary">
+      <a href="/about" class="btn btn-secondary" data-i18n="hero.about">
         Acerca de
       </a>
-      <a href="/download" class="btn btn-secondary">
-        Instalar
+      <a href="/download" class="btn btn-secondary" data-i18n="hero.install">
+        Instalar App
       </a>
     </div>
   </section>
 
-  <!-- Métricas Rápidas -->
+  <!-- Métricas Rápidas sin Badges -->
   <section class="stats-grid">
     <div class="stat-card">
       <div class="stat-value">{totalDatasets}</div>
-      <div class="stat-label">Ubicaciones</div>
+      <div class="stat-label" data-i18n="stats.datasets">Datasets</div>
     </div>
     <div class="stat-card">
       <div class="stat-value">{totalResources}</div>
-      <div class="stat-label">Recursos</div>
+      <div class="stat-label" data-i18n="stats.resources">Recursos</div>
     </div>
     <div class="stat-card">
       <div class="stat-value">{categoriesCount}</div>
-      <div class="stat-label">Dominios</div>
+      <div class="stat-label" data-i18n="stats.domains">Dominios</div>
     </div>
   </section>
 
-  <!-- Buscador Directo y Acceso Rápido -->
-  <section style="margin-bottom: 3rem;">
-    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+  <!-- Datasets Destacados -->
+  <section style="margin-bottom: 3.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
       <div>
-        <h2 style="margin: 0; font-size: 1.5rem;">Datasets Destacados</h2>
-        <p style="color: var(--color-text-muted); font-size: 0.875rem; margin: 0;">
+        <h2 style="margin: 0; font-size: 1.5rem;" data-i18n="home.featured">Datasets Destacados</h2>
+        <p style="color: var(--color-text-muted); font-size: 0.875rem; margin: 0;" data-i18n="home.featured_sub">
           Datos gubernamentales, financieros, climáticos y de infraestructura.
         </p>
       </div>
-      <a href="/datasets" style="font-size: 0.875rem; font-weight: 500;">
-        Ver catálogo
+      <a href="/datasets" style="font-size: 0.875rem; font-weight: 500;" data-i18n="home.view_all">
+        Ver catálogo completo &rarr;
       </a>
     </div>
 
@@ -77,4 +75,44 @@ const categoriesCount = new Set(allDatasets.map((d) => d.category)).size;
       ))}
     </div>
   </section>
+
+  <!-- Novedades y Notas Técnicas del Blog en Docs -->
+  {blogPosts.length > 0 && (
+    <section style="margin-bottom: 3rem; border-top: 1px solid var(--color-border); padding-top: 2.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+          <h2 style="margin: 0; font-size: 1.5rem;" data-i18n="home.blog_title">Novedades y Notas Técnicas</h2>
+          <p style="color: var(--color-text-muted); font-size: 0.875rem; margin: 0;" data-i18n="home.blog_sub">
+            Actualizaciones sobre el catálogo y los estándares federados.
+          </p>
+        </div>
+        <a href="/docs" style="font-size: 0.875rem; font-weight: 500;">
+          Ver docs &rarr;
+        </a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem;">
+        {blogPosts.slice(0, 2).map((post) => (
+          <article class="card" style="padding: 1.25rem;">
+            <div style="margin-bottom: 0.35rem;">
+              <span style="font-size: 0.725rem; color: var(--color-primary); font-family: var(--font-mono); font-weight: 600; text-transform: uppercase;">
+                {post.timestamp ? post.timestamp.split('T')[0] : 'Blog'}
+              </span>
+            </div>
+            <h3 style="font-size: 1.15rem; margin-bottom: 0.4rem;">
+              <a href={`/docs/${post.slug}`} style="text-decoration: none; color: inherit;">
+                {post.title}
+              </a>
+            </h3>
+            <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1rem; line-height: 1.45;">
+              {post.description}
+            </p>
+            <a href={`/docs/${post.slug}`} class="btn btn-secondary btn-sm" data-i18n="home.read_more">
+              Leer artículo &rarr;
+            </a>
+          </article>
+        ))}
+      </div>
+    </section>
+  )}
 </BaseLayout>

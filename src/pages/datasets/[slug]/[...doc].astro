@@ -1,0 +1,99 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getAllDatasetReferenceDocs } from '../../../lib/catalog';
+import { renderMarkdown } from '../../../lib/markdown';
+
+export function getStaticPaths() {
+  const allDocs = getAllDatasetReferenceDocs();
+  return allDocs.map((item) => ({
+    params: {
+      slug: item.datasetSlug,
+      doc: item.subpath
+    },
+    props: {
+      doc: item.doc,
+      dataset: item.dataset
+    }
+  }));
+}
+
+const { doc, dataset } = Astro.props;
+const renderedHtml = renderMarkdown(doc.bodyMarkdown, { datasetSlug: dataset.slug });
+
+const skos = doc.frontmatter.skos || {};
+---
+
+<BaseLayout title={`${doc.title} — ${dataset.title}`}>
+  <!-- Breadcrumbs -->
+  <nav style="display: flex; gap: 0.5rem; align-items: center; font-size: 0.825rem; color: var(--color-text-muted); margin-bottom: 1.5rem; flex-wrap: wrap;">
+    <a href="/" style="color: inherit; text-decoration: none;">Inicio</a>
+    <span>/</span>
+    <a href="/datasets" style="color: inherit; text-decoration: none;">Datasets</a>
+    <span>/</span>
+    <a href={`/datasets/${dataset.slug}`} style="color: inherit; text-decoration: none;">{dataset.title}</a>
+    <span>/</span>
+    <span style="color: var(--color-text); font-weight: 500;">{doc.title}</span>
+  </nav>
+
+  <div style="max-width: 860px; margin: 0 auto;">
+    <!-- Encabezado del Documento de Referencia -->
+    <div style="border-bottom: 1px solid var(--color-border); padding-bottom: 1.25rem; margin-bottom: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <span class="badge badge-info">{doc.type}</span>
+          <span class="badge" style="font-family: var(--font-mono); font-size: 0.7rem;">{doc.relativePath}</span>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <a href={`/datasets/${dataset.slug}`} class="btn btn-secondary btn-sm">
+            &larr; Volver al Dataset
+          </a>
+          <a href={`/raw/nodes/${dataset.slug}/${doc.relativePath}`} target="_blank" class="btn btn-secondary btn-sm" title="Ver archivo Markdown crudo">
+            Ver Markdown Raw
+          </a>
+        </div>
+      </div>
+
+      <h1 style="font-size: 2.25rem; margin-bottom: 0.5rem;">
+        {doc.title}
+      </h1>
+      <p style="font-size: 0.9rem; color: var(--color-text-muted); margin: 0;">
+        Documento de referencia técnica del nodo <strong><a href={`/datasets/${dataset.slug}`}>{dataset.title}</a></strong>
+      </p>
+    </div>
+
+    <!-- Metadatos SKOS u Ontológicos si existen -->
+    {(skos.prefLabel || skos.exactMatch || skos.broader || doc.frontmatter.tags) && (
+      <div class="card" style="margin-bottom: 2rem; background-color: var(--color-surface); padding: 1rem 1.25rem;">
+        <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--color-primary); font-family: var(--font-mono);">
+          Metadatos Ontológicos & SKOS
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; font-size: 0.85rem;">
+          {skos.prefLabel && (
+            <div>
+              <span style="color: var(--color-text-muted); font-size: 0.75rem; display: block;">Etiqueta Preferida (prefLabel):</span>
+              <strong>{skos.prefLabel}</strong>
+            </div>
+          )}
+          {skos.exactMatch && (
+            <div>
+              <span style="color: var(--color-text-muted); font-size: 0.75rem; display: block;">URI Ontológica (exactMatch):</span>
+              <a href={skos.exactMatch} target="_blank" rel="noopener noreferrer" class="external-link">
+                {skos.exactMatch.replace('https://www.wikidata.org/wiki/', 'Wikidata: ')} ↗
+              </a>
+            </div>
+          )}
+          {skos.broader && (
+            <div>
+              <span style="color: var(--color-text-muted); font-size: 0.75rem; display: block;">Término Más Amplio (broader):</span>
+              <code>{skos.broader}</code>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    <!-- Contenido Renderizado del Markdown -->
+    <article class="prose" set:html={renderedHtml} />
+  </div>
+</BaseLayout>

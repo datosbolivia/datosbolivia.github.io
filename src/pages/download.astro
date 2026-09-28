@@ -37,39 +37,43 @@ const renderedHtml = renderMarkdown(downloadPage.body);
 <BaseLayout title={downloadPage.title} description={downloadPage.description}>
   <div style="max-width: 860px; margin: 0 auto;">
     <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
-      <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">Descargas e Instalación</h1>
+      <h1 style="font-size: 2rem; margin-bottom: 0.5rem;" data-i18n="download.title">Descargas e Instalación</h1>
       <p style="color: var(--color-text-muted); margin: 0;">
         Accede al catálogo de forma offline y desbloquea procesamiento local con PWA y Desktop.
       </p>
     </div>
 
-    <!-- Opciones en Tarjetas Destacadas -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+    <!-- Opciones en Tarjetas Destacadas sin badges -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
       <!-- Tarjeta PWA -->
-      <div class="card" style="border-top: 4px solid var(--color-primary);">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
-          <h2 style="font-size: 1.25rem; margin: 0;">PWA Web</h2>
-          <span class="badge badge-success">Sin Instalación</span>
+      <div class="card" style="border-top: 3px solid var(--color-primary);">
+        <div style="margin-bottom: 0.5rem;">
+          <span style="font-size: 0.75rem; color: var(--color-primary); font-family: var(--font-mono); font-weight: 600; text-transform: uppercase;">
+            Navegador
+          </span>
+          <h2 style="font-size: 1.25rem; margin: 0.25rem 0 0;" data-i18n="download.pwa_title">Progressive Web App (PWA)</h2>
         </div>
-        <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1rem; flex: 1;">
+        <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1rem; flex: 1; line-height: 1.45;">
           Instala la aplicación directamente en tu navegador móvil o de escritorio. Navega el catálogo completo sin conexión.
         </p>
         <button id="download-pwa-btn" class="btn btn-primary" style="justify-content: center;">
-          Instalar en este Dispositivo
+          Instalar PWA
         </button>
       </div>
 
       <!-- Tarjeta Desktop Electron -->
-      <div class="card" style="border-top: 4px solid var(--color-secondary);">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
-          <h2 style="font-size: 1.25rem; margin: 0;">Desktop App</h2>
-          <span class="badge badge-info">Cómputo Local</span>
+      <div class="card" style="border-top: 3px solid var(--color-secondary);">
+        <div style="margin-bottom: 0.5rem;">
+          <span style="font-size: 0.75rem; color: var(--color-primary); font-family: var(--font-mono); font-weight: 600; text-transform: uppercase;">
+            Desktop Native
+          </span>
+          <h2 style="font-size: 1.25rem; margin: 0.25rem 0 0;" data-i18n="download.desktop_title">Aplicación Desktop (Electron)</h2>
         </div>
-        <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1rem; flex: 1;">
+        <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1rem; flex: 1; line-height: 1.45;">
           Aplicación de escritorio con ranura para el binario compilado en Go del SDK, consultas analíticas y validación de nodos en vivo.
         </p>
         <a href={config.desktopApp.downloadUrl} target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="justify-content: center;">
-          Ver Releases en GitHub &rarr;
+          Ver Releases &rarr;
         </a>
       </div>
     </div>
@@ -82,7 +86,7 @@ const renderedHtml = renderMarkdown(downloadPage.body);
       <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 0.5rem;">
         Motor de Cómputo: <strong id="engine-type">Detectando...</strong>
       </p>
-      <div id="engine-capabilities" style="display: flex; gap: 0.35rem; flex-wrap: wrap;"></div>
+      <div id="engine-capabilities" style="display: flex; gap: 0.5rem; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.75rem;"></div>
     </div>
 
     <!-- Contenido Detallado en Markdown -->
@@ -103,7 +107,7 @@ const renderedHtml = renderMarkdown(downloadPage.body);
       if (typeLabel) typeLabel.textContent = `${status.activeEngine} (${status.status})`;
       if (capContainer && status.capabilities) {
         capContainer.innerHTML = status.capabilities
-          .map((c) => `<span class="badge badge-info" style="font-size: 0.7rem;">${c}</span>`)
+          .map((c) => `<span style="padding: 0.2rem 0.4rem; background: var(--color-surface-hover); border: 1px solid var(--color-border); border-radius: var(--radius-sm);">${c}</span>`)
           .join('');
       }
     });

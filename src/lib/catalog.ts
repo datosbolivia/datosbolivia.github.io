@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import yaml from 'js-yaml';
 
 export interface SkosConcept {
   id: string;
@@ -9,6 +10,7 @@ export interface SkosConcept {
   exactMatch?: string;
   broader?: string;
   content: string;
+  rawMarkdown: string;
 }
 
 export interface ResourceField {
@@ -16,6 +18,7 @@ export interface ResourceField {
   type: string;
   description?: string;
   format?: string;
+  constraints?: Record<string, any>;
 }
 
 export interface DataResource {
@@ -27,6 +30,7 @@ export interface DataResource {
     fields?: ResourceField[];
   };
   policy?: string;
+  description?: string;
 }
 
 export interface DataPackage {
@@ -34,6 +38,17 @@ export interface DataPackage {
   title?: string;
   description?: string;
   resources: DataResource[];
+}
+
+export interface NodeReferenceDoc {
+  datasetSlug: string;
+  relativePath: string; // ej. "concepts/digital_citizenship.md"
+  cleanPath: string;    // ej. "concepts/digital_citizenship"
+  title: string;
+  type: string;
+  frontmatter: Record<string, any>;
+  bodyMarkdown: string;
+  rawMarkdown: string;
 }
 
 export interface DatasetNode {
@@ -46,14 +61,16 @@ export interface DatasetNode {
   dimensions: string[];
   contracts: Array<{ type: string; path: string }>;
   lineage?: {
-    source?: Array<{ url: string }>;
+    source?: Array<{ url: string; title?: string }>;
     version?: string;
     updated_at?: string;
   };
   tags: string[];
   timestamp?: string;
   datapackage?: DataPackage;
+  allResources: DataResource[];
   concepts: SkosConcept[];
+  referenceDocs: NodeReferenceDoc[];
   chartConfig?: any;
   rawMarkdown: string;
   bodyMarkdown: string;
@@ -74,11 +91,11 @@ export interface DocItem {
   status?: string;
   rawMarkdown: string;
   bodyMarkdown: string;
-  category: 'especificacion' | 'decision' | 'guia';
+  category: 'especificacion' | 'decision' | 'guia' | 'blog';
 }
 
 /**
- * Parser de YAML Frontmatter seguro y autónomo
+ * Parser de YAML Frontmatter seguro
  */
 export function parseFrontmatter(markdownText: string): { frontmatter: Record<string, any>; body: string } {
   const trimmed = markdownText.trimStart();
@@ -93,49 +110,61 @@ export function parseFrontmatter(markdownText: string): { frontmatter: Record<st
 
   const rawYaml = trimmed.slice(3, endIndex).trim();
   const body = trimmed.slice(endIndex + 4).trim();
-  const frontmatter: Record<string, any> = {};
+  let frontmatter: Record<string, any> = {};
 
-  // Parser simple línea por línea con soporte para escalares, listas y bloques anidados
-  const lines = rawYaml.split('\n');
-  let currentKey = '';
-  let inList = false;
-  let inNestedObj = false;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line.trim() || line.trim().startsWith('#')) continue;
-
-    const colonIndex = line.indexOf(':');
-    const isListItem = line.trim().startsWith('-');
-
-    if (isListItem && currentKey) {
-      const val = line.trim().substring(1).trim().replace(/^["']|["']$/g, '');
-      if (!Array.isArray(frontmatter[currentKey])) {
-        frontmatter[currentKey] = [];
-      }
-      frontmatter[currentKey].push(val);
-      continue;
+  try {
+    const parsed = yaml.load(rawYaml);
+    if (parsed && typeof parsed === 'object') {
+      frontmatter = parsed as Record<string, any>;
     }
+  } catch (e) {
+    console.warn('Error al parsear frontmatter con js-yaml:', e);
+  }
 
-    if (colonIndex !== -1 && !line.startsWith(' ') && !line.startsWith('\t')) {
-      currentKey = line.substring(0, colonIndex).trim();
-      const valStr = line.substring(colonIndex + 1).trim();
+  return { frontmatter, body };
+}
 
-      if (valStr === '') {
-        frontmatter[currentKey] = [];
-      } else if (valStr.startsWith('[') && valStr.endsWith(']')) {
-        frontmatter[currentKey] = valStr
-          .slice(1, -1)
-          .split(',')
-          .map(s => s.trim().replace(/^["']|["']$/g, ''))
-          .filter(Boolean);
-      } else {
-        frontmatter[currentKey] = valStr.replace(/^["']|["']$/g, '');
+/**
+ * Escanea recursivamente archivos markdown de referencia dentro de un nodo
+ */
+function scanNodeReferenceDocs(nodePath: string, datasetSlug: string): NodeReferenceDoc[] {
+  const docs: NodeReferenceDoc[] = [];
+
+  function walk(currentDir: string) {
+    if (!fs.existsSync(currentDir)) return;
+    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath);
+      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        const rel = path.relative(nodePath, fullPath);
+        // Excluir el propio index.md raíz del nodo
+        if (rel === 'index.md') continue;
+
+        const rawMarkdown = fs.readFileSync(fullPath, 'utf-8');
+        const { frontmatter, body } = parseFrontmatter(rawMarkdown);
+
+        const cleanPath = rel.replace(/\.md$/, '');
+        const title = frontmatter.title || path.basename(rel, '.md').replace(/[_-]/g, ' ');
+
+        docs.push({
+          datasetSlug,
+          relativePath: rel,
+          cleanPath,
+          title,
+          type: frontmatter.type || 'concept',
+          frontmatter,
+          bodyMarkdown: body,
+          rawMarkdown
+        });
       }
     }
   }
 
-  return { frontmatter, body };
+  walk(nodePath);
+  return docs;
 }
 
 /**
@@ -181,7 +210,7 @@ export function getAllDatasets(): DatasetNode[] {
     const rawMarkdown = fs.readFileSync(indexPath, 'utf-8');
     const { frontmatter, body } = parseFrontmatter(rawMarkdown);
 
-    // Intentar leer DataPackage
+    // 1. Leer DataPackage completo con js-yaml
     let datapackage: DataPackage | undefined;
     const dpFiles = ['datapackage.json', 'datapackage.yaml', 'datapackage.yml'];
     for (const dpName of dpFiles) {
@@ -192,8 +221,7 @@ export function getAllDatasets(): DatasetNode[] {
           if (dpName.endsWith('.json')) {
             datapackage = JSON.parse(content);
           } else {
-            // Parser básico para datapackage YAML
-            datapackage = parseSimpleYamlDatapackage(content);
+            datapackage = yaml.load(content) as DataPackage;
           }
           break;
         } catch (e) {
@@ -202,22 +230,28 @@ export function getAllDatasets(): DatasetNode[] {
       }
     }
 
-    // Leer conceptos SKOS
-    const concepts: SkosConcept[] = [];
-    const conceptsDir = path.join(nodePath, 'concepts');
-    if (fs.existsSync(conceptsDir)) {
-      const cFiles = fs.readdirSync(conceptsDir);
-      for (const cf of cFiles) {
-        if (!cf.endsWith('.md')) continue;
-        const cContent = fs.readFileSync(path.join(conceptsDir, cf), 'utf-8');
-        const cParsed = parseFrontmatter(cContent);
-        concepts.push({
-          id: cf.replace('.md', ''),
-          title: cParsed.frontmatter.title || cf.replace('.md', ''),
-          content: cParsed.body
-        });
-      }
+    // 2. Consolidar TODOS los recursos
+    const allResources: DataResource[] = [];
+    if (datapackage?.resources && Array.isArray(datapackage.resources)) {
+      allResources.push(...datapackage.resources);
     }
+
+    // 3. Leer todos los documentos Markdown de referencia
+    const referenceDocs = scanNodeReferenceDocs(nodePath, slug);
+
+    // Conceptos SKOS extraídos
+    const concepts: SkosConcept[] = referenceDocs
+      .filter(d => d.relativePath.startsWith('concepts/'))
+      .map(d => ({
+        id: d.cleanPath.replace('concepts/', ''),
+        title: d.title,
+        prefLabel: d.frontmatter.skos?.prefLabel,
+        altLabel: d.frontmatter.skos?.altLabel,
+        exactMatch: d.frontmatter.skos?.exactMatch,
+        broader: d.frontmatter.skos?.broader,
+        content: d.bodyMarkdown,
+        rawMarkdown: d.rawMarkdown
+      }));
 
     // Extraer gráficos declarativos si existen
     let chartConfig: any = null;
@@ -226,11 +260,10 @@ export function getAllDatasets(): DatasetNode[] {
       try {
         chartConfig = JSON.parse(chartMatch[1].trim());
       } catch {
-        // ignorar fallo de parseo JSON de chart
+        // ignorar fallo de parseo JSON
       }
     }
 
-    // Determinar categoría
     const category = categoryMap.get(slug) || 'General';
 
     // Parsear dimensiones
@@ -253,7 +286,6 @@ export function getAllDatasets(): DatasetNode[] {
       contracts.push({ type: 'datapackage', path: './datapackage.yaml' });
     }
 
-    // Título y descripción
     const title = frontmatter.title || slug.replace(/-/g, ' ').toUpperCase();
     const description = frontmatter.description || extractFirstParagraph(body);
 
@@ -269,28 +301,41 @@ export function getAllDatasets(): DatasetNode[] {
       tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
       timestamp: frontmatter.timestamp,
       datapackage,
+      allResources,
       concepts,
+      referenceDocs,
       chartConfig,
       rawMarkdown,
       bodyMarkdown: body
     });
   }
 
-  // Ordenar alfabéticamente por título
   return datasets.sort((a, b) => a.title.localeCompare(b.title));
 }
 
-/**
- * Obtiene un dataset específico por su slug
- */
 export function getDatasetBySlug(slug: string): DatasetNode | undefined {
   const all = getAllDatasets();
   return all.find(d => d.slug === slug);
 }
 
-/**
- * Agrupa datasets por categoría
- */
+export function getAllDatasetReferenceDocs(): Array<{ datasetSlug: string; subpath: string; doc: NodeReferenceDoc; dataset: DatasetNode }> {
+  const datasets = getAllDatasets();
+  const results: Array<{ datasetSlug: string; subpath: string; doc: NodeReferenceDoc; dataset: DatasetNode }> = [];
+
+  for (const ds of datasets) {
+    for (const doc of ds.referenceDocs) {
+      results.push({
+        datasetSlug: ds.slug,
+        subpath: doc.cleanPath,
+        doc,
+        dataset: ds
+      });
+    }
+  }
+
+  return results;
+}
+
 export function getDatasetsByCategory(): CategoryGroup[] {
   const datasets = getAllDatasets();
   const groups = new Map<string, DatasetNode[]>();
@@ -308,9 +353,6 @@ export function getDatasetsByCategory(): CategoryGroup[] {
   }));
 }
 
-/**
- * Obtiene todos los documentos de docs/ (Especificaciones y ADRs)
- */
 export function getAllDocs(): DocItem[] {
   const rootDir = process.cwd();
   const docsDir = path.join(rootDir, 'docs');
@@ -318,7 +360,6 @@ export function getAllDocs(): DocItem[] {
 
   if (!fs.existsSync(docsDir)) return docs;
 
-  // 1. Especificaciones en la raíz de docs
   const rootEntries = fs.readdirSync(docsDir, { withFileTypes: true });
   for (const entry of rootEntries) {
     if (entry.isFile() && entry.name.endsWith('.md')) {
@@ -340,7 +381,6 @@ export function getAllDocs(): DocItem[] {
     }
   }
 
-  // 2. Decisiones (ADRs) en docs/decisiones
   const decisionsDir = path.join(docsDir, 'decisiones');
   if (fs.existsSync(decisionsDir)) {
     const dEntries = fs.readdirSync(decisionsDir);
@@ -364,12 +404,38 @@ export function getAllDocs(): DocItem[] {
     }
   }
 
+  const blogDir = path.join(docsDir, 'blog');
+  if (fs.existsSync(blogDir)) {
+    const bEntries = fs.readdirSync(blogDir);
+    for (const file of bEntries) {
+      if (!file.endsWith('.md')) continue;
+      const filePath = path.join(blogDir, file);
+      const raw = fs.readFileSync(filePath, 'utf-8');
+      const { frontmatter, body } = parseFrontmatter(raw);
+      const slug = `blog-${file.replace('.md', '')}`;
+      docs.push({
+        slug,
+        title: frontmatter.title || file.replace('.md', ''),
+        type: frontmatter.type || 'blog',
+        description: frontmatter.description || extractFirstParagraph(body),
+        timestamp: frontmatter.timestamp || frontmatter.date,
+        status: frontmatter.status || 'Publicado',
+        rawMarkdown: raw,
+        bodyMarkdown: body,
+        category: 'blog'
+      });
+    }
+  }
+
   return docs;
 }
 
-/**
- * Lee una página editorial de content/pages/
- */
+export function getBlogPosts(): DocItem[] {
+  return getAllDocs()
+    .filter(d => d.category === 'blog')
+    .sort((a, b) => ((b.timestamp || '') > (a.timestamp || '') ? 1 : -1));
+}
+
 export function getEditorialPage(pageName: string): { title: string; description?: string; body: string } {
   const rootDir = process.cwd();
   const filePath = path.join(rootDir, 'content', 'pages', `${pageName}.md`);
@@ -385,65 +451,13 @@ export function getEditorialPage(pageName: string): { title: string; description
   };
 }
 
-// Auxiliares
 function extractFirstParagraph(markdown: string): string {
   const lines = markdown.split('\n');
   for (const line of lines) {
     const trimmed = line.trim();
-    if (trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('-') && !trimmed.startsWith('```')) {
+    if (trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('-') && !trimmed.startsWith('```') && !trimmed.startsWith('---')) {
       return trimmed.replace(/[*_`]/g, '');
     }
   }
   return '';
-}
-
-function parseSimpleYamlDatapackage(yamlContent: string): DataPackage {
-  const resources: DataResource[] = [];
-  const lines = yamlContent.split('\n');
-
-  let currentResource: Partial<DataResource> | null = null;
-  let inFields = false;
-  let currentField: Partial<ResourceField> | null = null;
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed.startsWith('- name:') && !inFields) {
-      if (currentResource && currentResource.name && currentResource.path) {
-        resources.push(currentResource as DataResource);
-      }
-      currentResource = {
-        name: trimmed.replace('- name:', '').trim().replace(/['"]/g, ''),
-        path: '',
-        schema: { fields: [] }
-      };
-      inFields = false;
-    } else if (trimmed.startsWith('path:') && currentResource) {
-      currentResource.path = trimmed.replace('path:', '').trim().replace(/['"]/g, '');
-    } else if (trimmed.startsWith('format:') && currentResource) {
-      currentResource.format = trimmed.replace('format:', '').trim().replace(/['"]/g, '');
-    } else if (trimmed.startsWith('fields:')) {
-      inFields = true;
-    } else if (inFields && trimmed.startsWith('- name:') && currentResource) {
-      if (currentField && currentField.name) {
-        currentResource.schema?.fields?.push(currentField as ResourceField);
-      }
-      currentField = {
-        name: trimmed.replace('- name:', '').trim().replace(/['"]/g, ''),
-        type: 'string'
-      };
-    } else if (inFields && trimmed.startsWith('type:') && currentField) {
-      currentField.type = trimmed.replace('type:', '').trim().replace(/['"]/g, '');
-    } else if (inFields && trimmed.startsWith('description:') && currentField) {
-      currentField.description = trimmed.replace('description:', '').trim().replace(/['"]/g, '');
-    }
-  }
-
-  if (currentField && currentField.name && currentResource) {
-    currentResource.schema?.fields?.push(currentField as ResourceField);
-  }
-  if (currentResource && currentResource.name && currentResource.path) {
-    resources.push(currentResource as DataResource);
-  }
-
-  return { resources };
 }

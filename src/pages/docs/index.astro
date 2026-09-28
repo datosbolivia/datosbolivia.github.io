@@ -3,40 +3,78 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getAllDocs } from '../../lib/catalog';
 
 const allDocs = getAllDocs();
+const blogs = allDocs.filter(d => d.category === 'blog');
 const specs = allDocs.filter(d => d.category === 'especificacion');
 const decisions = allDocs.filter(d => d.category === 'decision');
 ---
 
-<BaseLayout title="Documentación y Decisiones Arquitectónicas">
+<BaseLayout title="Centro Documental">
   <div style="max-width: 860px; margin: 0 auto;">
     <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
-      <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">Documentación</h1>
-      <p style="color: var(--color-text-muted); margin: 0;">
-        Guías de usuario, Especificaciones de los estandares utilizados y Registro de decisiones.
+      <h1 style="font-size: 2rem; margin-bottom: 0.5rem;" data-i18n="docs.title">Centro Documental</h1>
+      <p style="color: var(--color-text-muted); margin: 0;" data-i18n="docs.subtitle">
+        Especificaciones normativas, notas técnicas y registros de arquitectura.
       </p>
     </div>
 
+    <!-- Blog y Notas Técnicas -->
+    {blogs.length > 0 && (
+      <section style="margin-bottom: 3rem;">
+        <h2 style="font-size: 1.35rem; margin-bottom: 1rem;" data-i18n="docs.blog">
+          Blog y Novedades
+        </h2>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          {blogs.map((doc) => (
+            <div class="card" style="padding: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem; flex-wrap: wrap; gap: 0.5rem;">
+                <h3 style="font-size: 1.1rem; margin: 0;">
+                  <a href={`/docs/${doc.slug}`} style="text-decoration: none; color: inherit;">
+                    {doc.title}
+                  </a>
+                </h3>
+                {doc.timestamp && (
+                  <span style="font-size: 0.75rem; color: var(--color-text-muted); font-family: var(--font-mono);">
+                    {doc.timestamp.split('T')[0]}
+                  </span>
+                )}
+              </div>
+              <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 0.85rem; line-height: 1.45;">
+                {doc.description}
+              </p>
+              <div>
+                <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm" data-i18n="docs.read">
+                  Leer artículo &rarr;
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
     <!-- Especificaciones Normativas -->
     <section style="margin-bottom: 3rem;">
-      <h2 style="font-size: 1.35rem; margin-bottom: 1rem;">Especificaciones Normativas</h2>
+      <h2 style="font-size: 1.35rem; margin-bottom: 1rem;" data-i18n="docs.specs">
+        Especificaciones Normativas
+      </h2>
       <div style="display: flex; flex-direction: column; gap: 1rem;">
         {specs.map((doc) => (
-          <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
+          <div class="card" style="padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
               <h3 style="font-size: 1.1rem; margin: 0;">
                 <a href={`/docs/${doc.slug}`} style="text-decoration: none; color: inherit;">
                   {doc.title}
                 </a>
               </h3>
-              <span class="badge badge-info" style="font-size: 0.7rem;">
+              <span style="font-size: 0.75rem; color: var(--color-primary); font-family: var(--font-mono); font-weight: 600; text-transform: uppercase;">
                 {doc.type}
               </span>
             </div>
-            <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 0.75rem;">
+            <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 0.85rem; line-height: 1.45;">
               {doc.description}
             </p>
             <div>
-              <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm">
+              <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm" data-i18n="docs.read">
                 Leer Especificación &rarr;
               </a>
             </div>
@@ -48,9 +86,11 @@ const decisions = allDocs.filter(d => d.category === 'decision');
     <!-- Registros de Decisión de Arquitectura (ADRs) -->
     <section style="margin-bottom: 3rem;">
       <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem;">
-        <h2 style="font-size: 1.35rem; margin: 0;">Registros de Decisión de Arquitectura (ADRs)</h2>
-        <span class="badge" style="font-family: var(--font-mono); font-size: 0.75rem;">
-          {decisions.length} decisiones registradas
+        <h2 style="font-size: 1.35rem; margin: 0;" data-i18n="docs.adrs">
+          Decisiones de Arquitectura (ADRs)
+        </h2>
+        <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-text-muted);">
+          {decisions.length} decisiones
         </span>
       </div>
 

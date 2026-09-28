@@ -1,35 +1,11 @@
 ---
 type: dataset
-title: Air Quality
+title: Calidad del Aire — Mediciones ICA
+description: "Mediciones del Índice de Calidad del Aire (ICA) en estaciones de monitoreo, con coordenadas geográficas."
 contracts:
   - type: datapackage
     path: ./datapackage.yml
 ---
-
-# air_quality
-
----
-
-type: DuckDB Table
-title: "Calidad del Aire — Mediciones ICA"
-description: "Mediciones del Índice de Calidad del Aire (ICA) en estaciones de monitoreo de La Paz, con coordenadas geográficas."
-resource: data/air_quality/air_quality.csv
-tags: [aire, ica, contaminacion, salud, monitoreo]
-timestamp: 2026-06-27T02:00:00Z
-
----
-
-# Schema
-
-| Column                | Type      | Description                                                                                        |
-| --------------------- | --------- | -------------------------------------------------------------------------------------------------- |
-| `fecha_hora_registro` | TIMESTAMP | Fecha y hora exacta de la medición. Dimensión temporal principal.                                  |
-| `lugar_nombre`        | VARCHAR   | Nombre de la estación de monitoreo (ej. "Cotahuma", "San Antonio"). Dimensión espacial categórica. |
-| `latitude`            | DOUBLE    | Latitud WGS84 de la estación. Usar para mapas de puntos.                                           |
-| `longitude`           | DOUBLE    | Longitud WGS84 de la estación. Usar para mapas de puntos.                                          |
-| `valor_ica`           | DOUBLE    | Índice de Calidad del Aire (escala 0–500). **Es un índice: nunca sumar.**                          |
-| `observaciones`       | VARCHAR   | Texto libre con observaciones de campo.                                                            |
-| `fuente`              | VARCHAR   | Identificador de la fuente de datos (ej. Monica, SwissContact).                                    |
 
 # Uso Analítico
 

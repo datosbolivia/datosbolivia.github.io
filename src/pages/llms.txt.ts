@@ -11,12 +11,10 @@ export const GET: APIRoute = async () => {
     ``,
     `Este archivo expone el catálogo federado de datos abiertos de Bolivia conforme al estándar llms.txt. Permite a modelos de lenguaje (LLM) y agentes de IA descubrir datos estructurados sin alucinaciones.`,
     ``,
-    `## Información y Fundamentos del Proyecto`,
-    `- [Whitepaper Oficial en Zenodo](${config.whitepaper.doiUrl}): ${config.whitepaper.title}. Por ${config.whitepaper.author}. DOI: ${config.whitepaper.doi}`,
-    `- [Descarga PDF del Whitepaper](${config.whitepaper.pdfUrl}): Documento técnico completo.`,
-    `- [Repositorio de Charlas Comunitarias](${config.community.talks[0].repoUrl}): Presentaciones, diapositivas y código fuente.`,
-    `- [Grabación en Video de la Primera Charla](${config.community.talks[0].videoUrl}): Conferencia comunitaria del 2025-08-12.`,
+    `## Información y Documentación del Proyecto`,
     `- [Especificación ODKF v0.2](/raw/docs/especificacion_knowledge.md): Estándar normativo para nodos de datos abiertos federados.`,
+    `- [Guía de Fork y Despliegue](/raw/docs/GUIAS_FORK_Y_DESPLIEGUE.md): Instrucciones para replicar y desplegar instancias institucionales del portal.`,
+    `- [Centro Documental y ADRs](/docs): Registros formales de decisiones de arquitectura.`,
     ``,
     `## Catálogo de Datasets Federados (Open Knowledge Format v0.2)`,
     `A continuación se listan los nodos de datos disponibles con sus enlaces a los documentos Markdown originales:`
@@ -27,7 +25,7 @@ export const GET: APIRoute = async () => {
     const resourcesDesc = d.datapackage?.resources
       ? d.datapackage.resources.map(r => r.name).join(', ')
       : 'Recursos tabulares';
-    lines.push(`- [${d.title}](${rawUrl}): ${d.description} (Categoría: ${d.category}. Recursos: ${resourcesDesc})`);
+    lines.push(`- [${d.title}](${rawUrl}): ${d.description} (Dominio: ${d.category}. Recursos: ${resourcesDesc})`);
   }
 
   lines.push(``);

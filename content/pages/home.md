@@ -1,8 +1,7 @@
 ---
 type: page
 title: "Portal de Datos Abiertos DataMesh Bolivia"
-tagline: "Ecosistema federado, soberano y descentralizado para la comunidad, investigadores y Agentes de IA."
-badge: "Red Federal ODKF v0.2"
+tagline: "Ecosistema federado de datos abiertos para la comunidad, investigadores y Agentes de IA."
 ---
 
 Bienvenido al catálogo oficial de la red **DataMesh Bolivia**, administrado por la iniciativa comunitaria **datos-bolivia**.

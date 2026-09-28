@@ -1,0 +1,55 @@
+---
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import PwaPrompt from '../components/PwaPrompt.astro';
+import { config } from '../../portal.config';
+import '../styles/theme.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { 
+  title = config.site.title, 
+  description = config.site.description 
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | {config.organization.name}</title>
+    <meta name="description" content={description} />
+
+    <!-- Favicon e Identidad PWA -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content={config.pwa.themeColor} />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content={config.pwa.shortName} />
+
+    <!-- Open Graph y Metadatos -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={config.site.url} />
+
+    <!-- LLM Autodiscovery -->
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+  </head>
+
+  <body>
+    <Header />
+
+    <main class="container" style="padding-top: 1.5rem; padding-bottom: 3rem;">
+      <PwaPrompt />
+      <slot />
+    </main>
+
+    <Footer />
+  </body>
+</html>

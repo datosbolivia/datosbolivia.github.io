@@ -1,0 +1,30 @@
+---
+import { config } from '../../portal.config';
+---
+
+<footer class="site-footer">
+  <div class="container footer-content">
+    <div>
+      <p style="margin-bottom: 0.35rem; font-weight: 600; color: var(--color-text);">
+        {config.organization.name} — {config.site.title}
+      </p>
+      <p style="font-size: 0.8rem; margin-bottom: 0;">
+        {config.site.tagline}
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.825rem;">
+      <a href="/docs">
+        Documentación
+      </a>
+      <span>•</span>
+      <a href="/download">
+        Instalar
+      </a>
+      <span>•</span>
+      <a href="/llms.txt">
+        llms.txt
+      </a>
+    </div>
+  </div>
+</footer>

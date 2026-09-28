@@ -1,0 +1,80 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getAllDocs } from '../../lib/catalog';
+
+const allDocs = getAllDocs();
+const specs = allDocs.filter(d => d.category === 'especificacion');
+const decisions = allDocs.filter(d => d.category === 'decision');
+---
+
+<BaseLayout title="Documentación y Decisiones Arquitectónicas">
+  <div style="max-width: 860px; margin: 0 auto;">
+    <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
+      <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">Documentación</h1>
+      <p style="color: var(--color-text-muted); margin: 0;">
+        Guías de usuario, Especificaciones de los estandares utilizados y Registro de decisiones.
+      </p>
+    </div>
+
+    <!-- Especificaciones Normativas -->
+    <section style="margin-bottom: 3rem;">
+      <h2 style="font-size: 1.35rem; margin-bottom: 1rem;">Especificaciones Normativas</h2>
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        {specs.map((doc) => (
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
+              <h3 style="font-size: 1.1rem; margin: 0;">
+                <a href={`/docs/${doc.slug}`} style="text-decoration: none; color: inherit;">
+                  {doc.title}
+                </a>
+              </h3>
+              <span class="badge badge-info" style="font-size: 0.7rem;">
+                {doc.type}
+              </span>
+            </div>
+            <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 0.75rem;">
+              {doc.description}
+            </p>
+            <div>
+              <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm">
+                Leer Especificación &rarr;
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Registros de Decisión de Arquitectura (ADRs) -->
+    <section style="margin-bottom: 3rem;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem;">
+        <h2 style="font-size: 1.35rem; margin: 0;">Registros de Decisión de Arquitectura (ADRs)</h2>
+        <span class="badge" style="font-family: var(--font-mono); font-size: 0.75rem;">
+          {decisions.length} decisiones registradas
+        </span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        {decisions.map((doc) => (
+          <div class="card" style="padding: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">
+                  <a href={`/docs/${doc.slug}`} style="text-decoration: none; color: inherit;">
+                    {doc.title}
+                  </a>
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--color-text-muted); margin: 0;">
+                  Estado: <strong style="color: var(--color-success);">{doc.status}</strong> • Tipo: <code>{doc.type}</code>
+                </p>
+              </div>
+              <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm">
+                Ver ADR &rarr;
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  </div>
+</BaseLayout>

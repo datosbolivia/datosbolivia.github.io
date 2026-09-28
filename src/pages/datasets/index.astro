@@ -1,0 +1,133 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import DatasetCard from '../../components/DatasetCard.astro';
+import { getAllDatasets, getDatasetsByCategory } from '../../lib/catalog';
+
+const datasets = getAllDatasets();
+const categories = getDatasetsByCategory();
+---
+
+<BaseLayout title="Explorador de Datasets">
+  <div style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <h1 style="margin: 0; font-size: 2rem;">Catálogo de Datasets</h1>
+      <span class="badge" style="font-family: var(--font-mono);">
+        {datasets.length} conjuntos de datos
+      </span>
+    </div>
+    <p style="color: var(--color-text-muted); font-size: 0.95rem; margin: 0;">
+      Explora recursos, esquemas y conceptos.
+    </p>
+  </div>
+
+  <!-- Buscador en tiempo real -->
+  <input 
+    type="text" 
+    id="dataset-search" 
+    class="search-box" 
+    placeholder="Buscar por nombre, entidad, columna o categoría..." 
+    aria-label="Buscar datasets"
+  />
+
+  <!-- Filtro por categorías -->
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.75rem;" id="category-filters">
+    <button class="badge filter-btn active" data-category="all" style="cursor: pointer; padding: 0.35rem 0.65rem;">
+      Todos ({datasets.length})
+    </button>
+    {categories.map((cat) => (
+      <button class="badge filter-btn" data-category={cat.name} style="cursor: pointer; padding: 0.35rem 0.65rem;">
+        {cat.name} ({cat.datasets.length})
+      </button>
+    ))}
+  </div>
+
+  <!-- Lista de Datasets -->
+  <div class="dataset-grid" id="dataset-container">
+    {datasets.map((dataset) => (
+      <div 
+        class="dataset-item" 
+        data-title={dataset.title.toLowerCase()}
+        data-desc={dataset.description.toLowerCase()}
+        data-category={dataset.category}
+        data-slug={dataset.slug}
+        data-tags={dataset.tags.join(' ').toLowerCase()}
+      >
+        <DatasetCard dataset={dataset} />
+      </div>
+    ))}
+  </div>
+
+  <div id="no-results" style="display: none; text-align: center; padding: 3rem 0; color: var(--color-text-muted);">
+    <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No se encontraron datasets para esta búsqueda.</p>
+    <button id="reset-search" class="btn btn-secondary btn-sm">Limpiar filtros</button>
+  </div>
+</BaseLayout>
+
+<script is:inline>
+  const searchInput = document.getElementById('dataset-search');
+  const items = Array.from(document.querySelectorAll('.dataset-item'));
+  const filterBtns = Array.from(document.querySelectorAll('.filter-btn'));
+  const noResults = document.getElementById('no-results');
+  const resetBtn = document.getElementById('reset-search');
+
+  let activeCategory = 'all';
+
+  function filterDatasets() {
+    const query = (searchInput?.value || '').toLowerCase().trim();
+    let visibleCount = 0;
+
+    items.forEach((item) => {
+      const title = item.getAttribute('data-title') || '';
+      const desc = item.getAttribute('data-desc') || '';
+      const cat = item.getAttribute('data-category') || '';
+      const tags = item.getAttribute('data-tags') || '';
+      const slug = item.getAttribute('data-slug') || '';
+
+      const matchesQuery = !query || 
+        title.includes(query) || 
+        desc.includes(query) || 
+        tags.includes(query) || 
+        slug.includes(query);
+
+      const matchesCat = activeCategory === 'all' || cat === activeCategory;
+
+      if (matchesQuery && matchesCat) {
+        item.style.display = '';
+        visibleCount++;
+      } else {
+        item.style.display = 'none';
+      }
+    });
+
+    if (noResults) {
+      noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+  }
+
+  searchInput?.addEventListener('input', filterDatasets);
+
+  filterBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach((b) => b.classList.remove('active', 'badge-info'));
+      btn.classList.add('active', 'badge-info');
+      activeCategory = btn.getAttribute('data-category') || 'all';
+      filterDatasets();
+    });
+  });
+
+  resetBtn?.addEventListener('click', () => {
+    if (searchInput) searchInput.value = '';
+    activeCategory = 'all';
+    filterBtns.forEach((b) => b.classList.remove('active', 'badge-info'));
+    filterBtns[0]?.classList.add('active', 'badge-info');
+    filterDatasets();
+  });
+</script>
+
+<style>
+  .filter-btn.active {
+    background-color: var(--color-primary);
+    color: #ffffff;
+    border-color: var(--color-primary);
+  }
+</style>

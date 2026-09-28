@@ -1,0 +1,65 @@
+---
+// Componente de instalación PWA
+---
+
+<div id="pwa-install-banner" style="display: none; background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.75rem 1rem; margin-bottom: 1.5rem; align-items: center; justify-content: space-between; gap: 1rem; box-shadow: var(--shadow-sm);">
+  <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <div style="background-color: var(--color-secondary); color: #ffffff; border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; font-family: var(--font-mono); font-size: 0.75rem;">
+      PWA
+    </div>
+    <div>
+      <strong style="font-size: 0.9rem;">Instalar DataMesh Bolivia</strong>
+      <p style="font-size: 0.8rem; color: var(--color-text-muted); margin: 0;">
+        Accede al catálogo y esquemas 100% offline desde tu dispositivo.
+      </p>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 0.5rem;">
+    <button id="pwa-install-btn" class="btn btn-primary btn-sm">
+      Instalar
+    </button>
+    <button id="pwa-dismiss-btn" class="btn btn-secondary btn-sm">
+      ✕
+    </button>
+  </div>
+</div>
+
+<script is:inline>
+  let deferredPrompt;
+  const banner = document.getElementById('pwa-install-banner');
+  const installBtn = document.getElementById('pwa-install-btn');
+  const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (banner && !sessionStorage.getItem('pwa-prompt-dismissed')) {
+      banner.style.display = 'flex';
+    }
+  });
+
+  installBtn?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      if (banner) banner.style.display = 'none';
+    }
+    deferredPrompt = null;
+  });
+
+  dismissBtn?.addEventListener('click', () => {
+    if (banner) banner.style.display = 'none';
+    sessionStorage.setItem('pwa-prompt-dismissed', 'true');
+  });
+
+  // Registro del Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch((err) => {
+        console.warn('Fallo al registrar SW:', err);
+      });
+    });
+  }
+</script>

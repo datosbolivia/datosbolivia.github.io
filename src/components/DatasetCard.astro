@@ -1,0 +1,36 @@
+---
+import type { DatasetNode } from '../lib/catalog';
+
+interface Props {
+  dataset: DatasetNode;
+}
+
+const { dataset } = Astro.props;
+---
+
+<article class="card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; gap: 0.5rem;">
+    <span class="badge badge-info" style="font-size: 0.7rem;">
+      {dataset.category}
+    </span>
+  </div>
+
+  <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">
+    <a href={`/datasets/${dataset.slug}`} style="text-decoration: none; color: inherit;">
+      {dataset.title}
+    </a>
+  </h3>
+
+  <p style="font-size: 0.875rem; color: var(--color-text-muted); flex: 1; margin-bottom: 1rem; line-height: 1.45;">
+    {dataset.description.length > 130 ? `${dataset.description.substring(0, 130)}...` : dataset.description}
+  </p>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--color-border); padding-top: 0.75rem; font-size: 0.8rem; color: var(--color-text-muted);">
+    <span style="font-family: var(--font-mono); font-size: 0.75rem;">
+      {dataset.datapackage?.resources ? `${dataset.datapackage.resources.length} recurso(s)` : '1 recurso'}
+    </span>
+    <a href={`/datasets/${dataset.slug}`} class="btn btn-secondary btn-sm">
+      Explorar &rarr;
+    </a>
+  </div>
+</article>

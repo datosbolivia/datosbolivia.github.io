@@ -1,0 +1,159 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SchemaTable from '../../components/SchemaTable.astro';
+import { getAllDatasets, getDatasetBySlug } from '../../lib/catalog';
+
+export function getStaticPaths() {
+  const datasets = getAllDatasets();
+  return datasets.map((d) => ({
+    params: { slug: d.slug },
+    props: { dataset: d }
+  }));
+}
+
+const { dataset } = Astro.props;
+const resources = dataset.datapackage?.resources || [];
+---
+
+<BaseLayout title={dataset.title} description={dataset.description}>
+  <!-- Breadcrumbs -->
+  <nav style="display: flex; gap: 0.5rem; align-items: center; font-size: 0.825rem; color: var(--color-text-muted); margin-bottom: 1.5rem;">
+    <a href="/" style="color: inherit; text-decoration: none;">Inicio</a>
+    <span>/</span>
+    <a href="/datasets" style="color: inherit; text-decoration: none;">Datasets</a>
+    <span>/</span>
+    <span style="color: var(--color-text);">{dataset.title}</span>
+  </nav>
+
+  <!-- Encabezado del Dataset -->
+  <div style="border-bottom: 1px solid var(--color-border); padding-bottom: 1.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap;">
+      <span class="badge badge-info">{dataset.category}</span>
+      {dataset.tags.map((tag) => (
+        <span class="badge" style="font-family: var(--font-mono); font-size: 0.7rem;">#{tag}</span>
+      ))}
+    </div>
+
+    <h1 style="font-size: 2.25rem; margin-bottom: 0.75rem;">
+      {dataset.title}
+    </h1>
+
+    <p style="font-size: 1.1rem; color: var(--color-text-muted); max-width: 800px; margin-bottom: 1.25rem;">
+      {dataset.description}
+    </p>
+
+    <!-- Botones de Acción Rápida -->
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href={`/raw/nodes/${dataset.slug}/index.md`} target="_blank" class="btn btn-secondary btn-sm" title="Ver el Markdown original en crudo">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        Ir a especificación
+      </a>
+
+      {resources.length > 0 && resources[0].path && (
+        <a href={resources[0].path} target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+          Descargar / Acceder al Recurso &rarr;
+        </a>
+      )}
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2.5rem; align-items: start;" class="dataset-layout">
+    <!-- Columna Principal: Esquemas y Recursos -->
+    <div>
+      <section style="margin-bottom: 2.5rem;">
+        <h2 style="font-size: 1.4rem; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">
+          Contrato ({resources.length} recursos)
+        </h2>
+
+        {resources.length > 0 ? (
+          resources.map((res) => (
+            <SchemaTable resource={res} />
+          ))
+        ) : (
+          <p style="color: var(--color-text-muted); font-size: 0.9rem;">
+            No se encontraron recursos definidos en el contrato de este nodo.
+          </p>
+        )}
+      </section>
+
+      <!-- Conceptos Semánticos SKOS -->
+      {dataset.concepts.length > 0 && (
+        <section style="margin-bottom: 2.5rem;">
+          <h2 style="font-size: 1.4rem; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">
+            Conceptos Semánticos (SKOS / Wikidata)
+          </h2>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {dataset.concepts.map((concept) => (
+              <div class="card" style="padding: 1rem;">
+                <h4 style="font-size: 1rem; margin-bottom: 0.35rem;">
+                  {concept.title}
+                </h4>
+                <p style="font-size: 0.85rem; color: var(--color-text-muted); margin: 0;">
+                  {concept.content.length > 180 ? `${concept.content.substring(0, 180)}...` : concept.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+
+    <!-- Columna Lateral: Metadatos y Linaje -->
+    <aside style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <!-- Dimensiones Analíticas -->
+      {dataset.dimensions.length > 0 && (
+        <div class="card">
+          <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Dimensiones</h3>
+          <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+            {dataset.dimensions.map((dim) => (
+              <span class="badge" style="font-family: var(--font-mono); font-size: 0.75rem;">
+                {dim}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- Metadatos de Linaje y Gobernanza -->
+      <div class="card">
+        <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">Linaje y Gobernanza</h3>
+        <dl style="font-size: 0.825rem; display: flex; flex-direction: column; gap: 0.5rem;">
+          <div>
+            <dt style="color: var(--color-text-muted); font-weight: 500;">Identificador:</dt>
+            <dd><code>{dataset.slug}</code></dd>
+          </div>
+          {dataset.timestamp && (
+            <div>
+              <dt style="color: var(--color-text-muted); font-weight: 500;">Última actualización:</dt>
+              <dd>{dataset.timestamp}</dd>
+            </div>
+          )}
+        </dl>
+      </div>
+
+      <!-- Consulta Ejemplo DuckDB / Python -->
+      <div class="card">
+        <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Consulta en Python (SDK)</h3>
+        <pre style="margin: 0; font-size: 0.75rem;"><code>import datamesh as dm
+
+# Cargar dataset
+df = dm.read("{dataset.slug}")
+print(df.head())</code></pre>
+      </div>
+    </aside>
+  </div>
+</BaseLayout>
+
+<style>
+  @media (max-width: 820px) {
+    .dataset-layout {
+      grid-template-columns: 1fr !important;
+    }
+  }
+</style>

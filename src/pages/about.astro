@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getEditorialPage } from '../lib/catalog';
+import { config } from '../../portal.config';
+
+const aboutPage = getEditorialPage('about');
+
+// Parser básico de markdown a HTML para renderizar el contenido editorial
+function renderMarkdown(md: string): string {
+  let html = md
+    // Encabezados
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    // Blockquote
+    .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+    // Listas
+    .replace(/^\s*\-\s+(.*$)/gim, '<li>$1</li>')
+    // Enlaces y Negritas
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/gim, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/gim, '<em>$1</em>')
+    .replace(/`([^`]+)`/gim, '<code>$1</code>')
+    // Líneas horizontales
+    .replace(/^\-\-\-$/gim, '<hr style="border: none; border-top: 1px solid var(--color-border); margin: 2rem 0;" />')
+    // Párrafos
+    .split('\n\n')
+    .map(p => {
+      const trimmed = p.trim();
+      if (!trimmed) return '';
+      if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<li') || trimmed.startsWith('<hr') || trimmed.startsWith('<blockquote')) {
+        return trimmed;
+      }
+      return `<p>${trimmed.replace(/\n/g, '<br />')}</p>`;
+    })
+    .join('\n');
+
+  return html;
+}
+
+const renderedHtml = renderMarkdown(aboutPage.body);
+---
+
+<BaseLayout title={aboutPage.title} description={aboutPage.description}>
+  <div style="max-width: 800px; margin: 0 auto;">
+    <!-- Contenido Editorial en Markdown -->
+    <article class="prose" set:html={renderedHtml} />
+  </div>
+</BaseLayout>

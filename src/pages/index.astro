@@ -1,0 +1,80 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import DatasetCard from '../components/DatasetCard.astro';
+import { getAllDatasets, getEditorialPage } from '../lib/catalog';
+import { config } from '../../portal.config';
+
+const homeContent = getEditorialPage('home');
+const allDatasets = getAllDatasets();
+const featuredDatasets = allDatasets.slice(0, 6);
+
+// Estadísticas rápidas
+const totalDatasets = allDatasets.length;
+const totalResources = allDatasets.reduce((acc, d) => acc + (d.datapackage?.resources?.length || 1), 0);
+const categoriesCount = new Set(allDatasets.map((d) => d.category)).size;
+---
+
+<BaseLayout title={homeContent.title}>
+  <section class="hero">
+    <h1 class="hero-title">
+      {homeContent.title}
+    </h1>
+
+    <p class="hero-tagline">
+      {homeContent.description || config.site.tagline}
+    </p>
+
+    <p class="hero-tagline">
+      Ofrecido por {config.organization.name}
+    </p>
+
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="/datasets" class="btn btn-primary">
+        Explorar
+      </a>
+      <a href="/about" class="btn btn-secondary">
+        Acerca de
+      </a>
+      <a href="/download" class="btn btn-secondary">
+        Instalar
+      </a>
+    </div>
+  </section>
+
+  <!-- Métricas Rápidas -->
+  <section class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{totalDatasets}</div>
+      <div class="stat-label">Ubicaciones</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{totalResources}</div>
+      <div class="stat-label">Recursos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{categoriesCount}</div>
+      <div class="stat-label">Dominios</div>
+    </div>
+  </section>
+
+  <!-- Buscador Directo y Acceso Rápido -->
+  <section style="margin-bottom: 3rem;">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+      <div>
+        <h2 style="margin: 0; font-size: 1.5rem;">Datasets Destacados</h2>
+        <p style="color: var(--color-text-muted); font-size: 0.875rem; margin: 0;">
+          Datos gubernamentales, financieros, climáticos y de infraestructura.
+        </p>
+      </div>
+      <a href="/datasets" style="font-size: 0.875rem; font-weight: 500;">
+        Ver catálogo
+      </a>
+    </div>
+
+    <div class="dataset-grid">
+      {featuredDatasets.map((dataset) => (
+        <DatasetCard dataset={dataset} />
+      ))}
+    </div>
+  </section>
+</BaseLayout>

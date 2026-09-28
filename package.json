@@ -1,0 +1,27 @@
+{
+  "name": "catalogo-datamesh",
+  "version": "1.0.0",
+  "description": "Portal y catálogo federado DataMesh Bolivia (datos-bolivia)",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0 --port 8001",
+    "build": "astro build",
+    "preview": "astro preview --host 0.0.0.0 --port 8001",
+    "lint": "node scripts/lint-okf.mjs",
+    "lint:okf": "node scripts/lint-okf.mjs",
+    "electron:dev": "ELECTRON_DEV=true electron electron/main.cjs",
+    "electron:build": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "astro": "^5.4.2",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.13.10",
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.8.2"
+  }
+}

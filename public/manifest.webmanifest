@@ -1,0 +1,17 @@
+{
+  "name": "DataMesh Bolivia - Portal de Datos",
+  "short_name": "DatosBolivia",
+  "description": "Catálogo federado y soberano de datos abiertos para la comunidad y Agentes de IA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#0b243f",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

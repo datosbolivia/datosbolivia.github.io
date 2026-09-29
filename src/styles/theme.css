@@ -1188,6 +1188,29 @@ body.body-full-width {
   color: var(--color-text-muted);
 }
 
+.obsidian-mobile-close {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0.25rem 0.35rem;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.obsidian-mobile-close:hover {
+  color: var(--color-text);
+  border-color: var(--color-primary);
+  background-color: var(--color-surface-hover);
+}
+
+.obsidian-backdrop {
+  display: none;
+}
+
 .obsidian-tree-container {
   flex: 1;
   overflow-y: auto;
@@ -1310,8 +1333,8 @@ button.obsidian-file-item:focus-visible,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  gap: 0.75rem;
+  min-height: 42px;
 }
 
 .obsidian-pane-breadcrumb {
@@ -1323,6 +1346,11 @@ button.obsidian-file-item:focus-visible,
   color: var(--color-text-muted);
   overflow-x: auto;
   white-space: nowrap;
+  scrollbar-width: none;
+}
+
+.obsidian-pane-breadcrumb::-webkit-scrollbar {
+  display: none;
 }
 
 .obsidian-crumb-link {
@@ -1373,9 +1401,11 @@ button.obsidian-file-item:focus-visible,
 /* Responsividad */
 @media (max-width: 768px) {
   body.body-full-width {
-    height: auto;
-    max-height: none;
-    overflow: auto;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow: hidden;
   }
   .hero-title { font-size: 2rem; }
   .nav-toggle,
@@ -1395,21 +1425,112 @@ button.obsidian-file-item:focus-visible,
     padding: 1rem;
     border-bottom: 1px solid var(--color-border);
   }
+
+  /* Explorador Obsidian en Móvil: Drawer Off-Canvas y Zero-Scroll Bounded */
   .obsidian-layout {
-    flex-direction: column;
-    height: auto;
-    min-height: auto;
+    flex-direction: row;
+    height: calc(100vh - var(--header-height));
+    height: calc(100dvh - var(--header-height));
+    min-height: calc(100vh - var(--header-height));
+    position: relative;
+    overflow: hidden;
   }
+
+  /* Drawer flotante off-canvas */
   .obsidian-sidebar {
-    width: 100% !important;
-    min-width: 100% !important;
-    max-height: 220px;
-    border-right: none;
-    border-bottom: 1px solid var(--color-border);
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    bottom: 0;
+    width: 82% !important;
+    max-width: 320px;
+    min-width: 0 !important;
+    height: calc(100vh - var(--header-height));
+    height: calc(100dvh - var(--header-height));
+    max-height: none;
+    z-index: 48;
+    background-color: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+    border-bottom: none;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
   }
+
+  .obsidian-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .obsidian-backdrop {
+    display: block;
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 45;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .obsidian-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .obsidian-mobile-close {
+    display: inline-flex !important;
+  }
+
+  .obsidian-content-pane {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .obsidian-pane-bar {
+    padding: 0.4rem 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .obsidian-crumb-root {
+    display: none !important;
+  }
+
+  .obsidian-crumb-slug {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: bottom;
+  }
+
+  .obsidian-crumb-file {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: bottom;
+  }
+
   .obsidian-doc-viewport {
     padding: 1.25rem 1rem;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
+
   .hero-bg-vector {
     width: 100%;
     right: 0;

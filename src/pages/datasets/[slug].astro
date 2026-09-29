@@ -48,13 +48,26 @@ function getCleanResourceName(res: any): string {
 <BaseLayout title={dataset.title} description={dataset.description} fullWidth={true} noFooter={true}>
   <!-- Explorador de Archivos Estilo Obsidian Condensado (Pantalla Completa) -->
   <div class="obsidian-layout" id="obsidian-explorer">
+    <!-- Backdrop oscuro para drawer móvil -->
+    <div class="obsidian-backdrop" id="obsidian-backdrop" aria-hidden="true"></div>
+
     <!-- Panel Izquierdo: Árbol de Archivos -->
-    <aside class="obsidian-sidebar" aria-label="Explorador de Archivos">
+    <aside class="obsidian-sidebar" id="obsidian-sidebar" aria-label="Explorador de Archivos">
       <div class="obsidian-sidebar-header">
         <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
           <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;" data-i18n="explorer.files">Archivos</span>
         </div>
+        <button 
+          type="button" 
+          id="obsidian-sidebar-close" 
+          class="obsidian-mobile-close" 
+          title="Cerrar explorador" 
+          aria-label="Cerrar explorador"
+          data-i18n-title="explorer.close_sidebar"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
       <div class="obsidian-tree-container">
         <!-- Grupo KNOWLEDGE (Contexto Principal Primero) -->
@@ -174,12 +187,12 @@ function getCleanResourceName(res: any): string {
     <section class="obsidian-content-pane" aria-label="Visor de contenido">
       <!-- Barra Superior de Navegación del Panel -->
       <div class="obsidian-pane-bar">
-        <div style="display: flex; align-items: center; gap: 0.65rem; min-width: 0;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; min-width: 0; flex: 1;">
           <button 
             type="button" 
             id="obsidian-toggle-sidebar" 
             class="btn btn-secondary btn-sm" 
-            style="padding: 0.25rem 0.45rem; display: inline-flex; align-items: center;"
+            style="padding: 0.25rem 0.45rem; display: inline-flex; align-items: center; flex-shrink: 0;"
             title="Alternar explorador"
             aria-label="Alternar explorador"
             data-i18n-title="explorer.toggle_sidebar"
@@ -189,23 +202,23 @@ function getCleanResourceName(res: any): string {
           </button>
 
           <nav class="obsidian-pane-breadcrumb" id="pane-breadcrumb" aria-label="Ruta de navegación">
-            <a href="/" class="obsidian-crumb-link" data-i18n="nav.home">Inicio</a>
-            <span class="obsidian-crumb-sep">/</span>
-            <a href="/datasets" class="obsidian-crumb-link" data-i18n="nav.datasets">Datasets</a>
-            <span class="obsidian-crumb-sep">/</span>
+            <a href="/" class="obsidian-crumb-link obsidian-crumb-root" data-i18n="nav.home">Inicio</a>
+            <span class="obsidian-crumb-sep obsidian-crumb-root">/</span>
+            <a href="/datasets" class="obsidian-crumb-link obsidian-crumb-root" data-i18n="nav.datasets">Datasets</a>
+            <span class="obsidian-crumb-sep obsidian-crumb-root">/</span>
             <span class="obsidian-crumb-slug">{dataset.slug}</span>
             <span class="obsidian-crumb-sep">/</span>
             <span id="active-filename" class="obsidian-crumb-file">index.md</span>
           </nav>
         </div>
 
-        <div class="obsidian-pane-actions">
+        <div class="obsidian-pane-actions" style="flex-shrink: 0;">
           <a 
             id="pane-raw-link" 
             href={`/raw/nodes/${dataset.slug}/index.md`} 
             target="_blank" 
             class="btn btn-secondary btn-sm"
-            style="font-family: var(--font-mono); font-size: 0.75rem;"
+            style="font-family: var(--font-mono); font-size: 0.75rem; white-space: nowrap;"
           >
             <span data-i18n="explorer.raw">Ver Raw</span> &rarr;
           </a>
@@ -266,6 +279,8 @@ function getCleanResourceName(res: any): string {
     const layout = document.getElementById('obsidian-explorer');
     const sidebar = document.querySelector('.obsidian-sidebar');
     const toggleSidebarBtn = document.getElementById('obsidian-toggle-sidebar');
+    const closeSidebarBtn = document.getElementById('obsidian-sidebar-close');
+    const backdrop = document.getElementById('obsidian-backdrop');
 
     const fileItems = Array.from(document.querySelectorAll('.obsidian-file-item'));
     const fileTabs = Array.from(document.querySelectorAll('.obsidian-file-tab'));
@@ -274,11 +289,46 @@ function getCleanResourceName(res: any): string {
     const downloadLink = document.getElementById('pane-download-link');
     const docViewport = document.getElementById('doc-viewport');
 
-    // Alternar visibilidad de la barra lateral (Colapsar/Expandir)
-    toggleSidebarBtn?.addEventListener('click', () => {
-      sidebar?.classList.toggle('collapsed');
-      const isCollapsed = sidebar?.classList.contains('collapsed');
-      toggleSidebarBtn.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+    function isMobile() {
+      return window.innerWidth <= 768;
+    }
+
+    // Alternar visibilidad de la barra lateral (Colapsar en desktop, Drawer en móvil)
+    function toggleSidebar() {
+      if (isMobile()) {
+        const isOpen = sidebar?.classList.toggle('mobile-open');
+        backdrop?.classList.toggle('visible', !!isOpen);
+        toggleSidebarBtn?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      } else {
+        sidebar?.classList.toggle('collapsed');
+        const isCollapsed = sidebar?.classList.contains('collapsed');
+        toggleSidebarBtn?.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+      }
+    }
+
+    function closeMobileSidebar() {
+      if (sidebar?.classList.contains('mobile-open')) {
+        sidebar.classList.remove('mobile-open');
+        backdrop?.classList.remove('visible');
+        toggleSidebarBtn?.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    toggleSidebarBtn?.addEventListener('click', toggleSidebar);
+    closeSidebarBtn?.addEventListener('click', closeMobileSidebar);
+    backdrop?.addEventListener('click', closeMobileSidebar);
+
+    window.addEventListener('resize', () => {
+      if (!isMobile()) {
+        sidebar?.classList.remove('mobile-open');
+        backdrop?.classList.remove('visible');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isMobile() && sidebar?.classList.contains('mobile-open')) {
+        closeMobileSidebar();
+      }
     });
 
     function switchToFile(targetId, path, rawUrl, downloadUrl) {
@@ -328,6 +378,11 @@ function getCleanResourceName(res: any): string {
       // 5. Reset de scroll del viewport
       if (docViewport) {
         docViewport.scrollTop = 0;
+      }
+
+      // 6. Cerrar drawer en móvil si está abierto
+      if (isMobile()) {
+        closeMobileSidebar();
       }
     }
 

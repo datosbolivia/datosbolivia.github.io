@@ -9,29 +9,35 @@ const { dataset } = Astro.props;
 const resCount = dataset.datapackage?.resources ? dataset.datapackage.resources.length : 1;
 ---
 
-<article class="card">
-  <div style="margin-bottom: 0.35rem;">
-    <span style="font-size: 0.725rem; color: var(--color-primary); font-family: var(--font-mono); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">
-      {dataset.category}
-    </span>
+<article class="card dataset-card">
+  <div class="dataset-card-main">
+    <div class="dataset-card-meta">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--color-primary); flex-shrink: 0;"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+      <span class="dataset-card-category">
+        {dataset.category}
+      </span>
+    </div>
+
+    <h3 class="dataset-card-title">
+      <a href={`/datasets/${dataset.slug}`}>
+        {dataset.title}
+      </a>
+    </h3>
+
+    <p class="dataset-card-desc">
+      {dataset.description.length > 130 ? `${dataset.description.substring(0, 130)}...` : dataset.description}
+    </p>
   </div>
 
-  <h3 style="font-size: 1.15rem; margin-bottom: 0.4rem;">
-    <a href={`/datasets/${dataset.slug}`} style="text-decoration: none; color: inherit;">
-      {dataset.title}
-    </a>
-  </h3>
-
-  <p style="font-size: 0.875rem; color: var(--color-text-muted); flex: 1; margin-bottom: 0.85rem; line-height: 1.45;">
-    {dataset.description.length > 130 ? `${dataset.description.substring(0, 130)}...` : dataset.description}
-  </p>
-
-  <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--color-border); padding-top: 0.65rem; font-size: 0.8rem; color: var(--color-text-muted);">
-    <span style="font-family: var(--font-mono); font-size: 0.75rem;">
-      {resCount} <span data-i18n="card.resources">recurso(s)</span>
+  <div class="dataset-card-footer">
+    <span class="dataset-card-resources">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+      <span>{resCount}</span>
+      <span data-i18n="card.resources">recurso(s)</span>
     </span>
-    <a href={`/datasets/${dataset.slug}`} class="btn btn-secondary btn-sm" data-i18n="card.explore">
-      Explorar &rarr;
+    <a href={`/datasets/${dataset.slug}`} class="btn btn-secondary btn-sm dataset-card-action" data-i18n="card.explore">
+      <span>Explorar</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
     </a>
   </div>
 </article>

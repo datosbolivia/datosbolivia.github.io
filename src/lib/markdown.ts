@@ -1,7 +1,11 @@
 /**
  * Renderizador de Markdown Robusto y Seguro para DataMesh Bolivia
- * Maneja encabezados, tablas, listas, citas, bloques de código,
- * enlaces externos en nueva ventana y enlaces relativos a subdocumentos de dataset.
+ * Soporta:
+ *  - Bloques de código con 3+ backticks, header de lenguaje, botón de copia y Lucide icons
+ *  - Tablas Markdown GFM completas
+ *  - Callouts estilo Obsidian (> [!NOTE], > [!TIP], > [!WARNING], > [!INFO], > [!CAUTION])
+ *  - Wikilinks Obsidian ([[Nota]] y [[Nota|Texto]])
+ *  - Enlaces relativos a documentos del dataset y enlaces externos seguros con iconos Lucide
  */
 
 export interface RenderMarkdownOptions {
@@ -14,33 +18,56 @@ export function renderMarkdown(content: string, options: RenderMarkdownOptions =
 
   const { datasetSlug = '' } = options;
 
-  // 1. Extraer bloques de código para evitar que se procese su interior
+  // Normalizar saltos de línea a LF
+  const normalized = content.replace(/\r\n/g, '\n');
+
+  // 1. Extraer bloques de código (soporta 3 o más backticks e indentaciones)
   const codeBlocks: string[] = [];
-  let processed = content.replace(/```([a-zA-Z0-9_]*)\n([\s\S]*?)```/g, (match, lang, code) => {
-    const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
-    const escapedCode = escapeHtml(code.trim());
-    if (lang === 'chart') {
+  const codeRegex = /(?:^|\n)(`{3,})([a-zA-Z0-9_-]*)[^\S\n]*\n([\s\S]*?)\n\1[ \t]*(?=\n|$)/g;
+
+  let processed = normalized.replace(codeRegex, (match, fence, lang, code) => {
+    const placeholder = `\n__CODE_BLOCK_${codeBlocks.length}__\n`;
+    const escapedCode = escapeHtml(code.trimEnd());
+    const displayLang = (lang || 'code').toLowerCase();
+
+    if (displayLang === 'chart') {
       codeBlocks.push(
-        `<div class="chart-container card" style="margin: 1.5rem 0; padding: 1rem; background-color: var(--color-surface); border: 1px solid var(--color-primary);">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-            <strong style="font-size:0.85rem; color:var(--color-primary); font-family:var(--font-mono);">Configuración de Gráfico Declarativo</strong>
-            <span style="font-size:0.75rem; font-family:var(--font-mono); color:var(--color-text-muted);">JSON</span>
+        `<div class="chart-container card" style="margin: 1.5rem 0; padding: 1.25rem; background-color: var(--color-surface); border: 1px solid var(--color-primary);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+            <div style="display:flex; align-items:center; gap:0.4rem; color:var(--color-primary); font-family:var(--font-mono); font-size:0.8rem; font-weight:600;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              <span>Gráfico Declarativo</span>
+            </div>
+            <span style="font-size:0.725rem; font-family:var(--font-mono); color:var(--color-text-muted);">JSON</span>
           </div>
-          <pre style="margin:0; max-height:260px; overflow-y:auto;"><code class="language-json">${escapedCode}</code></pre>
+          <pre class="code-pre" style="margin:0; max-height:280px; overflow-y:auto;"><code class="language-json">${escapedCode}</code></pre>
         </div>`
       );
     } else {
       codeBlocks.push(
-        `<pre style="margin: 1rem 0;"><code class="language-${lang || 'text'}">${escapedCode}</code></pre>`
+        `<div class="code-block-wrapper">
+          <div class="code-block-header">
+            <span class="code-lang-tag">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              ${displayLang}
+            </span>
+            <button type="button" class="code-copy-btn" aria-label="Copiar código al portapapeles" title="Copiar código">
+              <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              <span class="copy-label">Copiar</span>
+            </button>
+          </div>
+          <pre class="code-pre"><code class="language-${displayLang}">${escapedCode}</code></pre>
+        </div>`
       );
     }
+
     return placeholder;
   });
 
   // 2. Extraer bloques de tablas Markdown
   const tableBlocks: string[] = [];
   processed = processed.replace(
-    /((?:(?:\|[^\n]+\|)\r?\n)+)/g,
+    /((?:(?:\|[^\n]+\|)\n)+)/g,
     (match) => {
       const lines = match.trim().split('\n').map(l => l.trim()).filter(Boolean);
       if (lines.length < 2) return match;
@@ -49,7 +76,7 @@ export function renderMarkdown(content: string, options: RenderMarkdownOptions =
       const isSeparator = /^\|(?:\s*:?-+:?\s*\|)+$/.test(lines[1]);
       if (!isSeparator) return match;
 
-      const placeholder = `__TABLE_BLOCK_${tableBlocks.length}__`;
+      const placeholder = `\n__TABLE_BLOCK_${tableBlocks.length}__\n`;
       
       const parseRow = (line: string) => {
         return line
@@ -182,14 +209,14 @@ export function renderMarkdown(content: string, options: RenderMarkdownOptions =
 
   let finalHtml = outputLines.join('\n');
 
-  // 4. Restaurar tablas
+  // 4. Restaurar tablas usando split-join para prevenir sustitución indebida de $
   for (let idx = 0; idx < tableBlocks.length; idx++) {
-    finalHtml = finalHtml.replace(`__TABLE_BLOCK_${idx}__`, tableBlocks[idx]);
+    finalHtml = finalHtml.split(`__TABLE_BLOCK_${idx}__`).join(tableBlocks[idx]);
   }
 
-  // 5. Restaurar bloques de código
+  // 5. Restaurar bloques de código usando split-join
   for (let idx = 0; idx < codeBlocks.length; idx++) {
-    finalHtml = finalHtml.replace(`__CODE_BLOCK_${idx}__`, codeBlocks[idx]);
+    finalHtml = finalHtml.split(`__CODE_BLOCK_${idx}__`).join(codeBlocks[idx]);
   }
 
   return finalHtml;
@@ -231,9 +258,9 @@ function processInline(text: string, datasetSlug: string): string {
   res = res.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, url) => {
     const trimmedUrl = url.trim();
 
-    // 1. Enlace externo (http / https) -> Abrir en ventana nueva
+    // 1. Enlace externo (http / https) -> Abrir en ventana nueva con icono Lucide ExternalLink
     if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
-      return `<a href="${trimmedUrl}" target="_blank" rel="noopener noreferrer" class="external-link" title="Abrir enlace externo en nueva pestaña">${label} <svg style="display:inline-block; vertical-align:middle;" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`;
+      return `<a href="${trimmedUrl}" target="_blank" rel="noopener noreferrer" class="external-link" title="Abrir enlace externo en nueva pestaña">${label} <svg style="display:inline-block; vertical-align:middle;" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`;
     }
 
     // 2. Anclas en la misma página (#...)
@@ -245,7 +272,6 @@ function processInline(text: string, datasetSlug: string): string {
     if (trimmedUrl.endsWith('.md')) {
       const cleanPath = trimmedUrl.replace(/^\.\//, '').replace(/\.md$/, '');
       if (datasetSlug) {
-        // Enlaza al visor de documento dentro del dataset o tab interno
         const targetTabId = `doc-${cleanPath.replace(/\//g, '-')}`;
         return `<a href="/datasets/${datasetSlug}/${cleanPath}" data-doc-target="${targetTabId}" class="internal-doc-link" title="Ver documento de referencia: ${cleanPath}">${label}</a>`;
       }

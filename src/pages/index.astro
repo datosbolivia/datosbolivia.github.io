@@ -16,26 +16,117 @@ const categoriesCount = new Set(allDatasets.map((d) => d.category)).size;
 ---
 
 <BaseLayout title={homeContent.title}>
-  <!-- Hero Editorial y Neutro -->
+  <!-- Hero Editorial y Neutro Cívico -->
   <section class="hero">
-    <h1 class="hero-title" data-i18n="hero.title">
-      {homeContent.title}
-    </h1>
+    <!-- Fondo Vectorial de Gráficos y Malla de Datos -->
+    <div class="hero-bg-vector" aria-hidden="true">
+      <svg viewBox="0 0 800 450" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="width: 100%; height: 100%;">
+        <defs>
+          <linearGradient id="hero-grad-area" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--color-primary)" stop-opacity="0.30"/>
+            <stop offset="100%" stop-color="var(--color-primary)" stop-opacity="0.0"/>
+          </linearGradient>
+          <linearGradient id="hero-grad-bar" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--color-primary)" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="var(--color-primary)" stop-opacity="0.02"/>
+          </linearGradient>
+        </defs>
 
-    <p class="hero-tagline" data-i18n="hero.subtitle">
-      {homeContent.description || config.site.tagline}
-    </p>
+        <!-- Cuadrícula / Guías -->
+        <line x1="50" y1="380" x2="750" y2="380" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.3"/>
+        <line x1="50" y1="300" x2="750" y2="300" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity="0.2"/>
+        <line x1="50" y1="220" x2="750" y2="220" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity="0.2"/>
+        <line x1="50" y1="140" x2="750" y2="140" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity="0.15"/>
+        <line x1="50" y1="60" x2="750" y2="60" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity="0.1"/>
 
-    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.25rem;">
-      <a href="/datasets" class="btn btn-primary" data-i18n="hero.explore">
-        Explorar Datasets &rarr;
-      </a>
-      <a href="/about" class="btn btn-secondary" data-i18n="hero.about">
-        Acerca de
-      </a>
-      <a href="/download" class="btn btn-secondary" data-i18n="hero.install">
-        Instalar App
-      </a>
+        <!-- Columnas / Histogramas de Datos -->
+        <rect x="140" y="250" width="28" height="130" rx="3" fill="url(#hero-grad-bar)" stroke="var(--color-primary)" stroke-width="1" opacity="0.5"/>
+        <rect x="180" y="190" width="28" height="190" rx="3" fill="url(#hero-grad-bar)" stroke="var(--color-primary)" stroke-width="1" opacity="0.5"/>
+        <rect x="220" y="280" width="28" height="100" rx="3" fill="url(#hero-grad-bar)" stroke="var(--color-primary)" stroke-width="1" opacity="0.5"/>
+        <rect x="260" y="150" width="28" height="230" rx="3" fill="url(#hero-grad-bar)" stroke="var(--color-primary)" stroke-width="1" opacity="0.5"/>
+        <rect x="300" y="220" width="28" height="160" rx="3" fill="url(#hero-grad-bar)" stroke="var(--color-primary)" stroke-width="1" opacity="0.5"/>
+
+        <rect x="520" y="270" width="24" height="110" rx="3" fill="url(#hero-grad-bar)" stroke="var(--color-primary)" stroke-width="1" opacity="0.4"/>
+        <rect x="555" y="200" width="24" height="180" rx="3" fill="url(#hero-grad-bar)" stroke="var(--color-primary)" stroke-width="1" opacity="0.4"/>
+        <rect x="590" y="230" width="24" height="150" rx="3" fill="url(#hero-grad-bar)" stroke="var(--color-primary)" stroke-width="1" opacity="0.4"/>
+        <rect x="625" y="170" width="24" height="210" rx="3" fill="url(#hero-grad-bar)" stroke="var(--color-primary)" stroke-width="1" opacity="0.4"/>
+
+        <!-- Curva Continua de Tendencia (Área) -->
+        <path d="M 60 350 Q 180 270, 290 180 T 520 130 T 740 70 L 740 380 L 60 380 Z" fill="url(#hero-grad-area)"/>
+        <path d="M 60 350 Q 180 270, 290 180 T 520 130 T 740 70" stroke="var(--color-primary)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+        <!-- Línea de Comparación Secundaria Discontinua -->
+        <path d="M 60 370 C 160 340, 240 300, 350 310 C 460 320, 540 230, 650 200 C 700 185, 730 190, 750 170" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 3" fill="none" opacity="0.35"/>
+
+        <!-- Red Federada de Nodos DataMesh -->
+        <line x1="290" y1="180" x2="350" y2="110" stroke="var(--color-primary)" stroke-width="1.2" opacity="0.4"/>
+        <line x1="350" y1="110" x2="440" y2="140" stroke="var(--color-primary)" stroke-width="1.2" opacity="0.4"/>
+        <line x1="440" y1="140" x2="520" y2="130" stroke="var(--color-primary)" stroke-width="1.2" opacity="0.4"/>
+        <line x1="350" y1="110" x2="400" y2="60" stroke="var(--color-primary)" stroke-width="1.2" opacity="0.3"/>
+        <line x1="520" y1="130" x2="610" y2="80" stroke="var(--color-primary)" stroke-width="1.2" opacity="0.4"/>
+        <line x1="610" y1="80" x2="740" y2="70" stroke="var(--color-primary)" stroke-width="1.2" opacity="0.4"/>
+
+        <!-- Puntos / Nodos de Datos -->
+        <circle cx="290" cy="180" r="4.5" fill="var(--color-surface)" stroke="var(--color-primary)" stroke-width="2"/>
+        <circle cx="350" cy="110" r="3.5" fill="var(--color-surface)" stroke="var(--color-primary)" stroke-width="2"/>
+        <circle cx="400" cy="60" r="3" fill="var(--color-surface)" stroke="var(--color-primary)" stroke-width="1.5"/>
+        <circle cx="440" cy="140" r="4" fill="var(--color-surface)" stroke="var(--color-primary)" stroke-width="2"/>
+        <circle cx="520" cy="130" r="5" fill="var(--color-surface)" stroke="var(--color-primary)" stroke-width="2.5"/>
+        <circle cx="610" cy="80" r="3.5" fill="var(--color-surface)" stroke="var(--color-primary)" stroke-width="2"/>
+        <circle cx="740" cy="70" r="5" fill="var(--color-surface)" stroke="var(--color-primary)" stroke-width="2.5"/>
+      </svg>
+    </div>
+
+    <div class="hero-inner">
+      <h1 class="hero-title" data-i18n="hero.title">
+        {homeContent.title || 'Información Pública y Verificable'}
+      </h1>
+
+      <p class="hero-tagline" data-i18n="hero.subtitle">
+        {homeContent.description || config.site.tagline}
+      </p>
+
+      <!-- Buscador Cívico Integrado -->
+      <form action="/datasets" method="GET" class="hero-search-form" role="search">
+        <input 
+          type="text" 
+          name="q" 
+          class="search-box hero-search-input" 
+          placeholder="¿Qué datos deseas consultar? (ej. inflación, aire, combustible...)" 
+          aria-label="Buscar en el catálogo"
+          data-i18n="hero.search_placeholder"
+        />
+        <button type="submit" class="btn btn-primary hero-search-btn" data-i18n="hero.explore">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span>Explorar Datasets</span>
+        </button>
+      </form>
+
+      <!-- Temas Cívicos Prioritarios -->
+      <div class="civic-topics">
+        <span class="civic-topics-label" data-i18n="hero.topics_label">Tematicas:</span>
+        <a href="/datasets?cat=Economía" class="civic-topic-link">Economía</a>
+        <span>•</span>
+        <a href="/datasets?cat=Medio%20Ambiente" class="civic-topic-link">Calidad del Aire</a>
+        <span>•</span>
+        <a href="/datasets?cat=Energía" class="civic-topic-link">Combustibles</a>
+        <span>•</span>
+        <a href="/datasets?cat=Demografía" class="civic-topic-link">Salud Pública</a>
+        <span>•</span>
+        <a href="/datasets?cat=Gobierno" class="civic-topic-link">Trámites</a>
+      </div>
+
+      <!-- Enlaces Secundarios -->
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="/about" class="btn btn-secondary" data-i18n="hero.about">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          <span>Acerca del Proyecto</span>
+        </a>
+        <a href="/download" class="btn btn-secondary" data-i18n="hero.install">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Descargar</span>
+        </a>
+      </div>
     </div>
   </section>
 
@@ -64,8 +155,9 @@ const categoriesCount = new Set(allDatasets.map((d) => d.category)).size;
           Datos gubernamentales, financieros, climáticos y de infraestructura.
         </p>
       </div>
-      <a href="/datasets" style="font-size: 0.875rem; font-weight: 500;" data-i18n="home.view_all">
-        Ver catálogo completo &rarr;
+      <a href="/datasets" style="font-size: 0.875rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem;" data-i18n="home.view_all">
+        <span>Ver catálogo completo</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
       </a>
     </div>
 
@@ -86,8 +178,9 @@ const categoriesCount = new Set(allDatasets.map((d) => d.category)).size;
             Actualizaciones sobre el catálogo y los estándares federados.
           </p>
         </div>
-        <a href="/docs" style="font-size: 0.875rem; font-weight: 500;">
-          Ver docs &rarr;
+        <a href="/docs" style="font-size: 0.875rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem;">
+          <span>Ver docs</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </a>
       </div>
 
@@ -108,7 +201,8 @@ const categoriesCount = new Set(allDatasets.map((d) => d.category)).size;
               {post.description}
             </p>
             <a href={`/docs/${post.slug}`} class="btn btn-secondary btn-sm" data-i18n="home.read_more">
-              Leer artículo &rarr;
+              <span>Leer artículo</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             </a>
           </article>
         ))}

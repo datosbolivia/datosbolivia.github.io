@@ -10,6 +10,8 @@ description: "Principios de gobernanza de datos federados, contratos sintáctico
 
 A diferencia de los portales tradicionales que concentran copias estáticas en almacenes centrales, esta plataforma opera como un índice de conocimiento distribuido. Cada entidad o custodio preserva la soberanía sobre sus datos, mientras que el catálogo expone metadatos normativos, esquemas de columnas y semántica formal tanto para humanos como para modelos y agentes de Inteligencia Artificial.
 
+[Más información](/docs/blog-0000-introduccion-a-datamesh)
+
 ---
 
 ## Principios de la Malla de Datos (Data Mesh)

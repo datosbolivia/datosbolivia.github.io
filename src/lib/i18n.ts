@@ -14,15 +14,25 @@ export const translations = {
     'nav.docs': 'Documentación',
     'nav.download': 'Descargas',
 
-    // Hero y Métricas
-    'hero.title': 'Catálogo de Datos Abiertos',
-    'hero.subtitle': 'Ecosistema federado de datos abiertos para la comunidad y Agentes de IA.',
+    'hero.eyebrow': 'Iniciativa de la Sociedad Civil • Datos Abiertos',
+    'hero.title': 'Información Pública y Verificable',
+    'hero.subtitle': 'Catálogo federado de datos abiertos para la ciudadanía, investigadores y Agentes de IA.',
+    'hero.search_placeholder': '¿Qué datos deseas consultar? (ej. inflación, aire, combustible...)',
+    'hero.topics_label': 'Tematicas:',
     'hero.explore': 'Explorar Datasets',
     'hero.about': 'Acerca de',
-    'hero.install': 'Instalar App',
+    'hero.install': 'Descargar',
     'stats.datasets': 'Datasets',
     'stats.resources': 'Recursos',
     'stats.domains': 'Dominios',
+
+    // Pilares de Sociedad Civil
+    'pillars.transparency_title': 'Transparencia Directa',
+    'pillars.transparency_desc': 'Datos de fuentes públicas legítimas, auditados bajo especificación OKF v0.2.',
+    'pillars.validation_title': 'Validación Rigurosa',
+    'pillars.validation_desc': 'Contratos sintácticos a nivel de columna para analistas, periodistas y ciudadanos.',
+    'pillars.interop_title': 'Interoperabilidad e IA',
+    'pillars.interop_desc': 'Estructurado para herramientas analíticas comunitarias y agentes autónomos.',
 
     // Página Principal
     'home.featured': 'Datasets Destacados',
@@ -37,6 +47,8 @@ export const translations = {
     'search.all': 'Todos',
     'search.no_results': 'No se encontraron datasets para esta búsqueda.',
     'search.reset': 'Limpiar filtros',
+    'view.grid': 'Vista en cuadrícula',
+    'view.list': 'Vista en lista',
 
     // Tarjeta de Dataset
     'card.explore': 'Explorar',
@@ -83,14 +95,25 @@ export const translations = {
     'nav.download': 'Download',
 
     // Hero and Stats
-    'hero.title': 'Open Data Catalog',
-    'hero.subtitle': 'Federated open data ecosystem for researchers, developers and AI Agents.',
+    'hero.eyebrow': 'Civil Society Initiative • Open Data',
+    'hero.title': 'Public & Verifiable Information',
+    'hero.subtitle': 'Federated open data ecosystem for citizens, researchers, and AI Agents.',
+    'hero.search_placeholder': 'What data do you want to explore? (e.g. inflation, air, fuel...)',
+    'hero.topics_label': 'Tematics',
     'hero.explore': 'Explore Datasets',
     'hero.about': 'About',
-    'hero.install': 'Install App',
+    'hero.install': 'Download',
     'stats.datasets': 'Datasets',
     'stats.resources': 'Resources',
     'stats.domains': 'Domains',
+
+    // Civil Society Pillars
+    'pillars.transparency_title': 'Direct Transparency',
+    'pillars.transparency_desc': 'Data from legitimate public sources, audited against OKF v0.2 specification.',
+    'pillars.validation_title': 'Rigorous Validation',
+    'pillars.validation_desc': 'Column-level syntactic contracts for analysts, investigative journalists, and citizens.',
+    'pillars.interop_title': 'Interoperability & AI',
+    'pillars.interop_desc': 'Structured for community analytical tooling and autonomous research agents.',
 
     // Home Page
     'home.featured': 'Featured Datasets',
@@ -105,6 +128,8 @@ export const translations = {
     'search.all': 'All',
     'search.no_results': 'No datasets found matching your search.',
     'search.reset': 'Clear filters',
+    'view.grid': 'Grid view',
+    'view.list': 'List view',
 
     // Dataset Card
     'card.explore': 'Explore',

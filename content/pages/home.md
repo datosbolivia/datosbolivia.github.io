@@ -1,7 +1,7 @@
 ---
 type: page
-title: "Portal de Datos Abiertos DataMesh Bolivia"
-tagline: "Ecosistema federado de datos abiertos para la comunidad, investigadores y Agentes de IA."
+title: "Catálogo de Datos Abiertos"
+tagline: "Ecosistema federado de datos abiertos para la comunidad y Agentes de IA."
 ---
 
 Bienvenido al catálogo oficial de la red **DataMesh Bolivia**, administrado por la iniciativa comunitaria **datos-bolivia**.

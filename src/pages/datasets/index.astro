@@ -10,10 +10,7 @@ const categories = getDatasetsByCategory();
 <BaseLayout title="Explorador de Datasets">
   <div style="margin-bottom: 2rem;">
     <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
-      <h1 style="margin: 0; font-size: 2rem;">Catálogo de Datasets</h1>
-      <span style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--color-text-muted);">
-        {datasets.length} conjuntos de datos
-      </span>
+      <h1 style="margin: 0; font-size: 2rem;">Catálogo</h1>
     </div>
     <p style="color: var(--color-text-muted); font-size: 0.95rem; margin: 0;">
       Explora recursos, esquemas y conceptos federados.
@@ -21,29 +18,73 @@ const categories = getDatasetsByCategory();
   </div>
 
   <!-- Buscador en tiempo real -->
-  <input 
-    type="text" 
-    id="dataset-search" 
-    class="search-box" 
-    placeholder="Buscar por nombre, entidad, columna o dominio..." 
-    aria-label="Buscar datasets"
-    data-i18n="search.placeholder"
-  />
-
-  <!-- Filtro por categorías sin tags/badges -->
-  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.75rem;" id="category-filters">
-    <button class="btn btn-secondary btn-sm filter-btn active" data-category="all">
-      <span data-i18n="search.all">Todos</span> ({datasets.length})
-    </button>
-    {categories.map((cat) => (
-      <button class="btn btn-secondary btn-sm filter-btn" data-category={cat.name}>
-        {cat.name} ({cat.datasets.length})
-      </button>
-    ))}
+  <div class="search-input-wrapper">
+    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input 
+      type="text" 
+      id="dataset-search" 
+      class="search-box" 
+      placeholder="Buscar por nombre, entidad, columna o dominio..." 
+      aria-label="Buscar datasets"
+      data-i18n="search.placeholder"
+    />
   </div>
 
-  <!-- Lista de Datasets -->
-  <div class="dataset-grid" id="dataset-container">
+  <!-- Barra de Filtros y Selector de Modo de Visualización -->
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.75rem;">
+    <!-- Filtro por categorías sin tags/badges -->
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="category-filters">
+      <button class="btn btn-secondary btn-sm filter-btn active" data-category="all">
+        <span data-i18n="search.all">Todos</span> ({datasets.length})
+      </button>
+      {categories.map((cat) => (
+        <button class="btn btn-secondary btn-sm filter-btn" data-category={cat.name}>
+          {cat.name} ({cat.datasets.length})
+        </button>
+      ))}
+    </div>
+
+    <!-- Selector de Modo de Visualización: Cuadrícula / Lista -->
+    <div class="view-toggle-group" role="group" aria-label="Modo de visualización">
+      <button 
+        type="button" 
+        id="view-grid-btn" 
+        class="view-toggle-btn active" 
+        aria-pressed="true" 
+        title="Vista en cuadrícula" 
+        aria-label="Vista en cuadrícula"
+        data-i18n-title="view.grid"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect width="7" height="7" x="3" y="3" rx="1"/>
+          <rect width="7" height="7" x="14" y="3" rx="1"/>
+          <rect width="7" height="7" x="14" y="14" rx="1"/>
+          <rect width="7" height="7" x="3" y="14" rx="1"/>
+        </svg>
+      </button>
+      <button 
+        type="button" 
+        id="view-list-btn" 
+        class="view-toggle-btn" 
+        aria-pressed="false" 
+        title="Vista en lista" 
+        aria-label="Vista en lista"
+        data-i18n-title="view.list"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="8" x2="21" y1="6" y2="6"/>
+          <line x1="8" x2="21" y1="12" y2="12"/>
+          <line x1="8" x2="21" y1="18" y2="18"/>
+          <line x1="3" x2="3.01" y1="6" y2="6"/>
+          <line x1="3" x2="3.01" y1="12" y2="12"/>
+          <line x1="3" x2="3.01" y1="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenedor de Datasets (Cuadrícula o Lista) -->
+  <div class="dataset-container dataset-grid" id="dataset-container">
     {datasets.map((dataset) => (
       <div 
         class="dataset-item" 
@@ -69,8 +110,35 @@ const categories = getDatasetsByCategory();
   const filterBtns = Array.from(document.querySelectorAll('.filter-btn'));
   const noResults = document.getElementById('no-results');
   const resetBtn = document.getElementById('reset-search');
+  const datasetContainer = document.getElementById('dataset-container');
+  const viewGridBtn = document.getElementById('view-grid-btn');
+  const viewListBtn = document.getElementById('view-list-btn');
 
   let activeCategory = 'all';
+
+  // Manejo de Modo de Visualización (Cuadrícula / Lista)
+  function setViewMode(mode) {
+    if (mode === 'list') {
+      datasetContainer?.classList.add('view-list');
+      datasetContainer?.classList.remove('dataset-grid');
+      viewListBtn?.classList.add('active');
+      viewListBtn?.setAttribute('aria-pressed', 'true');
+      viewGridBtn?.classList.remove('active');
+      viewGridBtn?.setAttribute('aria-pressed', 'false');
+      localStorage.setItem('datamesh_dataset_view', 'list');
+    } else {
+      datasetContainer?.classList.remove('view-list');
+      datasetContainer?.classList.add('dataset-grid');
+      viewGridBtn?.classList.add('active');
+      viewGridBtn?.setAttribute('aria-pressed', 'true');
+      viewListBtn?.classList.remove('active');
+      viewListBtn?.setAttribute('aria-pressed', 'false');
+      localStorage.setItem('datamesh_dataset_view', 'grid');
+    }
+  }
+
+  viewGridBtn?.addEventListener('click', () => setViewMode('grid'));
+  viewListBtn?.addEventListener('click', () => setViewMode('list'));
 
   function filterDatasets() {
     const query = (searchInput?.value || '').toLowerCase().trim();
@@ -120,6 +188,31 @@ const categories = getDatasetsByCategory();
     filterBtns[0]?.classList.add('active', 'btn-primary');
     filterDatasets();
   });
+
+  // Leer parámetros de URL y preferencias
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialQuery = urlParams.get('q') || urlParams.get('search');
+  const initialCat = urlParams.get('cat') || urlParams.get('category');
+  const initialView = urlParams.get('view') || localStorage.getItem('datamesh_dataset_view') || 'grid';
+
+  if (initialQuery && searchInput) {
+    searchInput.value = initialQuery;
+  }
+
+  if (initialCat) {
+    const matchedBtn = filterBtns.find(
+      (b) => (b.getAttribute('data-category') || '').toLowerCase() === initialCat.toLowerCase()
+    );
+    if (matchedBtn) {
+      filterBtns.forEach((b) => b.classList.remove('active', 'btn-primary'));
+      matchedBtn.classList.add('active', 'btn-primary');
+      activeCategory = matchedBtn.getAttribute('data-category') || 'all';
+    }
+  }
+
+  // Inicializar vista y filtrado
+  setViewMode(initialView);
+  filterDatasets();
 </script>
 
 <style>

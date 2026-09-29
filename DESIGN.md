@@ -5,37 +5,37 @@ mode: "agent-design-edit"
 description: "Visual identity, design tokens, and architectural UI guidelines for DataMesh Bolivia sovereign portal template."
 colors:
   light:
-    primary: "#2563eb"
-    primary-hover: "#1d4ed8"
-    primary-subtle: "#eff6ff"
-    secondary: "#0b243f"
-    secondary-subtle: "#163659"
-    accent: "#d97706"
-    accent-subtle: "#fef3c7"
-    bg: "#fafafa"
+    primary: "#0f766e"
+    primary-hover: "#115e59"
+    primary-subtle: "#f0fdfa"
+    secondary: "#1e293b"
+    secondary-subtle: "#334155"
+    accent: "#c2410c"
+    accent-subtle: "#fff7ed"
+    bg: "#fcfbf9"
     surface: "#ffffff"
-    surface-hover: "#f4f4f5"
-    border: "#e4e4e7"
-    border-subtle: "#f4f4f5"
-    text: "#09090b"
-    text-muted: "#52525b"
-    text-light: "#a1a1aa"
+    surface-hover: "#f5f3ef"
+    border: "#e7e5e4"
+    border-subtle: "#f5f5f4"
+    text: "#1c1917"
+    text-muted: "#57534e"
+    text-light: "#8c857b"
   dark:
-    primary: "#3b82f6"
-    primary-hover: "#60a5fa"
-    primary-subtle: "#1e293b"
-    secondary: "#0b243f"
+    primary: "#2dd4bf"
+    primary-hover: "#5eead4"
+    primary-subtle: "#132e2d"
+    secondary: "#0f172a"
     secondary-subtle: "#1e293b"
-    accent: "#f59e0b"
-    accent-subtle: "#451a03"
-    bg: "#09090b"
-    surface: "#18181b"
-    surface-hover: "#27272a"
-    border: "#27272a"
-    border-subtle: "#1f1f23"
-    text: "#f4f4f5"
-    text-muted: "#a1a1aa"
-    text-light: "#71717a"
+    accent: "#fb923c"
+    accent-subtle: "#431407"
+    bg: "#111618"
+    surface: "#1a2023"
+    surface-hover: "#242b30"
+    border: "#2a3338"
+    border-subtle: "#1e2529"
+    text: "#f5f5f4"
+    text-muted: "#a8a29e"
+    text-light: "#78716c"
 typography:
   fonts:
     serif: "'Charter', 'Bitstream Charter', 'Sitka Text', 'Cambria', serif"
@@ -153,16 +153,17 @@ All design tokens are mirrored between the YAML frontmatter above and `src/style
 
 | Token Category | CSS Variable | Value (Light) | Value (Dark) | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| **Primary** | `--color-primary` | `#2563eb` | `#3b82f6` | Interactive accent, active file indicator, links |
-| **Hover** | `--color-primary-hover` | `#1d4ed8` | `#60a5fa` | Primary interaction hover state |
-| **Subtle** | `--color-primary-subtle` | `#eff6ff` | `#1e293b` | Focus rings and subtle highlights |
-| **Background** | `--color-bg` | `#fafafa` | `#09090b` | Base application background |
-| **Surface** | `--color-surface` | `#ffffff` | `#18181b` | Cards, header, explorer sidebar, inputs |
-| **Surface Hover**| `--color-surface-hover` | `#f4f4f5` | `#27272a` | File explorer item hover, table header |
-| **Border** | `--color-border` | `#e4e4e7` | `#27272a` | Layout dividers, card outlines, table borders |
-| **Text** | `--color-text` | `#09090b` | `#f4f4f5` | High-contrast body text and headings |
-| **Muted Text** | `--color-text-muted` | `#52525b` | `#a1a1aa` | Metadata, breadcrumbs, descriptions |
-| **Typography Serif** | `--font-serif` | Charter / Cambria | Charter / Cambria | Editorial headings (H1, H2, H3, Hero) |
+| **Primary** | `--color-primary` | `#0f766e` | `#2dd4bf` | Teal cívico, enlaces activos, interacción principal |
+| **Hover** | `--color-primary-hover` | `#115e59` | `#5eead4` | Estado hover de botones y enlaces |
+| **Subtle** | `--color-primary-subtle` | `#f0fdfa` | `#132e2d` | Fondo sutil de foco e indicador activo de archivo |
+| **Accent** | `--color-accent` | `#c2410c` | `#fb923c` | Ocre / terracota para destacados y llamadas cívicas |
+| **Background** | `--color-bg` | `#fcfbf9` | `#111618` | Fondo papel cálido editorial para lectura cómoda |
+| **Surface** | `--color-surface` | `#ffffff` | `#1a2023` | Tarjetas, header, sidebar de explorador, inputs |
+| **Surface Hover**| `--color-surface-hover` | `#f5f3ef` | `#242b30` | Hover en elementos de árbol, encabezado de tablas |
+| **Border** | `--color-border` | `#e7e5e4` | `#2a3338` | Divisores de layout, marcos de tarjetas |
+| **Text** | `--color-text` | `#1c1917` | `#f5f5f4` | Texto carbón cálido de alta legibilidad |
+| **Muted Text** | `--color-text-muted` | `#57534e` | `#a8a29e` | Metadatos, breadcrumbs, descripciones |
+| **Typography Serif** | `--font-serif` | Newsreader / Charter | Newsreader / Charter | Encabezados editoriales (H1, H2, H3, Hero) |
 | **Typography Sans** | `--font-sans` | Inter / System | Inter / System | Standard interface and body text |
 | **Typography Mono** | `--font-mono` | JetBrains Mono / Fira | JetBrains Mono / Fira | File explorer, schemas, code, indicators |
 | **Radius MD** | `--radius-md` | `8px` | `8px` | Standard button and input corner radius |

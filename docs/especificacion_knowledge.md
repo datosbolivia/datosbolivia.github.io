@@ -50,7 +50,7 @@ knowledge/nodes/mi-institucion-datos/
 
 El archivo `index.md` combina un bloque delimitado de YAML con texto explicativo en Markdown:
 
-```yaml
+````yaml
 ---
 type: dataset
 title: Nombre Legible del Dataset
@@ -82,7 +82,7 @@ SELECT departamento, COUNT(*)
 FROM mi_tabla 
 GROUP BY departamento;
 ```
-```
+````
 
 ---
 

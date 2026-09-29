@@ -42,8 +42,9 @@ const decisions = allDocs.filter(d => d.category === 'decision');
                 {doc.description}
               </p>
               <div>
-                <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm" data-i18n="docs.read">
-                  Leer artículo &rarr;
+                <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;" data-i18n="docs.read">
+                  <span>Leer artículo</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </a>
               </div>
             </div>
@@ -74,8 +75,9 @@ const decisions = allDocs.filter(d => d.category === 'decision');
               {doc.description}
             </p>
             <div>
-              <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm" data-i18n="docs.read">
-                Leer Especificación &rarr;
+              <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;" data-i18n="docs.read">
+                <span>Leer Especificación</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
             </div>
           </div>
@@ -108,8 +110,9 @@ const decisions = allDocs.filter(d => d.category === 'decision');
                   Estado: <strong style="color: var(--color-success);">{doc.status}</strong> • Tipo: <code>{doc.type}</code>
                 </p>
               </div>
-              <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm">
-                Ver ADR &rarr;
+              <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                <span>Ver ADR</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
             </div>
           </div>

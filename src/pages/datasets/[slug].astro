@@ -58,18 +58,6 @@ function getCleanResourceName(res: any): string {
   <div class="obsidian-layout" id="obsidian-explorer">
     <!-- Panel Izquierdo: Árbol de Archivos -->
     <aside class="obsidian-sidebar" aria-label="Explorador de Archivos">
-      <div class="obsidian-sidebar-header">
-        <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-          </svg>
-          <span style="font-weight: 700; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{dataset.slug}</span>
-        </div>
-        <span style="font-size: 0.7rem; color: var(--color-text-muted); font-family: var(--font-mono); flex-shrink: 0;">
-          {1 + referenceDocs.length + resources.length + contracts.length} <span data-i18n="explorer.files">archivos</span>
-        </span>
-      </div>
-
       <div class="obsidian-tree-container">
         <!-- Grupo KNOWLEDGE (Contexto Principal Primero) -->
         <div class="obsidian-folder-group">

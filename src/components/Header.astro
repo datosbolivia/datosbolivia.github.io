@@ -14,7 +14,7 @@ function isActive(path: string) {
   <div class="container nav-container">
     <a href="/" class="logo-area" aria-label={config.organization.name}>
       <img
-        src="/assets/logo.jpg"
+        src="/logo.jpg"
         alt={config.organization.name}
         class="logo-image"
         width="32"
@@ -112,6 +112,14 @@ function isActive(path: string) {
         } else {
           el.textContent = dict[key];
         }
+      }
+    });
+
+    document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+      const key = el.getAttribute('data-i18n-title');
+      if (key && dict[key]) {
+        el.setAttribute('title', dict[key]);
+        el.setAttribute('aria-label', dict[key]);
       }
     });
 

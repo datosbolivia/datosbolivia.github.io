@@ -31,10 +31,6 @@ Este dataset está enriquecido semánticamente utilizando vocabularios controlad
 - [Ciudadanía Digital](concepts/digital_citizenship.md) - [Q5275815](https://www.wikidata.org/wiki/Q5275815)
 - [Interoperabilidad](concepts/interoperability.md) - [Q730006](https://www.wikidata.org/wiki/Q730006)
 
----
-
-# Gráficos del Dataset
-
 ```chart
 {
   "type": "area",
@@ -44,12 +40,7 @@ Este dataset está enriquecido semánticamente utilizando vocabularios controlad
   "sql": "SELECT \"Año\" AS anio, \"Registros\" AS registros, \"Autentificaciones\" AS autentificaciones FROM agetic_data_estadisticas_ciudadania_digital ORDER BY \"Año\"",
   "xKey": "anio",
   "yKeys": ["registros", "autentificaciones"],
-  "colors": ["#2563eb", "#059669"],
-  "questions": [
-    "¿Cuántos bolivianos tienen identidad digital?",
-    "¿A qué ritmo crece la ciudadanía digital en Bolivia?",
-    "¿Qué impacto tuvo la pandemia en la adopción digital?"
-  ]
+  "colors": ["#2563eb", "#059669"]
 }
 ```
 
@@ -62,11 +53,6 @@ Este dataset está enriquecido semánticamente utilizando vocabularios controlad
   "sql": "SELECT \"Año\" AS anio, \"Cantidad\" AS cantidad FROM agetic_data_estadisticas_emision_facturas ORDER BY \"Año\"",
   "xKey": "anio",
   "yKeys": ["cantidad"],
-  "colors": ["#7c3aed"],
-  "questions": [
-    "¿Cuántas facturas electrónicas se emiten en Bolivia por año?",
-    "¿Qué sector emite más facturas electrónicas?",
-    "¿La facturación electrónica ha reducido la evasión fiscal?"
-  ]
+  "colors": ["#7c3aed"]
 }
 ```

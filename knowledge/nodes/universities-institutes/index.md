@@ -27,12 +27,7 @@ Este dataset contiene información sobre la oferta académica a nivel universita
   "sql": "SELECT \"UNIVERSIDAD\", COUNT(DISTINCT \"CARRERA ASIGNADA\") AS carreras FROM universities_institutes_universidades_y_carreras GROUP BY \"UNIVERSIDAD\" ORDER BY carreras DESC LIMIT 12",
   "xKey": "UNIVERSIDAD",
   "yKeys": ["carreras"],
-  "colors": ["#2563eb"],
-  "questions": [
-    "¿Cuál universidad ofrece más carreras en Bolivia?",
-    "¿Cuántas carreras de ingeniería existen en Bolivia?",
-    "¿Qué universidad privada tiene mayor oferta académica?"
-  ]
+  "colors": ["#2563eb"]
 }
 ```
 
@@ -45,11 +40,6 @@ Este dataset contiene información sobre la oferta académica a nivel universita
   "sql": "SELECT \"UNIVERSIDAD\", SUM(\"PLAZAS DISPONIBLES\") AS plazas FROM universities_institutes_universidades_y_carreras WHERE \"PLAZAS DISPONIBLES\" IS NOT NULL GROUP BY \"UNIVERSIDAD\" ORDER BY plazas DESC LIMIT 12",
   "xKey": "UNIVERSIDAD",
   "yKeys": ["plazas"],
-  "colors": ["#059669"],
-  "questions": [
-    "¿Cuántas plazas universitarias existen en Bolivia?",
-    "¿Qué universidad pública tiene más capacidad de admisión?",
-    "¿Existe suficiente oferta universitaria para la demanda estudiantil?"
-  ]
+  "colors": ["#059669"]
 }
 ```

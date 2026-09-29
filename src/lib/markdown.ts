@@ -306,7 +306,6 @@ function renderChartCard(code: string): string {
   const sql = escapeHtml(config.sql || '');
   const chartType = (config.type || 'bar').toLowerCase();
   const primaryColor = (config.colors && config.colors[0]) || 'var(--color-primary)';
-  const questions = Array.isArray(config.questions) ? config.questions : [];
 
   let visualHtml = '';
 
@@ -412,18 +411,6 @@ function renderChartCard(code: string): string {
     `;
   }
 
-  let questionsHtml = '';
-  if (questions.length > 0) {
-    questionsHtml = `
-      <div class="chart-questions-box">
-        <span class="chart-questions-title">Preguntas Analíticas Sugeridas:</span>
-        <ul class="chart-questions-list">
-          ${questions.map((q: string) => `<li>${escapeHtml(q)}</li>`).join('')}
-        </ul>
-      </div>
-    `;
-  }
-
   return `
     <div class="chart-card card" id="${chartId}" style="margin: 1.5rem 0; padding: 1.25rem; border: 1px solid var(--color-border); background-color: var(--color-surface); border-radius: var(--radius-md);">
       <div class="chart-header" style="margin-bottom: 0.85rem;">
@@ -454,8 +441,6 @@ function renderChartCard(code: string): string {
         ` : ''}
         <pre class="code-pre" style="margin: 0; max-height: 180px; overflow-y: auto;"><code class="language-json">${escapedCode}</code></pre>
       </div>
-
-      ${questionsHtml}
     </div>
   `;
 }

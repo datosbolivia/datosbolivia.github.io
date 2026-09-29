@@ -30,9 +30,6 @@ Este dataset está enriquecido semánticamente utilizando terminologías estánd
 
 [1] Escala ICA EPA — https://www.airnow.gov/aqi/aqi-basics/
 
----
-
-# Gráficos del Dataset
 
 ```chart
 {
@@ -44,14 +41,11 @@ Este dataset está enriquecido semánticamente utilizando terminologías estánd
   "sql": "SELECT lugar_nombre, ROUND(AVG(valor_ica), 1) AS promedio_ica FROM air_quality_compilaci_n_de_datos_de_calidad_del_aire_de_bolivia GROUP BY lugar_nombre ORDER BY promedio_ica DESC LIMIT 10",
   "xKey": "lugar_nombre",
   "yKeys": ["promedio_ica"],
-  "colors": ["#dc2626"],
-  "questions": [
-    "¿Cuál ciudad de Bolivia tiene la peor calidad del aire y por qué?",
-    "¿Cómo compara el ICA de Potosí con La Paz?",
-    "¿Qué políticas han mejorado la calidad del aire en Bolivia?"
-  ]
+  "colors": ["#dc2626"]
 }
 ```
+
+---
 
 ```chart
 {
@@ -63,11 +57,6 @@ Este dataset está enriquecido semánticamente utilizando terminologías estánd
   "sql": "SELECT STRFTIME(CAST(fecha_hora_registro AS DATE), '%Y-%m') AS mes, ROUND(AVG(valor_ica), 1) AS promedio_ica, COUNT(*) AS mediciones FROM air_quality_compilaci_n_de_datos_de_calidad_del_aire_de_bolivia WHERE fecha_hora_registro IS NOT NULL GROUP BY mes ORDER BY mes LIMIT 24",
   "xKey": "mes",
   "yKeys": ["promedio_ica"],
-  "colors": ["#2563eb"],
-  "questions": [
-    "¿En qué meses la calidad del aire es peor en Bolivia?",
-    "¿La calidad del aire ha mejorado o empeorado en los últimos años?",
-    "¿Existe estacionalidad en los niveles de ICA?"
-  ]
+  "colors": ["#2563eb"]
 }
 ```

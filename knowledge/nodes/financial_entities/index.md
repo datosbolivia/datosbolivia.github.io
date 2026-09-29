@@ -27,12 +27,7 @@ Este dataset contiene información geoespacial de puntos de interés: cada fila 
   "sql": "SELECT departamento, COUNT(*) AS total_puntos FROM financial_entities_financial_entities_places WHERE departamento IS NOT NULL GROUP BY departamento ORDER BY total_puntos DESC",
   "xKey": "departamento",
   "yKeys": ["total_puntos"],
-  "colors": ["#059669"],
-  "questions": [
-    "¿Cuál departamento tiene más cobertura financiera en Bolivia?",
-    "¿Cómo compara la bancarización de Beni vs Santa Cruz?",
-    "¿Qué regiones de Bolivia tienen menor acceso a servicios financieros?"
-  ]
+  "colors": ["#059669"]
 }
 ```
 
@@ -45,11 +40,6 @@ Este dataset contiene información geoespacial de puntos de interés: cada fila 
   "sql": "SELECT desGrupo AS tipo, COUNT(*) AS cantidad FROM financial_entities_financial_entities_places WHERE desGrupo IS NOT NULL GROUP BY desGrupo ORDER BY cantidad DESC LIMIT 8",
   "xKey": "tipo",
   "yKeys": ["cantidad"],
-  "colors": ["#2563eb", "#059669", "#d97706", "#dc2626", "#7c3aed", "#0891b2", "#ec4899", "#475569"],
-  "questions": [
-    "¿Qué tipo de punto de atención financiera predomina en Bolivia?",
-    "¿Cuántos cajeros automáticos hay en Bolivia?",
-    "¿Están bien distribuidos los agentes bancarios?"
-  ]
+  "colors": ["#2563eb", "#059669", "#d97706", "#dc2626", "#7c3aed", "#0891b2", "#ec4899", "#475569"]
 }
 ```

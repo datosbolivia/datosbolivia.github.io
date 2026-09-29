@@ -24,12 +24,7 @@ Este dataset es geoespacial de eventos: cada fila es una alerta con su zona de c
   "sql": "SELECT CASE id_departamento WHEN 1 THEN 'Chuquisaca' WHEN 2 THEN 'La Paz' WHEN 3 THEN 'Cochabamba' WHEN 4 THEN 'Oruro' WHEN 5 THEN 'Potosí' WHEN 6 THEN 'Tarija' WHEN 7 THEN 'Santa Cruz' WHEN 8 THEN 'Beni' WHEN 9 THEN 'Pando' ELSE 'Otro' END AS departamento, COUNT(*) AS estaciones FROM oil_stations_stations GROUP BY id_departamento ORDER BY estaciones DESC",
   "xKey": "departamento",
   "yKeys": ["estaciones"],
-  "colors": ["#d97706"],
-  "questions": [
-    "¿Cuál departamento tiene más estaciones de combustible en Bolivia?",
-    "¿Existe acceso equitativo a combustible en el país?",
-    "¿Cuántas estaciones de servicio hay en La Paz?"
-  ]
+  "colors": ["#d97706"]
 }
 ```
 
@@ -42,11 +37,6 @@ Este dataset es geoespacial de eventos: cada fila es una alerta con su zona de c
   "sql": "SELECT id_eess, ROUND(AVG(saldo_octano), 0) AS octano, ROUND(AVG(saldo_bsa), 0) AS bsa FROM oil_stations_supply WHERE saldo_octano > 0 GROUP BY id_eess ORDER BY octano DESC LIMIT 15",
   "xKey": "id_eess",
   "yKeys": ["octano", "bsa"],
-  "colors": ["#2563eb", "#059669"],
-  "questions": [
-    "¿Qué estaciones tienen mayor disponibilidad de combustible?",
-    "¿Existe escasez de gasolina en Bolivia?",
-    "¿Cómo varía el stock de combustible entre estaciones?"
-  ]
+  "colors": ["#2563eb", "#059669"]
 }
 ```

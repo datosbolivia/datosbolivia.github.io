@@ -598,7 +598,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         if (!sql) return;
 
         try {
-          const sqlRes = await client.sql(sql, parsedTable);
+          const sqlRes = await client.sql(sql, parsedTable, triad);
           activeQueryResult = {
             columns: sqlRes.columns,
             rows: sqlRes.rows,

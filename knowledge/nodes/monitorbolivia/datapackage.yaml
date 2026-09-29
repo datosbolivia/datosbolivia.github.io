@@ -3,7 +3,7 @@ title: Monitor de Disponibilidad de Portales Web del Estado Boliviano
 resources:
 - name: uptime_summary
   type: table
-  path: https://github.com/andres-chirinos/monitorbolivia/raw/master/history/summary.parquet
+  path: https://www.kaggle.com/datasets/sociest/monitor-web-bolivia/summary.parquet
   scheme: file
   format: parquet
   mediatype: application/parquet

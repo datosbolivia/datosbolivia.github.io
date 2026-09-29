@@ -122,12 +122,6 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       </button>
     </div>
 
-    <!-- Indicador de Estado -->
-    <div class="explorer-status-bar">
-      <span class="explorer-record-info">TypeScript Client SDK listo para streaming...</span>
-      <span class="explorer-source-notice" style="display: none;"></span>
-    </div>
-
     <!-- Contenedor de la Tabla de Datos -->
     <div class="explorer-table-container table-wrapper">
       <div class="explorer-initial-state">
@@ -339,10 +333,6 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
     gap: 0.5rem;
   }
 
-  .explorer-source-notice {
-    color: var(--color-primary);
-  }
-
   /* Tabla de Datos */
   .explorer-table-container {
     max-height: 420px;
@@ -500,7 +490,6 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       const nextBtn = container.querySelector<HTMLButtonElement>('.pagination-next');
       const pageLabel = container.querySelector<HTMLElement>('.pagination-page-label');
       const recordInfo = container.querySelector<HTMLElement>('.explorer-record-info');
-      const sourceNotice = container.querySelector<HTMLElement>('.explorer-source-notice');
       const tableContainer = container.querySelector<HTMLElement>('.explorer-table-container');
       const paginationWrap = container.querySelector<HTMLElement>('.explorer-pagination');
       const loadDirectBtn = container.querySelector<HTMLButtonElement>('.load-direct-btn');
@@ -563,11 +552,6 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
             columns: result.columns,
             rows: result.rows,
           };
-
-          if (sourceNotice) {
-            sourceNotice.textContent = '• Streamed en vivo vía TypeScript SDK';
-            sourceNotice.style.display = 'inline';
-          }
 
           if (paginationWrap) paginationWrap.style.display = 'flex';
           executeClientQuery();

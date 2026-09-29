@@ -3,7 +3,7 @@ title: Mercado Cambiario P2P BOB / USDT (Binance Bolivia)
 resources:
 - name: advertiser
   type: table
-  path: https://github.com/andres-chirinos/p2p-bob-exchange/raw/main/test/b/advertiser.parquet
+  path: https://www.kaggle.com/datasets/andreschirinos/p2p-bob-exchange/advertiser.parquet
   scheme: file
   format: parquet
   mediatype: application/parquet

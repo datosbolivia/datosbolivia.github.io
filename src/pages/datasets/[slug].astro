@@ -45,20 +45,17 @@ function getCleanResourceName(res: any): string {
 }
 ---
 
-<BaseLayout title={dataset.title} description={dataset.description}>
-  <!-- Breadcrumb compacto superior -->
-  <nav style="display: flex; gap: 0.5rem; align-items: center; font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.75rem;">
-    <a href="/" style="color: inherit; text-decoration: none;" data-i18n="nav.home">Inicio</a>
-    <span>/</span>
-    <a href="/datasets" style="color: inherit; text-decoration: none;" data-i18n="nav.datasets">Datasets</a>
-    <span>/</span>
-    <span style="color: var(--color-text); font-weight: 500;">{dataset.slug}</span>
-  </nav>
-
-  <!-- Explorador de Archivos Estilo Obsidian Condensado -->
+<BaseLayout title={dataset.title} description={dataset.description} fullWidth={true} noFooter={true}>
+  <!-- Explorador de Archivos Estilo Obsidian Condensado (Pantalla Completa) -->
   <div class="obsidian-layout" id="obsidian-explorer">
     <!-- Panel Izquierdo: Árbol de Archivos -->
     <aside class="obsidian-sidebar" aria-label="Explorador de Archivos">
+      <div class="obsidian-sidebar-header">
+        <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+          <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;" data-i18n="explorer.files">Archivos</span>
+        </div>
+      </div>
       <div class="obsidian-tree-container">
         <!-- Grupo KNOWLEDGE (Contexto Principal Primero) -->
         <div class="obsidian-folder-group">
@@ -177,10 +174,29 @@ function getCleanResourceName(res: any): string {
     <section class="obsidian-content-pane" aria-label="Visor de contenido">
       <!-- Barra Superior de Navegación del Panel -->
       <div class="obsidian-pane-bar">
-        <div class="obsidian-pane-breadcrumb" id="pane-breadcrumb">
-          <span>{dataset.slug}</span>
-          <span>/</span>
-          <span id="active-filename" style="color: var(--color-text); font-weight: 600;">index.md</span>
+        <div style="display: flex; align-items: center; gap: 0.65rem; min-width: 0;">
+          <button 
+            type="button" 
+            id="obsidian-toggle-sidebar" 
+            class="btn btn-secondary btn-sm" 
+            style="padding: 0.25rem 0.45rem; display: inline-flex; align-items: center;"
+            title="Alternar explorador"
+            aria-label="Alternar explorador"
+            data-i18n-title="explorer.toggle_sidebar"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+            <span class="visually-hidden" data-i18n="explorer.toggle_sidebar">Alternar explorador</span>
+          </button>
+
+          <nav class="obsidian-pane-breadcrumb" id="pane-breadcrumb" aria-label="Ruta de navegación">
+            <a href="/" class="obsidian-crumb-link" data-i18n="nav.home">Inicio</a>
+            <span class="obsidian-crumb-sep">/</span>
+            <a href="/datasets" class="obsidian-crumb-link" data-i18n="nav.datasets">Datasets</a>
+            <span class="obsidian-crumb-sep">/</span>
+            <span class="obsidian-crumb-slug">{dataset.slug}</span>
+            <span class="obsidian-crumb-sep">/</span>
+            <span id="active-filename" class="obsidian-crumb-file">index.md</span>
+          </nav>
         </div>
 
         <div class="obsidian-pane-actions">
@@ -192,17 +208,6 @@ function getCleanResourceName(res: any): string {
             style="font-family: var(--font-mono); font-size: 0.75rem;"
           >
             <span data-i18n="explorer.raw">Ver Raw</span> &rarr;
-          </a>
-
-          <a 
-            id="pane-download-link" 
-            href="#" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            class="btn btn-primary btn-sm"
-            style="display: none; font-size: 0.75rem;"
-          >
-            <span data-i18n="explorer.download">Descargar</span> &darr;
           </a>
         </div>
       </div>
@@ -258,12 +263,23 @@ function getCleanResourceName(res: any): string {
 <script is:inline>
   // Controlador de navegación instantánea tipo Obsidian
   (function initObsidianExplorer() {
+    const layout = document.getElementById('obsidian-explorer');
+    const sidebar = document.querySelector('.obsidian-sidebar');
+    const toggleSidebarBtn = document.getElementById('obsidian-toggle-sidebar');
+
     const fileItems = Array.from(document.querySelectorAll('.obsidian-file-item'));
     const fileTabs = Array.from(document.querySelectorAll('.obsidian-file-tab'));
     const breadcrumbFilename = document.getElementById('active-filename');
     const rawLink = document.getElementById('pane-raw-link');
     const downloadLink = document.getElementById('pane-download-link');
     const docViewport = document.getElementById('doc-viewport');
+
+    // Alternar visibilidad de la barra lateral (Colapsar/Expandir)
+    toggleSidebarBtn?.addEventListener('click', () => {
+      sidebar?.classList.toggle('collapsed');
+      const isCollapsed = sidebar?.classList.contains('collapsed');
+      toggleSidebarBtn.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+    });
 
     function switchToFile(targetId, path, rawUrl, downloadUrl) {
       // 1. Alternar pestañas de contenido

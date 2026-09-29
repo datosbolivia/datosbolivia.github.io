@@ -11,22 +11,6 @@ const fields = resource.schema?.fields || [];
 
 <div style="margin-bottom: 2rem;">
   <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <div>
-      <h4 style="font-size: 1.05rem; margin-bottom: 0.25rem;">
-        {resource.name}
-      </h4>
-      {resource.path && (
-        <a 
-          href={resource.path} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-primary); word-break: break-all;"
-        >
-          {resource.path}
-        </a>
-      )}
-    </div>
-
     {resource.policy && (
       <span style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-success);">
         policy: {resource.policy}

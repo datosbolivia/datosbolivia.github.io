@@ -54,7 +54,7 @@ Este dataset está enriquecido semánticamente utilizando terminologías estánd
   "subtitle": "Tendencia del Índice de Calidad del Aire agregado por mes",
   "source": "SENAMHI / Monica-SwissContact vía DataMesh Bolivia",
   "unit": "ICA",
-  "sql": "SELECT STRFTIME(CAST(fecha_hora_registro AS DATE), '%Y-%m') AS mes, ROUND(AVG(valor_ica), 1) AS promedio_ica, COUNT(*) AS mediciones FROM air_quality_compilaci_n_de_datos_de_calidad_del_aire_de_bolivia WHERE fecha_hora_registro IS NOT NULL GROUP BY mes ORDER BY mes LIMIT 24",
+  "sql": "SELECT STRFTIME(CAST(fecha_hora_registro AS DATE), '%Y-%m') AS mes, ROUND(AVG(valor_ica), 1) AS promedio_ica, COUNT(*) AS mediciones FROM air_quality_compilaci_n_de_datos_de_calidad_del_aire_de_bolivia WHERE fecha_hora_registro IS NOT NULL GROUP BY mes ORDER BY mes DESC LIMIT 24",
   "xKey": "mes",
   "yKeys": ["promedio_ica"],
   "colors": ["#2563eb"]

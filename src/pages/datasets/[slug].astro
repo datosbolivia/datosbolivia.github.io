@@ -449,6 +449,29 @@ function getCleanResourceName(res: any): string {
           if (sqlView) sqlView.style.display = target === 'sql' ? 'block' : 'none';
         });
       });
+
+      // Copiar configuracion JSON al portapapeles
+      const copyBtn = card.querySelector('.chart-copy-btn');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+          const jsonEl = card.querySelector('code.language-json');
+          const text = jsonEl ? (jsonEl.textContent || '') : '';
+          if (!text) return;
+          navigator.clipboard.writeText(text).then(() => {
+            const iconEl = copyBtn.querySelector('.chart-copy-icon');
+            const checkEl = copyBtn.querySelector('.chart-copy-check');
+            const labelEl = copyBtn.querySelector('.chart-copy-label');
+            if (iconEl) (iconEl as HTMLElement).style.display = 'none';
+            if (checkEl) (checkEl as HTMLElement).style.display = 'inline';
+            if (labelEl) labelEl.textContent = 'Copiado';
+            setTimeout(() => {
+              if (iconEl) (iconEl as HTMLElement).style.display = 'inline';
+              if (checkEl) (checkEl as HTMLElement).style.display = 'none';
+              if (labelEl) labelEl.textContent = 'Copiar';
+            }, 2000);
+          }).catch(() => {});
+        });
+      }
     });
   })();
 </script>

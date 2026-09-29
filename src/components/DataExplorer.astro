@@ -18,7 +18,7 @@ const explorerId = `explorer-${datasetSlug}-${resourceIndex}`;
 const defaultClientSql = `SELECT * FROM "${triadName}" LIMIT 25;`;
 const pythonSnippet = `import datamesh as dm\n\n# Consulta unificada en 1 línea con DuckDB\nres = dm.sql("""\nSELECT *\nFROM '${triadName}'\nLIMIT 25\n""")\nprint(res)`;
 const cliSnippet = `datamesh sql "SELECT * FROM '${triadName}' LIMIT 25"`;
-const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\nconst res = await datamesh.query({\n  resource_uri: '${remoteUrl}',\n  limit: 25\n});\nconsole.log(res);`;
+const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n// Breve filtro\nconst res = await datamesh.query({\n  resource_uri: '${triadName}',\n  limit: 25\n});\nconsole.log(res);`;
 ---
 
 <div class="data-explorer-wrapper" id={explorerId} data-explorer-container data-dataset={datasetSlug} data-remote-url={remoteUrl} data-format={format} data-triad={triadName}>
@@ -551,9 +551,9 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         }
 
         try {
-          // Direct fetch using client SDK
+          // Direct fetch using client SDK with common canonical triad URI
           const result = await client.query({
-            resource_uri: remoteUrl,
+            resource_uri: triad || remoteUrl,
           });
 
           parsedTable = {

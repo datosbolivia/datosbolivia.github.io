@@ -1,5 +1,6 @@
 ---
 import { config } from '../../portal.config';
+import { translations } from '../lib/i18n';
 
 const currentPath = Astro.url.pathname;
 function isActive(path: string) {
@@ -57,7 +58,7 @@ function isActive(path: string) {
         aria-label="Cambiar tema" 
         title="Cambiar tema"
       >
-        <svg id="theme-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+        <svg id="theme-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="display: none;">
           <circle cx="12" cy="12" r="5"></circle>
           <line x1="12" y1="1" x2="12" y2="3"></line>
           <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -68,7 +69,7 @@ function isActive(path: string) {
           <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
         </svg>
-        <svg id="theme-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg id="theme-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
       </button>
@@ -77,113 +78,29 @@ function isActive(path: string) {
       <a href="/llms.txt" class="nav-llm-link" title="Especificación llms.txt para Agentes de IA">
         llms.txt
       </a>
+
+      <!-- Botón Menú Móvil -->
+      <button 
+        id="nav-toggle" 
+        class="nav-toggle btn-icon" 
+        aria-label="Abrir menú de navegación" 
+        aria-expanded="false" 
+        aria-controls="nav-links"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
     </div>
   </div>
 </header>
 
-<script is:inline>
-  // Diccionario de traducción client-side ultraligero
-  const i18nDict = {
-    es: {
-      'nav.home': 'Inicio',
-      'nav.datasets': 'Datasets',
-      'nav.about': 'Acerca de',
-      'nav.docs': 'Docs',
-      'nav.download': 'Descargas',
-      'hero.title': 'Catálogo de Datos Abiertos',
-      'hero.subtitle': 'Ecosistema federado de datos abiertos para la comunidad y Agentes de IA.',
-      'hero.explore': 'Explorar Datasets',
-      'hero.about': 'Acerca de',
-      'hero.install': 'Instalar App',
-      'stats.datasets': 'Datasets',
-      'stats.resources': 'Recursos',
-      'stats.domains': 'Dominios',
-      'home.featured': 'Datasets Destacados',
-      'home.featured_sub': 'Conjuntos de datos gubernamentales, estadísticos y científicos.',
-      'home.view_all': 'Ver catálogo completo',
-      'home.blog_title': 'Novedades y Notas Técnicas',
-      'home.blog_sub': 'Actualizaciones recientes sobre el catálogo y los estándares.',
-      'home.read_more': 'Leer artículo',
-      'search.placeholder': 'Buscar por nombre, entidad, columna o dominio...',
-      'search.all': 'Todos',
-      'search.no_results': 'No se encontraron datasets para esta búsqueda.',
-      'search.reset': 'Limpiar filtros',
-      'card.explore': 'Explorar',
-      'card.resources': 'recurso(s)',
-      'explorer.files': 'Archivos',
-      'explorer.context': 'Contexto',
-      'explorer.resources': 'Recursos',
-      'explorer.concepts': 'Conceptos',
-      'explorer.contracts': 'Contratos',
-      'explorer.raw': 'Ver Raw',
-      'explorer.download': 'Descargar',
-      'explorer.source': 'Fuente',
-      'explorer.table_schema': 'Esquema de Columnas',
-      'explorer.field_name': 'Columna',
-      'explorer.field_type': 'Tipo',
-      'explorer.field_desc': 'Descripción',
-      'explorer.field_constraints': 'Restricciones',
-      'docs.title': 'Centro Documental',
-      'docs.subtitle': 'Especificaciones normativas, notas técnicas y decisiones de diseño.',
-      'docs.specs': 'Especificaciones Normativas',
-      'docs.adrs': 'Decisiones de Arquitectura (ADRs)',
-      'docs.blog': 'Blog y Novedades',
-      'docs.read': 'Leer documento',
-      'download.title': 'Instalación y Descargas',
-      'download.pwa_title': 'Progressive Web App (PWA)',
-      'download.desktop_title': 'Aplicación Desktop (Electron)'
-    },
-    en: {
-      'nav.home': 'Home',
-      'nav.datasets': 'Datasets',
-      'nav.about': 'About',
-      'nav.docs': 'Docs',
-      'nav.download': 'Downloads',
-      'hero.title': 'Open Data Catalog',
-      'hero.subtitle': 'Federated open data ecosystem for researchers, developers and AI Agents.',
-      'hero.explore': 'Explore Datasets',
-      'hero.about': 'About',
-      'hero.install': 'Install App',
-      'stats.datasets': 'Datasets',
-      'stats.resources': 'Resources',
-      'stats.domains': 'Domains',
-      'home.featured': 'Featured Datasets',
-      'home.featured_sub': 'Government, statistical, and scientific datasets.',
-      'home.view_all': 'View all datasets',
-      'home.blog_title': 'News & Technical Notes',
-      'home.blog_sub': 'Recent updates on the catalog and open standards.',
-      'home.read_more': 'Read article',
-      'search.placeholder': 'Search by name, entity, column, or domain...',
-      'search.all': 'All',
-      'search.no_results': 'No datasets found matching your search.',
-      'search.reset': 'Clear filters',
-      'card.explore': 'Explore',
-      'card.resources': 'resource(s)',
-      'explorer.files': 'Files',
-      'explorer.context': 'Context',
-      'explorer.resources': 'Resources',
-      'explorer.concepts': 'Concepts',
-      'explorer.contracts': 'Contracts',
-      'explorer.raw': 'View Raw',
-      'explorer.download': 'Download',
-      'explorer.source': 'Source',
-      'explorer.table_schema': 'Column Schema',
-      'explorer.field_name': 'Column',
-      'explorer.field_type': 'Type',
-      'explorer.field_desc': 'Description',
-      'explorer.field_constraints': 'Constraints',
-      'docs.title': 'Documentation Center',
-      'docs.subtitle': 'Normative specifications, technical notes, and architecture decisions.',
-      'docs.specs': 'Normative Specifications',
-      'docs.adrs': 'Architecture Decisions (ADRs)',
-      'docs.blog': 'Blog & Updates',
-      'docs.read': 'Read document',
-      'download.title': 'Installation & Downloads',
-      'download.pwa_title': 'Progressive Web App (PWA)',
-      'download.desktop_title': 'Desktop Application (Electron)'
-    }
-  };
+<script id="i18n-data" type="application/json" set:html={JSON.stringify(translations)}></script>
 
+<script is:inline>
+  const i18nDict = JSON.parse(document.getElementById('i18n-data')?.textContent || '{}');
   // Función para aplicar idioma
   function applyLanguage(lang) {
     const dict = i18nDict[lang] || i18nDict.es;
@@ -244,5 +161,13 @@ function isActive(path: string) {
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('datamesh-theme', next);
     updateThemeIcons(next);
+  });
+
+  // Manejador del Menú Móvil
+  const navToggle = document.getElementById('nav-toggle');
+  const navLinks = document.getElementById('nav-links');
+  navToggle?.addEventListener('click', () => {
+    const isOpen = navLinks?.classList.toggle('mobile-open');
+    navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   });
 </script>

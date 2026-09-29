@@ -141,10 +141,11 @@ function auditMarkdownFile(filePath) {
     }
   }
 
-  // Comprobar enlaces locales
+  // Comprobar enlaces locales (excluyendo bloques de código de ejemplo)
+  const contentWithoutCode = content.replace(/```[\s\S]*?```/g, '');
   const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
   let match;
-  while ((match = linkRegex.exec(content)) !== null) {
+  while ((match = linkRegex.exec(contentWithoutCode)) !== null) {
     const url = match[2];
     if (
       url.startsWith('http://') || 

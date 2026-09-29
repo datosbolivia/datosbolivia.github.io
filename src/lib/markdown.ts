@@ -19,7 +19,6 @@ export function renderMarkdown(content: string, options: RenderMarkdownOptions =
   let processed = content.replace(/```([a-zA-Z0-9_]*)\n([\s\S]*?)```/g, (match, lang, code) => {
     const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
     const escapedCode = escapeHtml(code.trim());
-    return ""
     if (lang === 'chart') {
       codeBlocks.push(
         `<div class="chart-container card" style="margin: 1.5rem 0; padding: 1rem; background-color: var(--color-surface); border: 1px solid var(--color-primary);">
@@ -121,7 +120,30 @@ export function renderMarkdown(content: string, options: RenderMarkdownOptions =
       continue;
     }
 
-    // Blockquote
+    // Callouts estilo Obsidian (> [!NOTE] o > [!TIP] ...)
+    const calloutMatch = line.match(/^>\s*\[!([a-zA-Z]+)\]\s*(.*)$/);
+    if (calloutMatch) {
+      if (inList) { outputLines.push('</ul>'); inList = false; }
+      const calloutType = calloutMatch[1].toLowerCase();
+      const calloutTitle = calloutMatch[2].trim() || calloutMatch[1].toUpperCase();
+      
+      const calloutBody: string[] = [];
+      while (i + 1 < lines.length && lines[i + 1].startsWith('>')) {
+        i++;
+        calloutBody.push(lines[i].replace(/^>\s?/, ''));
+      }
+      
+      const bodyHtml = calloutBody.map(l => `<p style="margin: 0.25rem 0;">${processInline(l, datasetSlug)}</p>`).join('');
+      outputLines.push(
+        `<div class="callout callout-${calloutType}">
+          <div class="callout-title">${escapeHtml(calloutTitle)}</div>
+          <div class="callout-content">${bodyHtml || ''}</div>
+        </div>`
+      );
+      continue;
+    }
+
+    // Blockquote estándar
     if (line.startsWith('> ')) {
       if (inList) { outputLines.push('</ul>'); inList = false; }
       outputLines.push(`<blockquote>${processInline(line.slice(2), datasetSlug)}</blockquote>`);
@@ -186,6 +208,24 @@ function processInline(text: string, datasetSlug: string): string {
 
   // Código inline
   res = res.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Obsidian Wikilinks: [[Nota]] o [[Nota|Texto Visible]]
+  res = res.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (match, target, display) => {
+    const cleanTarget = target.trim();
+    const label = (display || cleanTarget).trim();
+
+    if (cleanTarget.startsWith('#')) {
+      return `<a href="${cleanTarget}">${label}</a>`;
+    }
+
+    if (datasetSlug) {
+      const cleanPath = cleanTarget.replace(/^\.\//, '').replace(/\.md$/, '');
+      const targetTabId = `doc-${cleanPath.replace(/\//g, '-')}`;
+      return `<a href="/datasets/${datasetSlug}/${cleanPath}" data-doc-target="${targetTabId}" class="internal-doc-link" title="Abrir nota: ${cleanTarget}">${label}</a>`;
+    }
+
+    return `<a href="${cleanTarget}" class="internal-doc-link">${label}</a>`;
+  });
 
   // Enlaces Markdown [texto](url)
   res = res.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, url) => {

@@ -10,6 +10,7 @@
     "preview": "astro preview --host 0.0.0.0 --port 8001",
     "lint": "node scripts/lint-okf.mjs",
     "lint:okf": "node scripts/lint-okf.mjs",
+    "audit": "node scripts/audit-portal.mjs",
     "electron:dev": "ELECTRON_DEV=true electron electron/main.cjs",
     "electron:build": "npm run build && electron-builder"
   },

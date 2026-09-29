@@ -9,7 +9,7 @@ export const translations = {
   es: {
     // Navegación
     'nav.home': 'Inicio',
-    'nav.datasets': 'Datasets',
+    'nav.datasets': 'Datos',
     'nav.about': 'Acerca de',
     'nav.docs': 'Documentación',
     'nav.download': 'Descargas',

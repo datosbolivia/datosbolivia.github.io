@@ -73,8 +73,8 @@ function getCleanResourceName(res: any): string {
       <div class="obsidian-tree-container">
         <!-- Grupo KNOWLEDGE (Contexto Principal Primero) -->
         <div class="obsidian-folder-group">
-          <div class="obsidian-folder-header" role="button" tabindex="0" title="Expandir/Colapsar Knowledge">
-            <svg class="obsidian-folder-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <div class="obsidian-folder-header" role="button" tabindex="0" aria-expanded="true" title="Expandir/Colapsar Knowledge">
+            <svg class="obsidian-folder-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
             <span>Knowledge</span>
@@ -88,7 +88,7 @@ function getCleanResourceName(res: any): string {
             data-raw={`/raw/nodes/${dataset.slug}/index.md`}
             title="index.md"
           >
-            <svg class="file-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg class="file-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
               <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -108,7 +108,7 @@ function getCleanResourceName(res: any): string {
                 data-raw={`/raw/nodes/${dataset.slug}/${doc.relativePath}`}
                 title={fileName}
               >
-                <svg class="file-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg class="file-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
                 </svg>
@@ -121,8 +121,8 @@ function getCleanResourceName(res: any): string {
         <!-- Grupo CONCEPTS (si existen conceptos) -->
         {conceptDocs.length > 0 && (
           <div class="obsidian-folder-group">
-            <div class="obsidian-folder-header" role="button" tabindex="0" title="Expandir/Colapsar Concepts">
-              <svg class="obsidian-folder-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <div class="obsidian-folder-header" role="button" tabindex="0" aria-expanded="true" title="Expandir/Colapsar Concepts">
+              <svg class="obsidian-folder-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
               <span>Concepts</span>
@@ -138,7 +138,7 @@ function getCleanResourceName(res: any): string {
                   data-raw={`/raw/nodes/${dataset.slug}/${doc.relativePath}`}
                   title={fileName}
                 >
-                  <svg class="file-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg class="file-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="16" x2="12" y2="12"></line>
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -153,8 +153,8 @@ function getCleanResourceName(res: any): string {
         <!-- Grupo RESOURCES (Tablas y Fuentes) -->
         {resources.length > 0 && (
           <div class="obsidian-folder-group">
-            <div class="obsidian-folder-header" role="button" tabindex="0" title="Expandir/Colapsar Resources">
-              <svg class="obsidian-folder-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <div class="obsidian-folder-header" role="button" tabindex="0" aria-expanded="true" title="Expandir/Colapsar Resources">
+              <svg class="obsidian-folder-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
               <span>Resources ({resources.length})</span>
@@ -185,7 +185,7 @@ function getCleanResourceName(res: any): string {
     </aside>
 
     <!-- Panel Derecho: Visor de Documentos y Esquemas -->
-    <main class="obsidian-content-pane">
+    <section class="obsidian-content-pane" aria-label="Visor de contenido">
       <!-- Barra Superior de Navegación del Panel -->
       <div class="obsidian-pane-bar">
         <div class="obsidian-pane-breadcrumb" id="pane-breadcrumb">
@@ -265,7 +265,7 @@ function getCleanResourceName(res: any): string {
           </div>
         ))}
       </div>
-    </main>
+    </section>
   </div>
 </BaseLayout>
 
@@ -343,11 +343,17 @@ function getCleanResourceName(res: any): string {
       });
     });
 
-    // Colapsar/expandir carpetas
+    // Colapsar/expandir carpetas con clic y teclado
     document.querySelectorAll('.obsidian-folder-header').forEach((header) => {
       header.addEventListener('click', () => {
         const group = header.closest('.obsidian-folder-group');
         group?.classList.toggle('collapsed');
+      });
+      header.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          header.click();
+        }
       });
     });
 

@@ -177,9 +177,43 @@ pre code {
   padding: 0;
 }
 
-/* ==========================================================================
-   Componentes de Diseño y Utilidades
-   ========================================================================== */
+/* Accesibilidad WCAG 2.2 */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -60px;
+  left: 1rem;
+  background-color: var(--color-primary);
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: var(--radius-sm);
+  z-index: 1000;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+
+.skip-link:focus {
+  top: 1rem;
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.nav-toggle {
+  display: none;
+}
 
 .container {
   max-width: var(--max-width);
@@ -541,6 +575,65 @@ tr:last-child td {
   font-style: italic;
 }
 
+/* Callouts estilo Obsidian */
+.callout {
+  padding: 0.85rem 1.15rem;
+  margin: 1.25rem 0;
+  border-left: 3px solid var(--color-primary);
+  background-color: var(--color-surface);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-top: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.callout-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+  color: var(--color-primary);
+}
+
+.callout-content {
+  font-size: 0.925rem;
+  line-height: 1.5;
+}
+
+.callout-content p {
+  margin-bottom: 0.35rem;
+}
+
+.callout-content > *:last-child {
+  margin-bottom: 0;
+}
+
+.callout-warning, .callout-caution {
+  border-left-color: var(--color-warning);
+}
+.callout-warning .callout-title, .callout-caution .callout-title {
+  color: var(--color-warning);
+}
+
+.callout-tip, .callout-success {
+  border-left-color: var(--color-success);
+}
+.callout-tip .callout-title, .callout-success .callout-title {
+  color: var(--color-success);
+}
+
+.callout-info, .callout-note {
+  border-left-color: var(--color-info);
+}
+.callout-info .callout-title, .callout-note .callout-title {
+  color: var(--color-info);
+}
+
 /* ==========================================================================
    Explorador de Archivos Estilo Obsidian (Condensado, Zero Scroll)
    ========================================================================== */
@@ -740,6 +833,11 @@ button.obsidian-file-item:focus-visible,
 /* Responsividad */
 @media (max-width: 768px) {
   .hero-title { font-size: 2rem; }
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
   .nav-links { display: none; }
   .nav-links.mobile-open {
     display: flex;

@@ -1333,3 +1333,131 @@ button.obsidian-file-item:focus-visible,
     opacity: 0.08;
   }
 }
+
+/* ==========================================================================
+   Gráficos Declarativos Analíticos
+   ========================================================================== */
+
+.chart-card {
+  transition: border-color 0.15s ease;
+}
+
+.chart-card:hover {
+  border-color: var(--color-primary);
+}
+
+.chart-toggle-btn.active {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  border-color: var(--color-primary);
+}
+
+.chart-bars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.5rem 0;
+}
+
+.chart-bar-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 85px;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+}
+
+.chart-bar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text);
+  font-size: 0.775rem;
+}
+
+.chart-bar-track {
+  width: 100%;
+  height: 14px;
+  background-color: var(--color-surface-hover);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.chart-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-sm);
+  transition: width 0.4s ease;
+}
+
+.chart-bar-value {
+  text-align: right;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-size: 0.775rem;
+}
+
+.chart-svg-wrap {
+  margin: 0.5rem 0;
+  background-color: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.5rem 0.25rem;
+}
+
+.chart-svg {
+  width: 100%;
+  height: 150px;
+  display: block;
+}
+
+.chart-x-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.675rem;
+  color: var(--color-text-muted);
+  padding: 0.35rem 0.5rem 0;
+}
+
+.chart-questions-box {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--color-border);
+}
+
+.chart-questions-title {
+  display: block;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
+}
+
+.chart-questions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.chart-questions-list li {
+  font-size: 0.825rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  position: relative;
+  padding-left: 1rem;
+}
+
+.chart-questions-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--color-primary);
+}

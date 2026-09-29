@@ -15,6 +15,7 @@
     "electron:build": "npm run build && electron-builder"
   },
   "dependencies": {
+    "@datosbolivia/datamesh-client": "file:../datamesh-sdk/bindings/typescript",
     "astro": "^5.4.2",
     "js-yaml": "^4.1.0"
   },

@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SchemaTable from '../../components/SchemaTable.astro';
+import DataExplorer from '../../components/DataExplorer.astro';
 import { getAllDatasets } from '../../lib/catalog';
 import { renderMarkdown } from '../../lib/markdown';
 
@@ -246,10 +247,7 @@ function getCleanResourceName(res: any): string {
               )}
             </div>
 
-            <h2 style="font-size: 1.25rem; margin-bottom: 0.75rem;" data-i18n="explorer.table_schema">
-              Esquema de Columnas
-            </h2>
-            <SchemaTable resource={res} />
+            <DataExplorer datasetSlug={dataset.slug} resource={res} resourceIndex={i} />
           </div>
         ))}
       </div>
@@ -366,5 +364,20 @@ function getCleanResourceName(res: any): string {
         matched.click();
       }
     }
+
+    // Alternar vistas de gráficos declarativos (Visualización vs SQL)
+    document.querySelectorAll('.chart-card').forEach((card) => {
+      const btns = card.querySelectorAll('.chart-toggle-btn');
+      const visView = card.querySelector('[data-view="vis"]');
+      const sqlView = card.querySelector('[data-view="sql"]');
+      btns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const target = btn.getAttribute('data-target');
+          btns.forEach((b) => b.classList.toggle('active', b === btn));
+          if (visView) visView.style.display = target === 'vis' ? 'block' : 'none';
+          if (sqlView) sqlView.style.display = target === 'sql' ? 'block' : 'none';
+        });
+      });
+    });
   })();
 </script>

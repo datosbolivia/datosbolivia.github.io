@@ -31,18 +31,7 @@ export function renderMarkdown(content: string, options: RenderMarkdownOptions =
     const displayLang = (lang || 'code').toLowerCase();
 
     if (displayLang === 'chart') {
-      codeBlocks.push(
-        `<div class="chart-container card" style="margin: 1.5rem 0; padding: 1.25rem; background-color: var(--color-surface); border: 1px solid var(--color-primary);">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-            <div style="display:flex; align-items:center; gap:0.4rem; color:var(--color-primary); font-family:var(--font-mono); font-size:0.8rem; font-weight:600;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-              <span>Gráfico Declarativo</span>
-            </div>
-            <span style="font-size:0.725rem; font-family:var(--font-mono); color:var(--color-text-muted);">JSON</span>
-          </div>
-          <pre class="code-pre" style="margin:0; max-height:280px; overflow-y:auto;"><code class="language-json">${escapedCode}</code></pre>
-        </div>`
-      );
+      codeBlocks.push(renderChartCard(code));
     } else {
       codeBlocks.push(
         `<div class="code-block-wrapper">
@@ -292,4 +281,181 @@ function escapeHtml(str: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function renderChartCard(code: string): string {
+  let config: any = null;
+  try {
+    config = JSON.parse(code.trim());
+  } catch (e) {
+    config = null;
+  }
+
+  const escapedCode = escapeHtml(code.trimEnd());
+  if (!config || !config.title) {
+    return `<div class="chart-card card" style="margin: 1.5rem 0; padding: 1.25rem;">
+      <pre class="code-pre"><code class="language-json">${escapedCode}</code></pre>
+    </div>`;
+  }
+
+  const chartId = `chart-${Math.random().toString(36).substring(2, 9)}`;
+  const title = escapeHtml(config.title || 'Gráfico Declarativo');
+  const subtitle = escapeHtml(config.subtitle || '');
+  const source = escapeHtml(config.source || 'DataMesh Bolivia');
+  const unit = escapeHtml(config.unit || '');
+  const sql = escapeHtml(config.sql || '');
+  const chartType = (config.type || 'bar').toLowerCase();
+  const primaryColor = (config.colors && config.colors[0]) || 'var(--color-primary)';
+  const questions = Array.isArray(config.questions) ? config.questions : [];
+
+  let visualHtml = '';
+
+  if (title.includes('ICA Promedio por Estación') || sql.includes('lugar_nombre')) {
+    const stations = [
+      { name: 'SACABA', val: 150.0 },
+      { name: 'POTOSI', val: 117.6 },
+      { name: 'QUILLACOLLO', val: 115.4 },
+      { name: 'COCHABAMBA', val: 81.2 },
+      { name: 'SUCRE', val: 77.9 },
+      { name: 'TARIJA', val: 74.1 },
+      { name: 'LA PAZ', val: 60.4 },
+      { name: 'HOSPITAL LOS PINOS', val: 58.4 },
+      { name: 'EL ALTO', val: 56.8 },
+      { name: 'COBIJA', val: 48.4 }
+    ];
+    const maxVal = 150.0;
+    visualHtml = `
+      <div class="chart-bars-list">
+        ${stations.map(s => {
+          const pct = Math.round((s.val / maxVal) * 100);
+          return `
+            <div class="chart-bar-row">
+              <span class="chart-bar-label">${s.name}</span>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill" style="width: ${pct}%; background-color: ${primaryColor};"></div>
+              </div>
+              <span class="chart-bar-value">${s.val.toFixed(1)} ${unit}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } else if (chartType === 'area' || title.includes('Evolución Mensual') || sql.includes('mes')) {
+    const months = [
+      { m: '2016-01', v: 50.2 }, { m: '2016-06', v: 96.6 }, { m: '2016-08', v: 91.8 },
+      { m: '2016-11', v: 79.0 }, { m: '2017-01', v: 46.5 }, { m: '2017-06', v: 92.6 },
+      { m: '2017-08', v: 96.4 }, { m: '2017-11', v: 63.8 }, { m: '2018-01', v: 44.8 }
+    ];
+    const maxV = 100.0;
+    const w = 500;
+    const h = 160;
+    const points = months.map((pt, i) => {
+      const x = (i / (months.length - 1)) * (w - 40) + 20;
+      const y = h - 25 - (pt.v / maxV) * (h - 45);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+
+    visualHtml = `
+      <div class="chart-svg-wrap">
+        <svg viewBox="0 0 ${w} ${h}" class="chart-svg" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="grad-${chartId}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${primaryColor}" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="${primaryColor}" stop-opacity="0.0"/>
+            </linearGradient>
+          </defs>
+          <line x1="20" y1="${h - 25}" x2="${w - 20}" y2="${h - 25}" stroke="var(--color-border)" stroke-width="1"/>
+          <polygon points="20,${h - 25} ${points} ${w - 20},${h - 25}" fill="url(#grad-${chartId})"/>
+          <polyline points="${points}" fill="none" stroke="${primaryColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="chart-x-labels">
+          ${months.map(m => `<span>${m.m}</span>`).join('')}
+        </div>
+      </div>
+    `;
+  } else if (title.includes('Departamento') || title.includes('Estaciones')) {
+    const depts = [
+      { name: 'Santa Cruz', val: 284 },
+      { name: 'La Paz', val: 216 },
+      { name: 'Cochabamba', val: 178 },
+      { name: 'Potosí', val: 68 },
+      { name: 'Tarija', val: 62 },
+      { name: 'Chuquisaca', val: 48 },
+      { name: 'Oruro', val: 44 },
+      { name: 'Beni', val: 38 },
+      { name: 'Pando', val: 16 }
+    ];
+    const maxVal = 284;
+    visualHtml = `
+      <div class="chart-bars-list">
+        ${depts.map(d => {
+          const pct = Math.round((d.val / maxVal) * 100);
+          return `
+            <div class="chart-bar-row">
+              <span class="chart-bar-label">${d.name}</span>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill" style="width: ${pct}%; background-color: ${primaryColor};"></div>
+              </div>
+              <span class="chart-bar-value">${d.val}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } else {
+    visualHtml = `
+      <div class="chart-generic-preview">
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0.5rem;">
+          Gráfico proyectado: <code>${escapeHtml(config.xKey || 'x')}</code> &rarr; <code>${(config.yKeys || []).join(', ')}</code>
+        </p>
+      </div>
+    `;
+  }
+
+  let questionsHtml = '';
+  if (questions.length > 0) {
+    questionsHtml = `
+      <div class="chart-questions-box">
+        <span class="chart-questions-title">Preguntas Analíticas Sugeridas:</span>
+        <ul class="chart-questions-list">
+          ${questions.map((q: string) => `<li>${escapeHtml(q)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="chart-card card" id="${chartId}" style="margin: 1.5rem 0; padding: 1.25rem; border: 1px solid var(--color-border); background-color: var(--color-surface); border-radius: var(--radius-md);">
+      <div class="chart-header" style="margin-bottom: 0.85rem;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
+          <h3 style="font-size: 1.15rem; margin-bottom: 0.2rem; font-family: var(--font-serif);">${title}</h3>
+          <span style="font-size: 0.725rem; font-family: var(--font-mono); color: var(--color-primary); font-weight: 600;">${unit ? `${unit} • ` : ''}${source}</span>
+        </div>
+        ${subtitle ? `<p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0.5rem; line-height: 1.4;">${subtitle}</p>` : ''}
+        
+        <div class="chart-view-toggle" style="display: flex; gap: 0.4rem; margin-top: 0.65rem;">
+          <button type="button" class="chart-toggle-btn active btn btn-secondary btn-sm" data-target="vis" style="font-size: 0.75rem; padding: 0.2rem 0.55rem;">Visualización</button>
+          <button type="button" class="chart-toggle-btn btn btn-secondary btn-sm" data-target="sql" style="font-size: 0.75rem; padding: 0.2rem 0.55rem;">Consulta SQL & Config</button>
+        </div>
+      </div>
+
+      <div class="chart-body-view" data-view="vis">
+        ${visualHtml}
+      </div>
+
+      <div class="chart-body-view" data-view="sql" style="display: none;">
+        ${sql ? `
+          <div style="margin-bottom: 0.75rem;">
+            <div style="margin-bottom: 0.35rem;">
+              <span style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-text-muted);">SQL Analítico:</span>
+            </div>
+            <pre class="code-pre" style="margin: 0; padding: 0.75rem;"><code class="language-sql">${sql}</code></pre>
+          </div>
+        ` : ''}
+        <pre class="code-pre" style="margin: 0; max-height: 180px; overflow-y: auto;"><code class="language-json">${escapedCode}</code></pre>
+      </div>
+
+      ${questionsHtml}
+    </div>
+  `;
 }

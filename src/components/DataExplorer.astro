@@ -1,0 +1,801 @@
+---
+import type { DataResource } from '../lib/catalog';
+import SchemaTable from './SchemaTable.astro';
+
+interface Props {
+  datasetSlug: string;
+  resource: DataResource;
+  resourceIndex: number;
+}
+
+const { datasetSlug, resource, resourceIndex } = Astro.props;
+
+const triadName = `${datasetSlug}:${resource.name}`;
+const remoteUrl = resource.path || '';
+const format = (resource.format || 'csv').toLowerCase();
+const explorerId = `explorer-${datasetSlug}-${resourceIndex}`;
+
+const defaultClientSql = `SELECT * FROM "${triadName}" LIMIT 25;`;
+const pythonSnippet = `import datamesh as dm\n\n# Consulta unificada en 1 línea con DuckDB\nres = dm.sql("""\nSELECT *\nFROM '${triadName}'\nLIMIT 25\n""")\nprint(res)`;
+const cliSnippet = `datamesh sql "SELECT * FROM '${triadName}' LIMIT 25"`;
+const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\nconst res = await datamesh.query({\n  resource_uri: '${remoteUrl}',\n  limit: 25\n});\nconsole.log(res);`;
+---
+
+<div class="data-explorer-wrapper" id={explorerId} data-explorer-container data-dataset={datasetSlug} data-remote-url={remoteUrl} data-format={format} data-triad={triadName}>
+  <!-- Subnavegación de Vistas del Recurso -->
+  <div class="resource-subnav" role="tablist">
+    <button 
+      type="button" 
+      class="subnav-tab-btn active" 
+      data-subtab-target="schema"
+      role="tab"
+      aria-selected="true"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+        <line x1="3" y1="9" x2="21" y2="9"></line>
+        <line x1="9" y1="21" x2="9" y2="9"></line>
+      </svg>
+      <span data-i18n="explorer.tab_schema">Esquema</span>
+    </button>
+
+    <button 
+      type="button" 
+      class="subnav-tab-btn" 
+      data-subtab-target="preview"
+      role="tab"
+      aria-selected="false"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+      <span data-i18n="explorer.tab_preview">Explorar Datos</span>
+    </button>
+
+    <button 
+      type="button" 
+      class="subnav-tab-btn" 
+      data-subtab-target="sql"
+      role="tab"
+      aria-selected="false"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <polyline points="4 17 10 11 4 5"></polyline>
+        <line x1="12" y1="19" x2="20" y2="19"></line>
+      </svg>
+      <span data-i18n="explorer.tab_sql">Consulta SQL / CLI</span>
+    </button>
+  </div>
+
+  <!-- Vista 1: Esquema de Columnas (Por Defecto) -->
+  <div class="subtab-pane active" data-subtab-pane="schema">
+    <SchemaTable resource={resource} />
+  </div>
+
+  <!-- Vista 2: Explorador Interactivo en Cliente (TypeScript SDK) -->
+  <div class="subtab-pane" data-subtab-pane="preview">
+    <!-- Toolbar de Operaciones Client-Side -->
+    <div class="explorer-toolbar">
+      <div class="explorer-search-box">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input 
+          type="text" 
+          class="explorer-filter-input" 
+          placeholder="Filtrar registros en tiempo real..." 
+          data-i18n-placeholder="explorer.search_placeholder" 
+        />
+      </div>
+
+      <div class="explorer-toolbar-actions">
+        <select class="explorer-page-size" title="Registros por página">
+          <option value="10">10 / pág</option>
+          <option value="25" selected>25 / pág</option>
+          <option value="50">50 / pág</option>
+          <option value="100">100 / pág</option>
+        </select>
+
+        <button type="button" class="btn btn-secondary btn-sm export-btn" title="Exportar filas visibles como CSV">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span data-i18n="explorer.export_csv">Exportar CSV</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Consola Rápida SQL Client-Side -->
+    <div class="client-sql-bar">
+      <input 
+        type="text" 
+        class="client-sql-input" 
+        value={defaultClientSql} 
+        placeholder="Ej: SELECT * FROM resource WHERE columna = 'valor' LIMIT 20"
+      />
+      <button type="button" class="btn btn-primary btn-sm client-sql-run-btn">
+        Ejecutar SQL
+      </button>
+    </div>
+
+    <!-- Indicador de Estado -->
+    <div class="explorer-status-bar">
+      <span class="explorer-record-info">TypeScript Client SDK listo para streaming...</span>
+      <span class="explorer-source-notice" style="display: none;"></span>
+    </div>
+
+    <!-- Contenedor de la Tabla de Datos -->
+    <div class="explorer-table-container table-wrapper">
+      <div class="explorer-initial-state">
+        <p style="margin-bottom: 0.75rem; color: var(--color-text-muted);">
+          El motor TypeScript cargará el recurso directamente desde la red hacia la memoria del navegador.
+        </p>
+        <button type="button" class="btn btn-primary btn-sm load-direct-btn">
+          Cargar Datos en Cliente
+        </button>
+      </div>
+    </div>
+
+    <!-- Barra de Paginación -->
+    <div class="explorer-pagination" style="display: none;">
+      <button type="button" class="btn btn-secondary btn-sm pagination-prev" disabled>
+        &larr; <span data-i18n="explorer.prev_page">Anterior</span>
+      </button>
+      <span class="pagination-page-label">Página 1 de 1</span>
+      <button type="button" class="btn btn-secondary btn-sm pagination-next" disabled>
+        <span data-i18n="explorer.next_page">Siguiente</span> &rarr;
+      </button>
+    </div>
+  </div>
+
+  <!-- Vista 3: Consola de Consultas SQL & SDK -->
+  <div class="subtab-pane" data-subtab-pane="sql">
+    <div class="triad-banner">
+      <span class="triad-label" data-i18n="explorer.triad_label">Tríada Canónica:</span>
+      <code class="triad-code">{triadName}</code>
+    </div>
+
+    <div class="sql-examples-grid">
+      <!-- Ejemplo CLI -->
+      <div class="sql-card card">
+        <div class="sql-card-header">
+          <span class="sql-lang-label">CLI (datamesh sql)</span>
+          <button type="button" class="copy-snippet-btn btn btn-secondary btn-sm" data-copy={cliSnippet}>
+            <span data-i18n="explorer.copy_cli">Copiar Comando CLI</span>
+          </button>
+        </div>
+        <pre class="code-pre"><code class="language-bash">{cliSnippet}</code></pre>
+      </div>
+
+      <!-- Ejemplo Python SDK -->
+      <div class="sql-card card">
+        <div class="sql-card-header">
+          <span class="sql-lang-label">Python SDK (DuckDB In-Memory)</span>
+          <button type="button" class="copy-snippet-btn btn btn-secondary btn-sm" data-copy={pythonSnippet}>
+            <span data-i18n="explorer.copy_python">Copiar Python SDK</span>
+          </button>
+        </div>
+        <pre class="code-pre"><code class="language-python">{pythonSnippet}</code></pre>
+      </div>
+
+      <!-- Ejemplo TypeScript Client SDK -->
+      <div class="sql-card card">
+        <div class="sql-card-header">
+          <span class="sql-lang-label">TypeScript SDK (Browser / Node)</span>
+          <button type="button" class="copy-snippet-btn btn btn-secondary btn-sm" data-copy={tsSnippet}>
+            <span>Copiar TypeScript</span>
+          </button>
+        </div>
+        <pre class="code-pre"><code class="language-typescript">{tsSnippet}</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .data-explorer-wrapper {
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  /* Subnavegación */
+  .resource-subnav {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0;
+  }
+
+  .subnav-tab-btn {
+    all: unset;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.95rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .subnav-tab-btn:hover {
+    color: var(--color-text);
+  }
+
+  .subnav-tab-btn.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .subtab-pane {
+    display: none;
+  }
+
+  .subtab-pane.active {
+    display: block;
+  }
+
+  /* Toolbar de Exploración */
+  .explorer-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.65rem;
+    flex-wrap: wrap;
+  }
+
+  .explorer-search-box {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+    display: flex;
+    align-items: center;
+  }
+
+  .explorer-search-box .search-icon {
+    position: absolute;
+    left: 0.75rem;
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+
+  .explorer-filter-input {
+    width: 100%;
+    padding: 0.45rem 0.75rem 0.45rem 2.25rem;
+    font-size: 0.85rem;
+    font-family: var(--font-sans);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  .explorer-filter-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-subtle);
+  }
+
+  .client-sql-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .client-sql-input {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  .client-sql-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-subtle);
+  }
+
+  .explorer-toolbar-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .explorer-page-size {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  .explorer-status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    margin-bottom: 0.65rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .explorer-source-notice {
+    color: var(--color-primary);
+  }
+
+  /* Tabla de Datos */
+  .explorer-table-container {
+    max-height: 420px;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+  }
+
+  .explorer-table-container table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.825rem;
+  }
+
+  .explorer-table-container th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: var(--color-surface-hover);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .explorer-table-container th:hover {
+    color: var(--color-primary);
+  }
+
+  .explorer-table-container td {
+    white-space: nowrap;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .explorer-initial-state {
+    padding: 2.5rem 1rem;
+    text-align: center;
+  }
+
+  /* Loading State */
+  .explorer-loading-state {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Paginación */
+  .explorer-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  /* Tríada y Ejemplos SQL */
+  .triad-banner {
+    padding: 0.75rem 1rem;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .triad-label {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+
+  .triad-code {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-primary);
+    font-weight: 600;
+    background: transparent;
+    padding: 0;
+  }
+
+  .sql-examples-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .sql-card {
+    padding: 1rem;
+  }
+
+  .sql-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.65rem;
+  }
+
+  .sql-lang-label {
+    font-family: var(--font-mono);
+    font-size: 0.775rem;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+</style>
+
+<script>
+  import { DataMeshClient } from '@datosbolivia/datamesh-client';
+
+  // Usa DuckDB en cliente con catálogo por defecto de la misma página (origen actual /llms.txt)
+  const client = new DataMeshClient({ engine: 'duckdb' });
+
+  function setupExplorers() {
+    const wrappers = document.querySelectorAll<HTMLElement>('[data-explorer-container]');
+
+    wrappers.forEach((container) => {
+      if (container.dataset.initialized) return;
+      container.dataset.initialized = 'true';
+
+      const remoteUrl = container.getAttribute('data-remote-url') || '';
+      const triad = container.getAttribute('data-triad') || '';
+      const format = container.getAttribute('data-format') || 'csv';
+
+      const tabBtns = container.querySelectorAll<HTMLButtonElement>('.subnav-tab-btn');
+      const tabPanes = container.querySelectorAll<HTMLElement>('.subtab-pane');
+      const filterInput = container.querySelector<HTMLInputElement>('.explorer-filter-input');
+      const pageSizeSelect = container.querySelector<HTMLSelectElement>('.explorer-page-size');
+      const exportBtn = container.querySelector<HTMLButtonElement>('.export-btn');
+      const prevBtn = container.querySelector<HTMLButtonElement>('.pagination-prev');
+      const nextBtn = container.querySelector<HTMLButtonElement>('.pagination-next');
+      const pageLabel = container.querySelector<HTMLElement>('.pagination-page-label');
+      const recordInfo = container.querySelector<HTMLElement>('.explorer-record-info');
+      const sourceNotice = container.querySelector<HTMLElement>('.explorer-source-notice');
+      const tableContainer = container.querySelector<HTMLElement>('.explorer-table-container');
+      const paginationWrap = container.querySelector<HTMLElement>('.explorer-pagination');
+      const loadDirectBtn = container.querySelector<HTMLButtonElement>('.load-direct-btn');
+      const sqlInput = container.querySelector<HTMLInputElement>('.client-sql-input');
+      const sqlRunBtn = container.querySelector<HTMLButtonElement>('.client-sql-run-btn');
+
+      let parsedTable: { columns: string[]; rows: string[][] } | null = null;
+      let activeQueryResult: { columns: string[]; rows: string[][]; total_count: number } | null = null;
+      let currentPage = 1;
+      let pageSize = parseInt(pageSizeSelect?.value || '25', 10);
+      let sortCol: string | undefined = undefined;
+      let sortDir: 'asc' | 'desc' = 'asc';
+      let isLoading = false;
+
+      // Sub-tabs switcher
+      tabBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const target = btn.getAttribute('data-subtab-target');
+          tabBtns.forEach((b) => {
+            b.classList.toggle('active', b === btn);
+            b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+          });
+          tabPanes.forEach((pane) => {
+            pane.classList.toggle('active', pane.getAttribute('data-subtab-pane') === target);
+          });
+
+          if (target === 'preview' && !parsedTable && !isLoading) {
+            fetchViaTypeScriptClient();
+          }
+        });
+      });
+
+      loadDirectBtn?.addEventListener('click', () => {
+        fetchViaTypeScriptClient();
+      });
+
+      // Fetch tabular data using TypeScript DataMeshClient
+      async function fetchViaTypeScriptClient() {
+        if (!tableContainer) return;
+        isLoading = true;
+        tableContainer.innerHTML = `
+          <div class="explorer-loading-state">
+            <div class="loading-spinner"></div>
+            <p>TypeScript Client SDK descargando recurso desde la red...</p>
+          </div>`;
+
+        if (format === 'parquet') {
+          isLoading = false;
+          renderUnsupportedFormatMessage('Parquet');
+          return;
+        }
+
+        try {
+          // Direct fetch using client SDK
+          const result = await client.query({
+            resource_uri: remoteUrl,
+          });
+
+          parsedTable = {
+            columns: result.columns,
+            rows: result.rows,
+          };
+
+          if (sourceNotice) {
+            sourceNotice.textContent = '• Streamed en vivo vía TypeScript SDK';
+            sourceNotice.style.display = 'inline';
+          }
+
+          if (paginationWrap) paginationWrap.style.display = 'flex';
+          executeClientQuery();
+        } catch (err: any) {
+          isLoading = false;
+          renderErrorMessage(err?.message || 'Error de red o CORS');
+        }
+      }
+
+      // Query table with in-memory TypeScript Client
+      function executeClientQuery() {
+        if (!parsedTable) return;
+
+        const searchKeyword = (filterInput?.value || '').trim();
+        const offset = (currentPage - 1) * pageSize;
+
+        activeQueryResult = client.queryTable(parsedTable, {
+          search: searchKeyword,
+          sort_by: sortCol,
+          sort_direction: sortDir,
+          limit: pageSize,
+          offset: offset,
+        });
+
+        renderTable();
+      }
+
+      // Run Client-Side SQL
+      sqlRunBtn?.addEventListener('click', async () => {
+        if (!parsedTable) {
+          await fetchViaTypeScriptClient();
+          if (!parsedTable) return;
+        }
+
+        const sql = sqlInput?.value.trim() || '';
+        if (!sql) return;
+
+        try {
+          const sqlRes = await client.sql(sql, parsedTable);
+          activeQueryResult = {
+            columns: sqlRes.columns,
+            rows: sqlRes.rows,
+            total_count: sqlRes.total_count,
+          };
+          currentPage = 1;
+          renderTable();
+          if (recordInfo) {
+            recordInfo.textContent = `Consulta SQL cliente completada: ${sqlRes.row_count} filas`;
+          }
+        } catch (e: any) {
+          alert(`Error en consulta SQL cliente: ${e?.message}`);
+        }
+      });
+
+      function renderTable() {
+        if (!tableContainer || !activeQueryResult) return;
+
+        const { columns, rows, total_count } = activeQueryResult;
+        const totalPages = Math.max(1, Math.ceil(total_count / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const startIdx = (currentPage - 1) * pageSize;
+        const endIdx = Math.min(startIdx + rows.length, total_count);
+
+        if (recordInfo) {
+          if (total_count === 0) {
+            recordInfo.textContent = '0 registros encontrados';
+          } else {
+            recordInfo.textContent = `Mostrando ${startIdx + 1} - ${endIdx} de ${total_count} registros`;
+          }
+        }
+
+        if (pageLabel) {
+          pageLabel.textContent = `Página ${currentPage} de ${totalPages}`;
+        }
+
+        if (prevBtn) prevBtn.disabled = currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+        if (rows.length === 0) {
+          tableContainer.innerHTML = `
+            <div style="padding: 2.5rem; text-align: center; color: var(--color-text-muted); font-size: 0.85rem;">
+              No se encontraron registros que coincidan con la búsqueda.
+            </div>`;
+          return;
+        }
+
+        let html = '<table><thead><tr>';
+        columns.forEach((col) => {
+          const isSorted = sortCol && sortCol.toLowerCase() === col.toLowerCase();
+          const arrow = isSorted ? (sortDir === 'asc' ? ' &uarr;' : ' &darr;') : '';
+          html += `<th data-col-name="${escapeHtml(col)}" title="Ordenar columna">${escapeHtml(col)}${arrow}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+
+        rows.forEach((row) => {
+          html += '<tr>';
+          columns.forEach((_, colIdx) => {
+            const val = row[colIdx] !== undefined ? row[colIdx] : '';
+            html += `<td title="${escapeHtml(val)}">${escapeHtml(val)}</td>`;
+          });
+          html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        tableContainer.innerHTML = html;
+
+        // Sorting on header click
+        tableContainer.querySelectorAll('th').forEach((th) => {
+          th.addEventListener('click', () => {
+            const colName = th.getAttribute('data-col-name');
+            if (!colName) return;
+            if (sortCol?.toLowerCase() === colName.toLowerCase()) {
+              sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+              sortCol = colName;
+              sortDir = 'asc';
+            }
+            executeClientQuery();
+          });
+        });
+      }
+
+      function renderErrorMessage(msg: string) {
+        if (!tableContainer) return;
+        tableContainer.innerHTML = `
+          <div style="padding: 2rem 1.5rem; text-align: center; color: var(--color-text-muted);">
+            <p style="margin-bottom: 0.5rem; font-weight: 600; color: var(--color-text);">
+              El cliente web no pudo descargar este recurso directamente.
+            </p>
+            <p style="font-size: 0.8rem; margin-bottom: 1rem; line-height: 1.5;">
+              Causa: ${escapeHtml(msg)}. El servidor remoto restringe solicitudes directas de navegador (CORS) o requiere autorización de sesión.
+            </p>
+            <p style="font-size: 0.825rem; margin-bottom: 0.75rem;">
+              Puedes consultarlo sin restricciones de navegador utilizando el SDK y CLI de DataMesh:
+            </p>
+            <pre class="code-pre" style="margin: 0 auto; max-width: 550px; text-align: left; padding: 0.6rem 0.9rem;"><code class="language-bash">datamesh sql "SELECT * FROM '${triad}' LIMIT 10"</code></pre>
+          </div>`;
+      }
+
+      function renderUnsupportedFormatMessage(formatName: string) {
+        if (!tableContainer) return;
+        tableContainer.innerHTML = `
+          <div style="padding: 2rem 1.5rem; text-align: center; color: var(--color-text-muted);">
+            <p style="margin-bottom: 0.5rem; font-weight: 600; color: var(--color-text);">
+              Formato ${formatName} (Formato Columnar Binario)
+            </p>
+            <p style="font-size: 0.8rem; margin-bottom: 1rem; line-height: 1.5;">
+              Los archivos Parquet son procesados en streaming con motor columnar local DuckDB a través del SDK / CLI de DataMesh.
+            </p>
+            <pre class="code-pre" style="margin: 0 auto; max-width: 550px; text-align: left; padding: 0.6rem 0.9rem;"><code class="language-bash">datamesh sql "SELECT * FROM '${triad}' LIMIT 10"</code></pre>
+          </div>`;
+      }
+
+      function escapeHtml(str: string): string {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      filterInput?.addEventListener('input', () => {
+        currentPage = 1;
+        executeClientQuery();
+      });
+
+      pageSizeSelect?.addEventListener('change', () => {
+        pageSize = parseInt(pageSizeSelect.value, 10);
+        currentPage = 1;
+        executeClientQuery();
+      });
+
+      prevBtn?.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          executeClientQuery();
+          tableContainer.scrollTop = 0;
+        }
+      });
+
+      nextBtn?.addEventListener('click', () => {
+        if (!parsedTable) return;
+        const totalPages = Math.ceil(parsedTable.rows.length / pageSize);
+        if (currentPage < totalPages) {
+          currentPage++;
+          executeClientQuery();
+          tableContainer.scrollTop = 0;
+        }
+      });
+
+      exportBtn?.addEventListener('click', () => {
+        if (!parsedTable) return;
+        let csv = parsedTable.columns.map((c) => `"${c.replace(/"/g, '""')}"`).join(',') + '\n';
+        parsedTable.rows.forEach((row) => {
+          csv += row.map((cell) => `"${(cell || '').replace(/"/g, '""')}"`).join(',') + '\n';
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${triad.replace(/[^a-zA-Z0-9_-]/g, '_')}_export.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      // Snippet copy buttons
+      container.querySelectorAll('.copy-snippet-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const text = btn.getAttribute('data-copy') || '';
+          try {
+            await navigator.clipboard.writeText(text);
+            const original = btn.innerHTML;
+            btn.innerHTML = '<span>¡Copiado!</span>';
+            setTimeout(() => {
+              btn.innerHTML = original;
+            }, 2000);
+          } catch {
+            // fallback
+          }
+        });
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupExplorers);
+  } else {
+    setupExplorers();
+  }
+</script>

@@ -13,18 +13,27 @@ export const translations = {
     'nav.about': 'Acerca de',
     'nav.docs': 'Documentación',
     'nav.download': 'Descargas',
+    'nav.llms_title': 'Especificación llms.txt para Agentes de IA',
 
+    // Hero y Métricas
     'hero.eyebrow': 'Iniciativa de la Sociedad Civil • Datos Abiertos',
     'hero.title': 'Información Pública y Verificable',
     'hero.subtitle': 'Catálogo federado de datos abiertos para la ciudadanía, investigadores y Agentes de IA.',
     'hero.search_placeholder': '¿Qué datos deseas consultar? (ej. inflación, aire, combustible...)',
-    'hero.topics_label': 'Tematicas:',
+    'hero.topics_label': 'Temáticas:',
     'hero.explore': 'Explorar Datasets',
-    'hero.about': 'Acerca de',
+    'hero.about': 'Acerca del Proyecto',
     'hero.install': 'Descargar',
     'stats.datasets': 'Datasets',
     'stats.resources': 'Recursos',
     'stats.domains': 'Dominios',
+
+    // Temáticas Cívicas (Topics)
+    'topics.economy': 'Economía',
+    'topics.environment': 'Calidad del Aire',
+    'topics.energy': 'Combustibles',
+    'topics.health': 'Salud Pública',
+    'topics.government': 'Trámites',
 
     // Pilares de Sociedad Civil
     'pillars.transparency_title': 'Transparencia Directa',
@@ -42,7 +51,11 @@ export const translations = {
     'home.blog_sub': 'Actualizaciones recientes sobre el catálogo y los estándares.',
     'home.read_more': 'Leer artículo',
 
-    // Buscador y Filtros
+    // Catálogo de Datasets y Filtros
+    'datasets.title': 'Catálogo de Datasets',
+    'datasets.subtitle': 'Explora recursos, esquemas y conceptos federados.',
+    'datasets.filter_by_domain': 'Dominios:',
+    'dataset.back_to_dataset': 'Volver al Dataset',
     'search.placeholder': 'Buscar por nombre, entidad, columna o dominio...',
     'search.all': 'Todos',
     'search.no_results': 'No se encontraron datasets para esta búsqueda.',
@@ -55,11 +68,15 @@ export const translations = {
     'card.resources': 'recurso(s)',
 
     // Explorador de Dataset (Estilo Obsidian)
+    'explorer.title': 'Explorador de Archivos',
     'explorer.files': 'Archivos',
-    'explorer.context': 'Contexto',
+    'explorer.knowledge': 'Knowledge',
+    'explorer.concepts': 'Concepts',
     'explorer.resources': 'Recursos',
-    'explorer.concepts': 'Conceptos',
     'explorer.contracts': 'Contratos',
+    'explorer.resource_num': 'Recurso',
+    'explorer.download_resource': 'Descargar Recurso',
+    'explorer.raw_md': 'Ver Markdown Raw',
     'explorer.raw': 'Ver Raw',
     'explorer.download': 'Descargar',
     'explorer.source': 'Fuente',
@@ -69,22 +86,63 @@ export const translations = {
     'explorer.field_desc': 'Descripción',
     'explorer.field_constraints': 'Restricciones',
 
+    // Tabla de Esquemas
+    'schema.field': 'Campo (Columna)',
+    'schema.type': 'Tipo',
+    'schema.description': 'Descripción',
+    'schema.no_fields': 'No hay campos detallados en el schema de este recurso.',
+
+    // Metadatos Ontológicos & SKOS
+    'skos.title': 'Metadatos Ontológicos & SKOS',
+    'skos.pref_label': 'Etiqueta Preferida (prefLabel):',
+    'skos.exact_match': 'URI Ontológica (exactMatch):',
+    'skos.broader': 'Término Más Amplio (broader):',
+
     // Documentación
     'docs.title': 'Centro Documental',
-    'docs.subtitle': 'Especificaciones normativas, notas técnicas y decisiones de diseño.',
+    'docs.subtitle': 'Especificaciones normativas, notas técnicas y registros de arquitectura.',
     'docs.specs': 'Especificaciones Normativas',
     'docs.adrs': 'Decisiones de Arquitectura (ADRs)',
+    'docs.decisions_count': 'decisiones',
+    'docs.status_label': 'Estado:',
+    'docs.type_label': 'Tipo:',
     'docs.blog': 'Blog y Novedades',
-    'docs.read': 'Leer documento',
+    'docs.read': 'Leer artículo',
+    'docs.read_spec': 'Leer Especificación',
+    'docs.view_adr': 'Ver ADR',
+    'docs.view_raw': 'Ver Raw (.md)',
 
-    // Descargas
+    // Descargas e Instalación
     'download.title': 'Instalación y Descargas',
+    'download.subtitle': 'Accede al catálogo de forma offline y desbloquea procesamiento local con PWA y Desktop.',
+    'download.browser': 'Navegador',
     'download.pwa_title': 'Progressive Web App (PWA)',
+    'download.pwa_desc': 'Instala la aplicación directamente en tu navegador móvil o de escritorio. Navega el catálogo completo sin conexión.',
+    'download.pwa_btn': 'Instalar PWA',
+    'download.desktop_native': 'Desktop Native',
     'download.desktop_title': 'Aplicación Desktop (Electron)',
+    'download.desktop_desc': 'Aplicación de escritorio con ranura para el binario compilado en Go del SDK, consultas analíticas y validación de nodos en vivo.',
+    'download.desktop_btn': 'Ver Releases',
+    'download.engine_active': 'Entorno Desktop Activo',
+    'download.engine_type': 'Motor de Cómputo:',
+    'download.detecting': 'Detectando...',
+    'download.pwa_manual_hint': 'Para instalar la PWA, utiliza el menú de tu navegador: "Instalar aplicación" o "Agregar a la pantalla de inicio".',
 
-    // Acciones Generales
+    // Componente PWA Prompt
+    'pwa.prompt_title': 'Instalar DataMesh Bolivia',
+    'pwa.prompt_desc': 'Accede al catálogo y esquemas 100% offline desde tu dispositivo.',
+    'pwa.install_btn': 'Instalar',
+
+    // Pie de Página
+    'footer.install': 'Instalar',
+
+    // Acciones Generales y Accesibilidad
+    'action.skip_link': 'Saltar al contenido principal',
+    'action.close': 'Cerrar',
+    'action.menu': 'Menú de navegación',
     'action.theme': 'Cambiar tema',
-    'action.lang': 'EN'
+    'action.lang': 'EN',
+    'action.lang_title': 'Cambiar idioma (ES / EN)'
   },
   en: {
     // Navigation
@@ -93,19 +151,27 @@ export const translations = {
     'nav.about': 'About',
     'nav.docs': 'Documentation',
     'nav.download': 'Download',
+    'nav.llms_title': 'llms.txt specification for AI Agents',
 
     // Hero and Stats
     'hero.eyebrow': 'Civil Society Initiative • Open Data',
     'hero.title': 'Public & Verifiable Information',
     'hero.subtitle': 'Federated open data ecosystem for citizens, researchers, and AI Agents.',
     'hero.search_placeholder': 'What data do you want to explore? (e.g. inflation, air, fuel...)',
-    'hero.topics_label': 'Tematics',
+    'hero.topics_label': 'Topics:',
     'hero.explore': 'Explore Datasets',
-    'hero.about': 'About',
+    'hero.about': 'About the Project',
     'hero.install': 'Download',
     'stats.datasets': 'Datasets',
     'stats.resources': 'Resources',
     'stats.domains': 'Domains',
+
+    // Civic Topics
+    'topics.economy': 'Economy',
+    'topics.environment': 'Air Quality',
+    'topics.energy': 'Fuels & Energy',
+    'topics.health': 'Public Health',
+    'topics.government': 'Procedures',
 
     // Civil Society Pillars
     'pillars.transparency_title': 'Direct Transparency',
@@ -123,7 +189,11 @@ export const translations = {
     'home.blog_sub': 'Recent updates on the catalog and open standards.',
     'home.read_more': 'Read article',
 
-    // Search and Filters
+    // Dataset Catalog and Filters
+    'datasets.title': 'Dataset Catalog',
+    'datasets.subtitle': 'Explore federated resources, schemas, and concepts.',
+    'datasets.filter_by_domain': 'Domains:',
+    'dataset.back_to_dataset': 'Back to Dataset',
     'search.placeholder': 'Search by name, entity, column, or domain...',
     'search.all': 'All',
     'search.no_results': 'No datasets found matching your search.',
@@ -136,11 +206,15 @@ export const translations = {
     'card.resources': 'resource(s)',
 
     // Dataset Explorer (Obsidian-Style)
+    'explorer.title': 'File Explorer',
     'explorer.files': 'Files',
-    'explorer.context': 'Context',
-    'explorer.resources': 'Resources',
+    'explorer.knowledge': 'Knowledge',
     'explorer.concepts': 'Concepts',
+    'explorer.resources': 'Resources',
     'explorer.contracts': 'Contracts',
+    'explorer.resource_num': 'Resource',
+    'explorer.download_resource': 'Download Resource',
+    'explorer.raw_md': 'View Raw Markdown',
     'explorer.raw': 'View Raw',
     'explorer.download': 'Download',
     'explorer.source': 'Source',
@@ -150,22 +224,63 @@ export const translations = {
     'explorer.field_desc': 'Description',
     'explorer.field_constraints': 'Constraints',
 
+    // Schema Table
+    'schema.field': 'Field (Column)',
+    'schema.type': 'Type',
+    'schema.description': 'Description',
+    'schema.no_fields': 'No schema fields detailed for this resource.',
+
+    // Ontological & SKOS Metadata
+    'skos.title': 'Ontological Metadata & SKOS',
+    'skos.pref_label': 'Preferred Label (prefLabel):',
+    'skos.exact_match': 'Ontological URI (exactMatch):',
+    'skos.broader': 'Broader Term (broader):',
+
     // Documentation
     'docs.title': 'Documentation Center',
     'docs.subtitle': 'Normative specifications, technical notes, and architecture decisions.',
     'docs.specs': 'Normative Specifications',
     'docs.adrs': 'Architecture Decisions (ADRs)',
+    'docs.decisions_count': 'decisions',
+    'docs.status_label': 'Status:',
+    'docs.type_label': 'Type:',
     'docs.blog': 'Blog & Updates',
-    'docs.read': 'Read document',
+    'docs.read': 'Read article',
+    'docs.read_spec': 'Read Specification',
+    'docs.view_adr': 'View ADR',
+    'docs.view_raw': 'View Raw (.md)',
 
-    // Downloads
+    // Downloads & Installation
     'download.title': 'Installation & Downloads',
+    'download.subtitle': 'Access catalog offline and unlock local compute capabilities with PWA and Desktop.',
+    'download.browser': 'Browser',
     'download.pwa_title': 'Progressive Web App (PWA)',
+    'download.pwa_desc': 'Install the app directly in your desktop or mobile browser. Browse the entire catalog offline.',
+    'download.pwa_btn': 'Install PWA',
+    'download.desktop_native': 'Desktop Native',
     'download.desktop_title': 'Desktop Application (Electron)',
+    'download.desktop_desc': 'Desktop app with slot for the compiled Go SDK binary, analytical queries, and live node validation.',
+    'download.desktop_btn': 'View Releases',
+    'download.engine_active': 'Desktop Engine Active',
+    'download.engine_type': 'Compute Engine:',
+    'download.detecting': 'Detecting...',
+    'download.pwa_manual_hint': 'To install the PWA, use your browser menu: "Install app" or "Add to Home screen".',
 
-    // General Actions
+    // PWA Prompt Component
+    'pwa.prompt_title': 'Install DataMesh Bolivia',
+    'pwa.prompt_desc': 'Access catalog and schemas 100% offline from your device.',
+    'pwa.install_btn': 'Install',
+
+    // Footer
+    'footer.install': 'Install',
+
+    // General Actions and Accessibility
+    'action.skip_link': 'Skip to main content',
+    'action.close': 'Close',
+    'action.menu': 'Navigation menu',
     'action.theme': 'Toggle theme',
-    'action.lang': 'ES'
+    'action.lang': 'ES',
+    'action.lang_title': 'Change language (ES / EN)'
   }
 } as const;
 

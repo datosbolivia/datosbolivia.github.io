@@ -47,6 +47,7 @@ function isActive(path: string) {
         class="lang-btn" 
         aria-label="Cambiar idioma" 
         title="Cambiar idioma (ES / EN)"
+        data-i18n-title="action.lang_title"
       >
         EN
       </button>
@@ -57,6 +58,7 @@ function isActive(path: string) {
         class="btn-icon" 
         aria-label="Cambiar tema" 
         title="Cambiar tema"
+        data-i18n-title="action.theme"
       >
         <svg id="theme-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="display: none;">
           <circle cx="12" cy="12" r="5"></circle>
@@ -75,7 +77,7 @@ function isActive(path: string) {
       </button>
 
       <!-- Enlace canónico a llms.txt sin badges -->
-      <a href="/llms.txt" class="nav-llm-link" title="Especificación llms.txt para Agentes de IA">
+      <a href="/llms.txt" class="nav-llm-link" title="Especificación llms.txt para Agentes de IA" data-i18n-title="nav.llms_title">
         llms.txt
       </a>
 
@@ -86,6 +88,7 @@ function isActive(path: string) {
         aria-label="Abrir menú de navegación" 
         aria-expanded="false" 
         aria-controls="nav-links"
+        data-i18n-title="action.menu"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <line x1="3" y1="12" x2="21" y2="12"></line>

@@ -39,9 +39,9 @@ const fields = resource.schema?.fields || [];
       <table>
         <thead>
           <tr>
-            <th style="width: 25%;">Campo (Columna)</th>
-            <th style="width: 15%;">Tipo</th>
-            <th style="width: 60%;">Descripción</th>
+            <th style="width: 25%;" data-i18n="schema.field">Campo (Columna)</th>
+            <th style="width: 15%;" data-i18n="schema.type">Tipo</th>
+            <th style="width: 60%;" data-i18n="schema.description">Descripción</th>
           </tr>
         </thead>
         <tbody>
@@ -64,7 +64,7 @@ const fields = resource.schema?.fields || [];
       </table>
     </div>
   ) : (
-    <p style="font-size: 0.875rem; color: var(--color-text-muted); font-style: italic;">
+    <p style="font-size: 0.875rem; color: var(--color-text-muted); font-style: italic;" data-i18n="schema.no_fields">
       No hay campos detallados en el schema de este recurso.
     </p>
   )}

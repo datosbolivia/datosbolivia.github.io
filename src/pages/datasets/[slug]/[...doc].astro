@@ -26,9 +26,9 @@ const skos = doc.frontmatter.skos || {};
 <BaseLayout title={`${doc.title} — ${dataset.title}`}>
   <!-- Breadcrumbs -->
   <nav style="display: flex; gap: 0.5rem; align-items: center; font-size: 0.825rem; color: var(--color-text-muted); margin-bottom: 1.5rem; flex-wrap: wrap;">
-    <a href="/" style="color: inherit; text-decoration: none;">Inicio</a>
+    <a href="/" style="color: inherit; text-decoration: none;" data-i18n="nav.home">Inicio</a>
     <span>/</span>
-    <a href="/datasets" style="color: inherit; text-decoration: none;">Datasets</a>
+    <a href="/datasets" style="color: inherit; text-decoration: none;" data-i18n="nav.datasets">Datasets</a>
     <span>/</span>
     <a href={`/datasets/${dataset.slug}`} style="color: inherit; text-decoration: none;">{dataset.title}</a>
     <span>/</span>
@@ -46,10 +46,10 @@ const skos = doc.frontmatter.skos || {};
 
         <div style="display: flex; gap: 0.5rem;">
           <a href={`/datasets/${dataset.slug}`} class="btn btn-secondary btn-sm">
-            &larr; Volver al Dataset
+            &larr; <span data-i18n="dataset.back_to_dataset">Volver al Dataset</span>
           </a>
           <a href={`/raw/nodes/${dataset.slug}/${doc.relativePath}`} target="_blank" class="btn btn-secondary btn-sm" title="Ver archivo Markdown crudo">
-            Ver Markdown Raw
+            <span data-i18n="explorer.raw_md">Ver Markdown Raw</span>
           </a>
         </div>
       </div>
@@ -65,19 +65,19 @@ const skos = doc.frontmatter.skos || {};
     <!-- Metadatos SKOS u Ontológicos si existen -->
     {(skos.prefLabel || skos.exactMatch || skos.broader) && (
       <div class="card" style="margin-bottom: 2rem; background-color: var(--color-surface); padding: 1rem 1.25rem;">
-        <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--color-primary); font-family: var(--font-mono);">
+        <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--color-primary); font-family: var(--font-mono);" data-i18n="skos.title">
           Metadatos Ontológicos & SKOS
         </h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; font-size: 0.85rem;">
           {skos.prefLabel && (
             <div>
-              <span style="color: var(--color-text-muted); font-size: 0.75rem; display: block;">Etiqueta Preferida (prefLabel):</span>
+              <span style="color: var(--color-text-muted); font-size: 0.75rem; display: block;" data-i18n="skos.pref_label">Etiqueta Preferida (prefLabel):</span>
               <strong>{skos.prefLabel}</strong>
             </div>
           )}
           {skos.exactMatch && (
             <div>
-              <span style="color: var(--color-text-muted); font-size: 0.75rem; display: block;">URI Ontológica (exactMatch):</span>
+              <span style="color: var(--color-text-muted); font-size: 0.75rem; display: block;" data-i18n="skos.exact_match">URI Ontológica (exactMatch):</span>
               <a href={skos.exactMatch} target="_blank" rel="noopener noreferrer" class="external-link">
                 {skos.exactMatch.replace('https://www.wikidata.org/wiki/', 'Wikidata: ')} ↗
               </a>
@@ -85,7 +85,7 @@ const skos = doc.frontmatter.skos || {};
           )}
           {skos.broader && (
             <div>
-              <span style="color: var(--color-text-muted); font-size: 0.75rem; display: block;">Término Más Amplio (broader):</span>
+              <span style="color: var(--color-text-muted); font-size: 0.75rem; display: block;" data-i18n="skos.broader">Término Más Amplio (broader):</span>
               <code>{skos.broader}</code>
             </div>
           )}

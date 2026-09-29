@@ -7,12 +7,12 @@ const datasets = getAllDatasets();
 const categories = getDatasetsByCategory();
 ---
 
-<BaseLayout title="Explorador de Datasets">
+<BaseLayout title="Catálogo de Datasets">
   <div style="margin-bottom: 2rem;">
     <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
-      <h1 style="margin: 0; font-size: 2rem;">Catálogo</h1>
+      <h1 style="margin: 0; font-size: 2rem;" data-i18n="datasets.title">Catálogo de Datasets</h1>
     </div>
-    <p style="color: var(--color-text-muted); font-size: 0.95rem; margin: 0;">
+    <p style="color: var(--color-text-muted); font-size: 0.95rem; margin: 0;" data-i18n="datasets.subtitle">
       Explora recursos, esquemas y conceptos federados.
     </p>
   </div>
@@ -30,56 +30,72 @@ const categories = getDatasetsByCategory();
     />
   </div>
 
-  <!-- Barra de Filtros y Selector de Modo de Visualización -->
-  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.75rem;">
-    <!-- Filtro por categorías sin tags/badges -->
-    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="category-filters">
-      <button class="btn btn-secondary btn-sm filter-btn active" data-category="all">
-        <span data-i18n="search.all">Todos</span> ({datasets.length})
-      </button>
-      {categories.map((cat) => (
-        <button class="btn btn-secondary btn-sm filter-btn" data-category={cat.name}>
-          {cat.name} ({cat.datasets.length})
+  <!-- Barra de Herramientas: Filtros Multiselección de Dominios a la izquierda, Modo de Vista a la derecha -->
+  <div class="datasets-toolbar">
+    <!-- Filtros de Dominio (Multiselección a la izquierda) -->
+    <div class="datasets-filters-left">
+      <span class="filters-domain-label" data-i18n="datasets.filter_by_domain">Dominios:</span>
+      <div class="domain-filters" id="category-filters" role="group" aria-label="Filtro de dominios">
+        <button 
+          type="button" 
+          class="filter-btn active" 
+          data-category="all" 
+          aria-pressed="true"
+        >
+          <span data-i18n="search.all">Todos</span>
         </button>
-      ))}
+        {categories.map((cat) => (
+          <button 
+            type="button" 
+            class="filter-btn" 
+            data-category={cat.name} 
+            aria-pressed="false"
+          >
+            <span>{cat.name}</span>
+            <span class="filter-count">({cat.datasets.length})</span>
+          </button>
+        ))}
+      </div>
     </div>
 
-    <!-- Selector de Modo de Visualización: Cuadrícula / Lista -->
-    <div class="view-toggle-group" role="group" aria-label="Modo de visualización">
-      <button 
-        type="button" 
-        id="view-grid-btn" 
-        class="view-toggle-btn active" 
-        aria-pressed="true" 
-        title="Vista en cuadrícula" 
-        aria-label="Vista en cuadrícula"
-        data-i18n-title="view.grid"
-      >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect width="7" height="7" x="3" y="3" rx="1"/>
-          <rect width="7" height="7" x="14" y="3" rx="1"/>
-          <rect width="7" height="7" x="14" y="14" rx="1"/>
-          <rect width="7" height="7" x="3" y="14" rx="1"/>
-        </svg>
-      </button>
-      <button 
-        type="button" 
-        id="view-list-btn" 
-        class="view-toggle-btn" 
-        aria-pressed="false" 
-        title="Vista en lista" 
-        aria-label="Vista en lista"
-        data-i18n-title="view.list"
-      >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="8" x2="21" y1="6" y2="6"/>
-          <line x1="8" x2="21" y1="12" y2="12"/>
-          <line x1="8" x2="21" y1="18" y2="18"/>
-          <line x1="3" x2="3.01" y1="6" y2="6"/>
-          <line x1="3" x2="3.01" y1="12" y2="12"/>
-          <line x1="3" x2="3.01" y1="18" y2="18"/>
-        </svg>
-      </button>
+    <!-- Selector de Modo de Visualización (a la derecha) -->
+    <div class="datasets-view-right">
+      <div class="view-toggle-group" role="group" aria-label="Modo de visualización">
+        <button 
+          type="button" 
+          id="view-grid-btn" 
+          class="view-toggle-btn active" 
+          aria-pressed="true" 
+          title="Vista en cuadrícula" 
+          aria-label="Vista en cuadrícula"
+          data-i18n-title="view.grid"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect width="7" height="7" x="3" y="3" rx="1"/>
+            <rect width="7" height="7" x="14" y="3" rx="1"/>
+            <rect width="7" height="7" x="14" y="14" rx="1"/>
+            <rect width="7" height="7" x="3" y="14" rx="1"/>
+          </svg>
+        </button>
+        <button 
+          type="button" 
+          id="view-list-btn" 
+          class="view-toggle-btn" 
+          aria-pressed="false" 
+          title="Vista en lista" 
+          aria-label="Vista en lista"
+          data-i18n-title="view.list"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="8" x2="21" y1="6" y2="6"/>
+            <line x1="8" x2="21" y1="12" y2="12"/>
+            <line x1="8" x2="21" y1="18" y2="18"/>
+            <line x1="3" x2="3.01" y1="6" y2="6"/>
+            <line x1="3" x2="3.01" y1="12" y2="12"/>
+            <line x1="3" x2="3.01" y1="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -114,7 +130,30 @@ const categories = getDatasetsByCategory();
   const viewGridBtn = document.getElementById('view-grid-btn');
   const viewListBtn = document.getElementById('view-list-btn');
 
-  let activeCategory = 'all';
+  // Estado de multi-selección de categorías
+  const selectedCategories = new Set();
+  const allBtn = filterBtns.find((b) => b.getAttribute('data-category') === 'all');
+
+  function updateCategoryUI() {
+    if (selectedCategories.size === 0) {
+      filterBtns.forEach((b) => {
+        const isAll = b.getAttribute('data-category') === 'all';
+        b.classList.toggle('active', isAll);
+        b.setAttribute('aria-pressed', isAll ? 'true' : 'false');
+      });
+    } else {
+      filterBtns.forEach((b) => {
+        const cat = b.getAttribute('data-category');
+        const isActive = cat !== 'all' && selectedCategories.has(cat);
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+      if (allBtn) {
+        allBtn.classList.remove('active');
+        allBtn.setAttribute('aria-pressed', 'false');
+      }
+    }
+  }
 
   // Manejo de Modo de Visualización (Cuadrícula / Lista)
   function setViewMode(mode) {
@@ -155,7 +194,7 @@ const categories = getDatasetsByCategory();
         desc.includes(query) || 
         slug.includes(query);
 
-      const matchesCat = activeCategory === 'all' || cat === activeCategory;
+      const matchesCat = selectedCategories.size === 0 || selectedCategories.has(cat);
 
       if (matchesQuery && matchesCat) {
         item.style.display = '';
@@ -174,51 +213,52 @@ const categories = getDatasetsByCategory();
 
   filterBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      filterBtns.forEach((b) => b.classList.remove('active', 'btn-primary'));
-      btn.classList.add('active', 'btn-primary');
-      activeCategory = btn.getAttribute('data-category') || 'all';
+      const cat = btn.getAttribute('data-category');
+      if (!cat || cat === 'all') {
+        selectedCategories.clear();
+      } else {
+        if (selectedCategories.has(cat)) {
+          selectedCategories.delete(cat);
+        } else {
+          selectedCategories.add(cat);
+        }
+      }
+      updateCategoryUI();
       filterDatasets();
     });
   });
 
   resetBtn?.addEventListener('click', () => {
     if (searchInput) searchInput.value = '';
-    activeCategory = 'all';
-    filterBtns.forEach((b) => b.classList.remove('active', 'btn-primary'));
-    filterBtns[0]?.classList.add('active', 'btn-primary');
+    selectedCategories.clear();
+    updateCategoryUI();
     filterDatasets();
   });
 
   // Leer parámetros de URL y preferencias
   const urlParams = new URLSearchParams(window.location.search);
   const initialQuery = urlParams.get('q') || urlParams.get('search');
-  const initialCat = urlParams.get('cat') || urlParams.get('category');
+  const initialCats = urlParams.getAll('cat').flatMap((c) => c.split(',')).map((c) => c.trim()).filter(Boolean);
   const initialView = urlParams.get('view') || localStorage.getItem('datamesh_dataset_view') || 'grid';
 
   if (initialQuery && searchInput) {
     searchInput.value = initialQuery;
   }
 
-  if (initialCat) {
-    const matchedBtn = filterBtns.find(
-      (b) => (b.getAttribute('data-category') || '').toLowerCase() === initialCat.toLowerCase()
-    );
-    if (matchedBtn) {
-      filterBtns.forEach((b) => b.classList.remove('active', 'btn-primary'));
-      matchedBtn.classList.add('active', 'btn-primary');
-      activeCategory = matchedBtn.getAttribute('data-category') || 'all';
-    }
+  if (initialCats.length > 0) {
+    initialCats.forEach((catName) => {
+      const matchedBtn = filterBtns.find(
+        (b) => (b.getAttribute('data-category') || '').toLowerCase() === catName.toLowerCase()
+      );
+      if (matchedBtn) {
+        const cat = matchedBtn.getAttribute('data-category');
+        if (cat && cat !== 'all') selectedCategories.add(cat);
+      }
+    });
+    updateCategoryUI();
   }
 
   // Inicializar vista y filtrado
   setViewMode(initialView);
   filterDatasets();
 </script>
-
-<style>
-  .filter-btn.active {
-    background-color: var(--color-primary);
-    color: #ffffff;
-    border-color: var(--color-primary);
-  }
-</style>

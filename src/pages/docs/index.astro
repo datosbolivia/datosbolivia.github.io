@@ -42,8 +42,8 @@ const decisions = allDocs.filter(d => d.category === 'decision');
                 {doc.description}
               </p>
               <div>
-                <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;" data-i18n="docs.read">
-                  <span>Leer artículo</span>
+                <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                  <span data-i18n="docs.read">Leer artículo</span>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </a>
               </div>
@@ -75,8 +75,8 @@ const decisions = allDocs.filter(d => d.category === 'decision');
               {doc.description}
             </p>
             <div>
-              <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;" data-i18n="docs.read">
-                <span>Leer Especificación</span>
+              <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                <span data-i18n="docs.read_spec">Leer Especificación</span>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
             </div>
@@ -92,7 +92,7 @@ const decisions = allDocs.filter(d => d.category === 'decision');
           Decisiones de Arquitectura (ADRs)
         </h2>
         <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-text-muted);">
-          {decisions.length} decisiones
+          {decisions.length} <span data-i18n="docs.decisions_count">decisiones</span>
         </span>
       </div>
 
@@ -107,11 +107,11 @@ const decisions = allDocs.filter(d => d.category === 'decision');
                   </a>
                 </h4>
                 <p style="font-size: 0.8rem; color: var(--color-text-muted); margin: 0;">
-                  Estado: <strong style="color: var(--color-success);">{doc.status}</strong> • Tipo: <code>{doc.type}</code>
+                  <span data-i18n="docs.status_label">Estado:</span> <strong style="color: var(--color-success);">{doc.status}</strong> • <span data-i18n="docs.type_label">Tipo:</span> <code>{doc.type}</code>
                 </p>
               </div>
               <a href={`/docs/${doc.slug}`} class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
-                <span>Ver ADR</span>
+                <span data-i18n="docs.view_adr">Ver ADR</span>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
             </div>

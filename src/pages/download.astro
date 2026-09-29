@@ -12,7 +12,7 @@ const renderedHtml = renderMarkdown(downloadPage.body);
   <div style="max-width: 860px; margin: 0 auto;">
     <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
       <h1 style="font-size: 2rem; margin-bottom: 0.5rem;" data-i18n="download.title">Descargas e Instalación</h1>
-      <p style="color: var(--color-text-muted); margin: 0;">
+      <p style="color: var(--color-text-muted); margin: 0;" data-i18n="download.subtitle">
         Accede al catálogo de forma offline y desbloquea procesamiento local con PWA y Desktop.
       </p>
     </div>
@@ -24,16 +24,16 @@ const renderedHtml = renderMarkdown(downloadPage.body);
         <div style="margin-bottom: 0.5rem;">
           <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--color-primary); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
-            <span>Navegador</span>
+            <span data-i18n="download.browser">Navegador</span>
           </div>
           <h2 style="font-size: 1.25rem; margin: 0.35rem 0 0;" data-i18n="download.pwa_title">Progressive Web App (PWA)</h2>
         </div>
-        <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1rem; flex: 1; line-height: 1.45;">
+        <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1rem; flex: 1; line-height: 1.45;" data-i18n="download.pwa_desc">
           Instala la aplicación directamente en tu navegador móvil o de escritorio. Navega el catálogo completo sin conexión.
         </p>
         <button id="download-pwa-btn" class="btn btn-primary" style="justify-content: center; display: inline-flex; align-items: center; gap: 0.4rem;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span>Instalar PWA</span>
+          <span data-i18n="download.pwa_btn">Instalar PWA</span>
         </button>
       </div>
 
@@ -42,15 +42,15 @@ const renderedHtml = renderMarkdown(downloadPage.body);
         <div style="margin-bottom: 0.5rem;">
           <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--color-primary); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
-            <span>Desktop Native</span>
+            <span data-i18n="download.desktop_native">Desktop Native</span>
           </div>
           <h2 style="font-size: 1.25rem; margin: 0.35rem 0 0;" data-i18n="download.desktop_title">Aplicación Desktop (Electron)</h2>
         </div>
-        <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1rem; flex: 1; line-height: 1.45;">
+        <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1rem; flex: 1; line-height: 1.45;" data-i18n="download.desktop_desc">
           Aplicación de escritorio con ranura para el binario compilado en Go del SDK, consultas analíticas y validación de nodos en vivo.
         </p>
         <a href={config.desktopApp.downloadUrl} target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="justify-content: center; display: inline-flex; align-items: center; gap: 0.4rem;">
-          <span>Ver Releases</span>
+          <span data-i18n="download.desktop_btn">Ver Releases</span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         </a>
       </div>
@@ -58,11 +58,11 @@ const renderedHtml = renderMarkdown(downloadPage.body);
 
     <!-- Estado del Runtime Desktop si está dentro de Electron -->
     <div id="desktop-engine-status" class="card" style="display: none; margin-bottom: 2.5rem; background-color: var(--color-surface); border: 1px solid var(--color-primary);">
-      <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--color-primary);">
+      <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--color-primary);" data-i18n="download.engine_active">
         Entorno Desktop Activo
       </h3>
       <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 0.5rem;">
-        Motor de Cómputo: <strong id="engine-type">Detectando...</strong>
+        <span data-i18n="download.engine_type">Motor de Cómputo:</span> <strong id="engine-type" data-i18n="download.detecting">Detectando...</strong>
       </p>
       <div id="engine-capabilities" style="display: flex; gap: 0.5rem; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.75rem;"></div>
     </div>

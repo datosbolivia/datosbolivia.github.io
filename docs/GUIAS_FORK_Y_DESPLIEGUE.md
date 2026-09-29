@@ -14,13 +14,14 @@ Este repositorio está arquitecturado específicamente para ser **forkeable**: c
 
 ## Paso 1: Hacer Fork del Repositorio
 
-1. Dirígete a [github.com/andres-chirinos/catalogo-datamesh](https://github.com/andres-chirinos/catalogo-datamesh) y presiona el botón **Fork**.
+1. Dirígete a [github.com/datosbolivia/catalogo](https://github.com/datosbolivia/catalogo) y presiona el botón **Fork**.
 2. Clona tu repositorio forkeado:
-   ```bash
-   git clone https://github.com/TU-ORGANIZACION/catalogo-datamesh.git
-   cd catalogo-datamesh
-   npm install
-   ```
+   
+```bash
+git clone https://github.com/datosbolivia/catalogo.git
+cd catalogo
+npm install
+```
 
 ---
 
@@ -31,17 +32,17 @@ Abre `portal.config.ts` y modifica los datos de tu institución:
 ```typescript
 export const config = {
   organization: {
-    name: "Datos Cochabamba",
-    slug: "datos-cochabamba",
-    url: "https://datos-cochabamba.org",
-    github: "https://github.com/datos-cochabamba/catalogo",
-    description: "Portal de datos abiertos del departamento de Cochabamba."
+    name: "Datos Salud",
+    slug: "datos-salud",
+    url: "https://datos-salud.org",
+    github: "https://github.com/datos-salud/datos-salud.github.io",
+    description: "Portal de datos abiertos sobre Salud."
   },
   site: {
-    title: "Catálogo de Datos Abiertos de Cochabamba",
-    description: "Índice federado municipal y departamental.",
-    tagline: "Transparencia y datos abiertos para la ciudadanía cochabambina.",
-    url: "https://datos-cochabamba.org",
+    title: "Catálogo de Datos Abiertos de Salud",
+    description: "Índice del Sistema SNIS, RNVE, entre otros.",
+    tagline: "Transparencia y datos abiertos de salud para Bolivia",
+    url: "https://datos-salud.org",
     base: "/"
   },
   // ...
@@ -82,9 +83,10 @@ Edita los archivos Markdown para adaptar los textos:
    - `datapackage.yaml`: Contrato de columnas y tipos.
 2. Registra el nuevo dataset en `knowledge/index.md`.
 3. Valida el estándar:
-   ```bash
-   npm run lint:okf
-   ```
+
+```bash
+npm run lint:okf
+```
 
 ---
 
@@ -92,9 +94,11 @@ Edita los archivos Markdown para adaptar los textos:
 
 ### Despliegue en GitHub Pages (Gratuito)
 1. Ejecuta el build:
-   ```bash
-   npm run build
-   ```
+
+```bash
+npm run build
+```
+
 2. En GitHub, ve a **Settings > Pages** y selecciona la rama de publicación (ej. `gh-pages` o la carpeta `dist`).
 
 ### Despliegue en Vercel, Netlify o Cloudflare Pages
@@ -103,6 +107,7 @@ Conecta tu repositorio de GitHub:
 - Output directory: `dist`
 
 ### Empaquetar como Aplicación de Escritorio con Electron
+
 ```bash
 npm run electron:build
 ```

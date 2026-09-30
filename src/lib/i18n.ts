@@ -124,6 +124,7 @@ export const translations = {
     'docs.title': 'Centro Documental',
     'docs.subtitle': 'Especificaciones normativas, notas técnicas y registros de arquitectura.',
     'docs.specs': 'Especificaciones Normativas',
+    'docs.guides': 'Guías y SDK',
     'docs.adrs': 'Decisiones de Arquitectura (ADRs)',
     'docs.decisions_count': 'decisiones',
     'docs.status_label': 'Estado:',
@@ -131,6 +132,7 @@ export const translations = {
     'docs.blog': 'Blog y Novedades',
     'docs.read': 'Leer artículo',
     'docs.read_spec': 'Leer Especificación',
+    'docs.read_guide': 'Ver Guía',
     'docs.view_adr': 'Ver ADR',
     'docs.view_raw': 'Ver Raw (.md)',
 
@@ -284,6 +286,7 @@ export const translations = {
     'docs.title': 'Documentation Center',
     'docs.subtitle': 'Normative specifications, technical notes, and architecture decisions.',
     'docs.specs': 'Normative Specifications',
+    'docs.guides': 'Guides & SDK',
     'docs.adrs': 'Architecture Decisions (ADRs)',
     'docs.decisions_count': 'decisions',
     'docs.status_label': 'Status:',
@@ -291,6 +294,7 @@ export const translations = {
     'docs.blog': 'Blog & Updates',
     'docs.read': 'Read article',
     'docs.read_spec': 'Read Specification',
+    'docs.read_guide': 'View Guide',
     'docs.view_adr': 'View ADR',
     'docs.view_raw': 'View Raw (.md)',
 

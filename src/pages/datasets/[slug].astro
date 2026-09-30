@@ -47,7 +47,12 @@ function getCleanResourceName(res: any): string {
 
 <BaseLayout title={dataset.title} description={dataset.description} fullWidth={true} noFooter={true}>
   <!-- Explorador de Archivos Estilo Obsidian Condensado (Pantalla Completa) -->
-  <div class="obsidian-layout" id="obsidian-explorer">
+  <div
+    class="obsidian-layout"
+    id="obsidian-explorer"
+    data-dataset-slug={dataset.slug}
+    data-resources={JSON.stringify(resources.map(r => ({ name: r.name, path: r.path })))}
+  >
     <!-- Backdrop oscuro para drawer móvil -->
     <div class="obsidian-backdrop" id="obsidian-backdrop" aria-hidden="true"></div>
 
@@ -436,42 +441,110 @@ function getCleanResourceName(res: any): string {
       }
     }
 
-    // Alternar vistas de gráficos declarativos (Visualización vs SQL)
-    document.querySelectorAll('.chart-card').forEach((card) => {
-      const btns = card.querySelectorAll('.chart-toggle-btn');
-      const visView = card.querySelector('[data-view="vis"]');
-      const sqlView = card.querySelector('[data-view="sql"]');
-      btns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const target = btn.getAttribute('data-target');
-          btns.forEach((b) => b.classList.toggle('active', b === btn));
-          if (visView) visView.style.display = target === 'vis' ? 'block' : 'none';
-          if (sqlView) sqlView.style.display = target === 'sql' ? 'block' : 'none';
-        });
+  })();
+</script>
+
+<script>
+  import * as Plot from '@observablehq/plot';
+  import { DataMeshClient, datamesh, normalizeResourceUrl, parseCsv } from '@datosbolivia/datamesh-client';
+
+  function initOjsCells() {
+    const cells = document.querySelectorAll<HTMLElement>('[data-ojs-cell="true"]');
+    if (cells.length === 0) return;
+
+    const explorerEl = document.getElementById('obsidian-explorer');
+    let datasetContext: any = null;
+    try {
+      const resources = JSON.parse(explorerEl?.getAttribute('data-resources') || '[]');
+      const slug = explorerEl?.getAttribute('data-dataset-slug') || '';
+      datasetContext = { slug, resources };
+    } catch (_) {}
+
+    cells.forEach(async (cell) => {
+      if (cell.dataset.initialized === 'true') return;
+      cell.dataset.initialized = 'true';
+
+      const rawB64 = cell.getAttribute('data-ojs-code');
+      if (!rawB64) return;
+      const outputEl = cell.querySelector<HTMLElement>('.ojs-output');
+      const sourceEl = cell.querySelector<HTMLElement>('.ojs-source');
+      const toggleBtn = cell.querySelector<HTMLButtonElement>('.ojs-toggle-code');
+
+      toggleBtn?.addEventListener('click', () => {
+        const isVisible = sourceEl?.style.display !== 'none';
+        if (sourceEl) sourceEl.style.display = isVisible ? 'none' : 'block';
+        toggleBtn.textContent = isVisible ? 'Ver Código OJS' : 'Ocultar Código OJS';
       });
 
-      // Copiar configuracion JSON al portapapeles
-      const copyBtn = card.querySelector('.chart-copy-btn');
-      if (copyBtn) {
-        copyBtn.addEventListener('click', () => {
-          const jsonEl = card.querySelector('code.language-json');
-          const text = jsonEl ? (jsonEl.textContent || '') : '';
-          if (!text) return;
-          navigator.clipboard.writeText(text).then(() => {
-            const iconEl = copyBtn.querySelector('.chart-copy-icon');
-            const checkEl = copyBtn.querySelector('.chart-copy-check');
-            const labelEl = copyBtn.querySelector('.chart-copy-label');
-            if (iconEl) iconEl.style.display = 'none';
-            if (checkEl) checkEl.style.display = 'inline';
-            if (labelEl) labelEl.textContent = 'Copiado';
-            setTimeout(() => {
-              if (iconEl) iconEl.style.display = 'inline';
-              if (checkEl) checkEl.style.display = 'none';
-              if (labelEl) labelEl.textContent = 'Copiar';
-            }, 2000);
-          }).catch(() => {});
-        });
+      try {
+        let code = '';
+        try {
+          code = decodeURIComponent(escape(atob(rawB64)));
+        } catch (_) {
+          code = atob(rawB64);
+        }
+
+        let runCode = code.trim();
+
+        // Si no tiene return explícito, envolver la última expresión
+        if (!/\breturn\b/.test(runCode)) {
+          const lines = runCode.split('\n');
+          const lastIdx = lines.findLastIndex((l) => l.trim() && !l.trim().startsWith('//'));
+          if (lastIdx !== -1) {
+            lines[lastIdx] = 'return ' + lines[lastIdx];
+            runCode = lines.join('\n');
+          }
+        }
+
+        const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+        const runner = new AsyncFunction(
+          'Plot',
+          'datamesh',
+          'DataMeshClient',
+          'dataset',
+          'normalizeResourceUrl',
+          'parseCsv',
+          'container',
+          runCode
+        );
+
+        const result = await runner(
+          Plot,
+          datamesh,
+          DataMeshClient,
+          datasetContext,
+          normalizeResourceUrl,
+          parseCsv,
+          outputEl
+        );
+
+        if (outputEl) {
+          outputEl.innerHTML = '';
+          if (result instanceof HTMLElement || result instanceof SVGElement) {
+            outputEl.appendChild(result);
+          } else if (result !== undefined && result !== null) {
+            const pre = document.createElement('pre');
+            pre.className = 'code-pre';
+            pre.textContent = typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result);
+            outputEl.appendChild(pre);
+          }
+        }
+      } catch (err: any) {
+        if (outputEl) {
+          outputEl.innerHTML = `
+            <div style="padding: 1rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-hover); color: var(--color-text-muted); font-size: 0.8rem; font-family: var(--font-mono);">
+              <div style="font-weight: 600; color: #dc2626; margin-bottom: 0.35rem;">Error en celda OJS:</div>
+              <div>${err?.message || String(err)}</div>
+            </div>
+          `;
+        }
       }
     });
-  })();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initOjsCells);
+  } else {
+    initOjsCells();
+  }
 </script>

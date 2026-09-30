@@ -1,0 +1,17 @@
+name: presupuesto
+title: Presupuesto Público del Estado Boliviano
+resources:
+  - name: ingreso
+    type: table
+    path: https://abierto.economiayfinanzas.gob.bo/presupuesto/descargas/ingreso/ultimo/ingreso.parquet
+    scheme: file
+    format: parquet
+    mediatype: application/parquet
+    encoding: utf-8
+  - name: gasto
+    type: table
+    path: https://abierto.economiayfinanzas.gob.bo/presupuesto/descargas/gasto/ultimo/gasto.parquet
+    scheme: file
+    format: parquet
+    mediatype: application/parquet
+    encoding: utf-8

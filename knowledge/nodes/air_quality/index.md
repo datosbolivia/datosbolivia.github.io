@@ -31,32 +31,31 @@ Este dataset está enriquecido semánticamente utilizando terminologías estánd
 [1] Escala ICA EPA — https://www.airnow.gov/aqi/aqi-basics/
 
 
-```chart
-{
-  "type": "bar",
-  "title": "ICA Promedio por Estación de Monitoreo",
-  "subtitle": "Promedio del Índice de Calidad del Aire por punto de monitoreo — mayor = peor calidad",
-  "source": "SENAMHI / Monica-SwissContact vía DataMesh Bolivia",
-  "unit": "ICA",
-  "sql": "SELECT lugar_nombre, ROUND(AVG(valor_ica), 1) AS promedio_ica FROM air_quality_compilaci_n_de_datos_de_calidad_del_aire_de_bolivia GROUP BY lugar_nombre ORDER BY promedio_ica DESC LIMIT 10",
-  "xKey": "lugar_nombre",
-  "yKeys": ["promedio_ica"],
-  "colors": ["#dc2626"]
-}
+```ojs
+// Cargar datos de calidad del aire con DataMesh TypeScript SDK
+const resourcePath = dataset?.resources?.[0]?.path || "data/calidad_aire.csv";
+const res = await datamesh.query({ resource_uri: resourcePath });
+
+const placeIdx = res.columns.indexOf("lugar_nombre");
+const icaIdx = res.columns.indexOf("valor_ica");
+
+const data = res.rows
+  .map(r => ({
+    lugar: r[placeIdx],
+    ica: parseFloat(r[icaIdx]) || 0
+  }))
+  .filter(d => d.lugar && d.ica > 0);
+
+return Plot.plot({
+  title: "ICA Promedio por Estación de Monitoreo",
+  subtitle: "Índice de Calidad del Aire",
+  marginLeft: 130,
+  x: { grid: true, label: "Índice ICA Promedio" },
+  y: { label: null },
+  marks: [
+    Plot.barX(data, Plot.groupY({ x: "mean" }, { y: "lugar", sort: { y: "-x" }, fill: "#dc2626" })),
+    Plot.ruleX([0])
+  ]
+});
 ```
 
----
-
-```chart
-{
-  "type": "area",
-  "title": "Evolución Mensual del ICA — Promedio Nacional",
-  "subtitle": "Tendencia del Índice de Calidad del Aire agregado por mes",
-  "source": "SENAMHI / Monica-SwissContact vía DataMesh Bolivia",
-  "unit": "ICA",
-  "sql": "SELECT STRFTIME(CAST(fecha_hora_registro AS DATE), '%Y-%m') AS mes, ROUND(AVG(valor_ica), 1) AS promedio_ica, COUNT(*) AS mediciones FROM air_quality_compilaci_n_de_datos_de_calidad_del_aire_de_bolivia WHERE fecha_hora_registro IS NOT NULL GROUP BY mes ORDER BY mes DESC LIMIT 24",
-  "xKey": "mes",
-  "yKeys": ["promedio_ica"],
-  "colors": ["#2563eb"]
-}
-```

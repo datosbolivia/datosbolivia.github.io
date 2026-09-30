@@ -210,30 +210,67 @@ export function getAllDatasets(): DatasetNode[] {
     const rawMarkdown = fs.readFileSync(indexPath, 'utf-8');
     const { frontmatter, body } = parseFrontmatter(rawMarkdown);
 
-    // 1. Leer DataPackage completo con js-yaml
+    // 1. Parsear contratos declarados en frontmatter (referencia de concepto a estándar)
+    const contracts: Array<{ type: string; path: string }> = [];
+    if (Array.isArray(frontmatter.contracts)) {
+      for (const c of frontmatter.contracts) {
+        if (typeof c === 'string') {
+          contracts.push({ type: 'datapackage', path: c });
+        } else if (typeof c === 'object' && c !== null) {
+          contracts.push({ type: c.type || 'datapackage', path: c.path || '' });
+        }
+      }
+    } else {
+      contracts.push({ type: 'datapackage', path: './datapackage.yaml' });
+    }
+
+    // 2. Descubrir recursos a partir de contratos/estándares referenciados en frontmatter
     let datapackage: DataPackage | undefined;
-    const dpFiles = ['datapackage.json', 'datapackage.yaml', 'datapackage.yml'];
-    for (const dpName of dpFiles) {
-      const dpPath = path.join(nodePath, dpName);
+    const candidatesToCheck: string[] = [];
+
+    // Priorizar los contratos declarados que apuntan a estándares de datos (datapackage, frictionless, etc.)
+    for (const contract of contracts) {
+      if (contract.path) {
+        candidatesToCheck.push(path.resolve(nodePath, contract.path));
+      }
+    }
+
+    // Fallbacks convencionales si el contrato no apunta a un archivo directo o no existe
+    candidatesToCheck.push(
+      path.join(nodePath, 'datapackage.json'),
+      path.join(nodePath, 'datapackage.yaml'),
+      path.join(nodePath, 'datapackage.yml')
+    );
+
+    for (const dpPath of candidatesToCheck) {
       if (fs.existsSync(dpPath)) {
         try {
           const content = fs.readFileSync(dpPath, 'utf-8');
-          if (dpName.endsWith('.json')) {
+          if (dpPath.endsWith('.json')) {
             datapackage = JSON.parse(content);
           } else {
             datapackage = yaml.load(content) as DataPackage;
           }
-          break;
+          if (datapackage && Array.isArray(datapackage.resources)) {
+            break;
+          }
         } catch (e) {
-          console.warn(`Error al parsear ${dpPath}:`, e);
+          console.warn(`Error al parsear estándar en ${dpPath}:`, e);
         }
       }
     }
 
-    // 2. Consolidar TODOS los recursos
+    // 3. Consolidar TODOS los recursos
     const allResources: DataResource[] = [];
     if (datapackage?.resources && Array.isArray(datapackage.resources)) {
       allResources.push(...datapackage.resources);
+    }
+    if (Array.isArray(frontmatter.resources)) {
+      for (const res of frontmatter.resources) {
+        if (!allResources.some(r => r.name === res.name)) {
+          allResources.push(res);
+        }
+      }
     }
 
     // 3. Leer todos los documentos Markdown de referencia
@@ -272,19 +309,7 @@ export function getAllDatasets(): DatasetNode[] {
       dimensions = frontmatter.dimensions;
     }
 
-    // Parsear contratos
-    const contracts: Array<{ type: string; path: string }> = [];
-    if (Array.isArray(frontmatter.contracts)) {
-      for (const c of frontmatter.contracts) {
-        if (typeof c === 'string') {
-          contracts.push({ type: 'datapackage', path: c });
-        } else if (typeof c === 'object' && c !== null) {
-          contracts.push({ type: c.type || 'datapackage', path: c.path || '' });
-        }
-      }
-    } else {
-      contracts.push({ type: 'datapackage', path: './datapackage.yaml' });
-    }
+
 
     const title = frontmatter.title || slug.replace(/-/g, ' ').toUpperCase();
     const description = frontmatter.description || extractFirstParagraph(body);
@@ -376,7 +401,7 @@ export function getAllDocs(): DocItem[] {
         status: frontmatter.status || 'Activo',
         rawMarkdown: raw,
         bodyMarkdown: body,
-        category: 'especificacion'
+        category: (frontmatter.category as any) || (entry.name.toLowerCase().includes('guia') ? 'guia' : 'especificacion')
       });
     }
   }

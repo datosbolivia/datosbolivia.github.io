@@ -14,32 +14,26 @@ Este dataset contiene información geoespacial de puntos de interés: cada fila 
 - **Cruce de datos**: Se puede integrar con datos demográficos, densidad poblacional o comerciales para evaluar la inclusión o cobertura financiera por zona.
 - **Dashboard recomendado**: Mapa de puntos de interés (POIs) interactivo con filtros por entidad financiera (`entidad`), departamento (`departamento`), y grupo de atención (`desGrupo`).
 
----
+```ojs
+// Cargar puntos de atención financiera con DataMesh TypeScript SDK
+const resourcePath = dataset?.resources?.[0]?.path || "data/financial_entities_places.csv";
+const res = await datamesh.query({ resource_uri: resourcePath });
 
-# Gráficos del Dataset
+const deptIdx = res.columns.indexOf("departamento");
+const data = res.rows
+  .map(r => ({ departamento: (r[deptIdx] || '').trim() }))
+  .filter(d => d.departamento);
 
-```chart
-{
-  "type": "bar",
-  "title": "Puntos de Atención Financiera por Departamento",
-  "subtitle": "Distribución de sucursales, cajeros y agencias por departamento — indicador de inclusión financiera",
-  "source": "ASFI — Autoridad de Supervisión del Sistema Financiero",
-  "sql": "SELECT departamento, COUNT(*) AS total_puntos FROM financial_entities_financial_entities_places WHERE departamento IS NOT NULL GROUP BY departamento ORDER BY total_puntos DESC",
-  "xKey": "departamento",
-  "yKeys": ["total_puntos"],
-  "colors": ["#059669"]
-}
+return Plot.plot({
+  title: "Puntos de Atención Financiera por Departamento (ASFI)",
+  subtitle: "Distribución geográfica",
+  marginLeft: 110,
+  x: { grid: true, label: "Total PAF" },
+  y: { label: null },
+  marks: [
+    Plot.barX(data, Plot.groupY({ x: "count" }, { y: "departamento", sort: { y: "-x" }, fill: "#059669" })),
+    Plot.ruleX([0])
+  ]
+});
 ```
 
-```chart
-{
-  "type": "pie",
-  "title": "Tipos de Puntos de Atención Financiera",
-  "subtitle": "Distribución porcentual por tipo de PAF en Bolivia",
-  "source": "ASFI — Autoridad de Supervisión del Sistema Financiero",
-  "sql": "SELECT desGrupo AS tipo, COUNT(*) AS cantidad FROM financial_entities_financial_entities_places WHERE desGrupo IS NOT NULL GROUP BY desGrupo ORDER BY cantidad DESC LIMIT 8",
-  "xKey": "tipo",
-  "yKeys": ["cantidad"],
-  "colors": ["#2563eb", "#059669", "#d97706", "#dc2626", "#7c3aed", "#0891b2", "#ec4899", "#475569"]
-}
-```

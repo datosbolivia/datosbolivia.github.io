@@ -1539,40 +1539,102 @@ button.obsidian-file-item:focus-visible,
 }
 
 /* ==========================================================================
-   Gráficos Declarativos Analíticos
+   Observable JS (OJS) & Observable Plot Celdas
    ========================================================================== */
 
-.chart-card {
+.ojs-cell {
+  max-width: 680px;
+  width: 100%;
+  margin: 1.5rem 0;
+  box-sizing: border-box;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   transition: border-color 0.15s ease;
 }
 
-.chart-card:hover {
+.ojs-cell:hover {
   border-color: var(--color-primary);
 }
 
-.chart-sql-preview {
-  padding: 0.5rem 0;
-}
-
-.chart-sql-badge {
-  display: inline-flex;
+.ojs-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.725rem;
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
-  background-color: var(--color-surface-hover);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 0.2rem 0.55rem;
-  margin-bottom: 0.65rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.chart-toggle-btn.active {
-  background-color: var(--color-primary);
-  color: #ffffff;
-  border-color: var(--color-primary);
+.ojs-output {
+  width: 100%;
+  overflow-x: auto;
 }
+
+.ojs-output svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.ojs-output figure {
+  margin: 0;
+}
+
+.ojs-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+/* SVG chart element sizing */
+.chart-bar-svg,
+.chart-area-svg,
+.chart-scatter-svg,
+.chart-pie-svg {
+  display: block;
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  margin: 0 auto;
+}
+
+/* Map / Choropleth */
+.chart-map-wrap {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.chart-map-svg {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 220px;
+}
+
+.chart-map-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 140px;
+  flex: 1;
+}
+
+@media (max-width: 520px) {
+  .chart-map-svg {
+    max-width: 100%;
+  }
+  .chart-map-wrap {
+    flex-direction: column;
+  }
+}
+
 
 .chart-bars-list {
   display: flex;

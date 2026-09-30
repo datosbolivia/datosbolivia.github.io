@@ -19,6 +19,7 @@ Este es el catálogo de entrada principal (Discovery Phase 1). Los siguientes no
 - [Puntos de Atención Financiera - ASFI](/nodes/financial_entities/index.md)
 - [Universidades, Institutos y Carreras](/nodes/universities-institutes/index.md)
 - [Monitor de Disponibilidad Web - MonitorBolivia](/nodes/monitorbolivia/index.md)
+- [Preosupuesto del Gobierno de Bolivia](/nodes/preosupuesto-abierto/datapackage.yaml)
 
 ### Demografía, Censos y Sociedad
 - [Censo de Población y Vivienda - INE](/nodes/censos-bolivia/index.md)

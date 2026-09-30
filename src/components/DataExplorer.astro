@@ -91,6 +91,22 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       </div>
 
       <div class="explorer-toolbar-actions">
+        <!-- Selector de modo de vista: Tabla, Mapa, Gráfico -->
+        <div class="explorer-view-modes" role="group" aria-label="Modo de Visualización">
+          <button type="button" class="view-mode-btn active" data-view-mode="table" title="Vista Tabla de Datos">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="21"></line></svg>
+            <span>Tabla</span>
+          </button>
+          <button type="button" class="view-mode-btn" data-view-mode="map" title="Vista Mapa Geoespacial">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+            <span>Mapa</span>
+          </button>
+          <button type="button" class="view-mode-btn" data-view-mode="chart" title="Vista Gráfico Analítico">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            <span>Gráfico</span>
+          </button>
+        </div>
+
         <select class="explorer-page-size" title="Registros por página">
           <option value="10">10 / pág</option>
           <option value="25" selected>25 / pág</option>
@@ -125,13 +141,24 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
     <!-- Contenedor de la Tabla de Datos -->
     <div class="explorer-table-container table-wrapper">
       <div class="explorer-initial-state">
-        <p style="margin-bottom: 0.75rem; color: var(--color-text-muted);">
-          Cargando...
+        <p style="margin-bottom: 0.35rem; font-weight: 600; color: var(--color-text);">
+          Exploración Interactiva en Cliente
+        </p>
+        <p style="font-size: 0.8rem; margin-bottom: 1.15rem; color: var(--color-text-muted);">
+          Recurso: {resource.name} ({format.toUpperCase()}) &bull; Motor DuckDB y proxy CORS automático
         </p>
         <button type="button" class="btn btn-primary btn-sm load-direct-btn">
-          Cargar Datos en Cliente
+          Cargar y Explorar Recurso
         </button>
       </div>
+    </div>
+
+    <!-- Contenedor de Mapa Geoespacial -->
+    <div class="explorer-map-container" style="display: none; padding: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background-color: var(--color-surface); margin-bottom: 0.5rem;">
+    </div>
+
+    <!-- Contenedor de Gráfico Analítico -->
+    <div class="explorer-chart-container" style="display: none; padding: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background-color: var(--color-surface); margin-bottom: 0.5rem;">
     </div>
 
     <!-- Barra de Paginación -->
@@ -316,6 +343,44 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .explorer-view-modes {
+    display: inline-flex;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+
+  .view-mode-btn {
+    all: unset;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    background: transparent;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .view-mode-btn:not(:first-child) {
+    border-left: 1px solid var(--color-border);
+  }
+
+  .view-mode-btn:hover {
+    color: var(--color-text);
+    background-color: var(--color-surface-hover);
+  }
+
+  .view-mode-btn.active {
+    background-color: var(--color-primary);
+    color: #ffffff;
   }
 
   .explorer-page-size {
@@ -473,7 +538,8 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
 </style>
 
 <script>
-  import { DataMeshClient } from '@datosbolivia/datamesh-client';
+  import { DataMeshClient, parseCsv, normalizeResourceUrl } from '@datosbolivia/datamesh-client';
+  import { fetchWithCorsProxy, isCorsRestrictedDomain } from '../lib/proxy';
 
   // Usa DuckDB en cliente con catálogo por defecto de la misma página (origen actual /llms.txt)
   const client = new DataMeshClient({ engine: 'duckdb' });
@@ -499,6 +565,9 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       const pageLabel = container.querySelector<HTMLElement>('.pagination-page-label');
       const recordInfo = container.querySelector<HTMLElement>('.explorer-record-info');
       const tableContainer = container.querySelector<HTMLElement>('.explorer-table-container');
+      const mapContainer = container.querySelector<HTMLElement>('.explorer-map-container');
+      const chartContainer = container.querySelector<HTMLElement>('.explorer-chart-container');
+      const viewModeBtns = container.querySelectorAll<HTMLButtonElement>('.view-mode-btn');
       const paginationWrap = container.querySelector<HTMLElement>('.explorer-pagination');
       const loadDirectBtn = container.querySelector<HTMLButtonElement>('.load-direct-btn');
       const sqlInput = container.querySelector<HTMLInputElement>('.client-sql-input');
@@ -511,6 +580,103 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       let sortCol: string | undefined = undefined;
       let sortDir: 'asc' | 'desc' = 'asc';
       let isLoading = false;
+      let currentViewMode: 'table' | 'map' | 'chart' = 'table';
+
+      // Alternador de modos de vista (Tabla, Mapa, Gráfico)
+      viewModeBtns.forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const mode = (btn.getAttribute('data-view-mode') || 'table') as 'table' | 'map' | 'chart';
+          switchViewMode(mode);
+        });
+      });
+
+      async function switchViewMode(mode: 'table' | 'map' | 'chart') {
+        currentViewMode = mode;
+        viewModeBtns.forEach((b) => b.classList.toggle('active', b.getAttribute('data-view-mode') === mode));
+
+        if (!parsedTable && !isLoading) {
+          await fetchViaTypeScriptClient();
+        }
+
+        renderCurrentView();
+      }
+
+      function showLoadingState() {
+        let title = 'Cargando recurso tabular...';
+        let substatus = 'Descargando datos y montando motor analítico DuckDB en cliente';
+        if (currentViewMode === 'map') {
+          title = 'Cargando visualización geoespacial...';
+          substatus = 'Procesando coordenadas territoriales y límites departamentales';
+        } else if (currentViewMode === 'chart') {
+          title = 'Cargando gráfico analítico...';
+          substatus = 'Calculando agregaciones de métricas y dimensiones de datos';
+        }
+
+        const loadingHtml = `
+          <div class="explorer-loading-state" style="padding: 2.25rem 1rem; text-align: center; max-width: 480px; margin: 0 auto;">
+            <div class="loading-spinner"></div>
+            <p style="font-size: 0.875rem; font-weight: 600; color: var(--color-text); margin-top: 0.75rem; margin-bottom: 0.25rem;">
+              ${title}
+            </p>
+            <p class="explorer-loading-substatus" style="font-size: 0.75rem; color: var(--color-text-muted);">
+              ${substatus}
+            </p>
+          </div>`;
+
+        if (currentViewMode === 'table') {
+          if (tableContainer) {
+            tableContainer.style.display = 'block';
+            tableContainer.innerHTML = loadingHtml;
+          }
+          if (mapContainer) mapContainer.style.display = 'none';
+          if (chartContainer) chartContainer.style.display = 'none';
+        } else if (currentViewMode === 'map') {
+          if (mapContainer) {
+            mapContainer.style.display = 'block';
+            mapContainer.innerHTML = loadingHtml;
+          }
+          if (tableContainer) tableContainer.style.display = 'none';
+          if (chartContainer) chartContainer.style.display = 'none';
+        } else if (currentViewMode === 'chart') {
+          if (chartContainer) {
+            chartContainer.style.display = 'block';
+            chartContainer.innerHTML = loadingHtml;
+          }
+          if (tableContainer) tableContainer.style.display = 'none';
+          if (mapContainer) mapContainer.style.display = 'none';
+        }
+      }
+
+      function renderCurrentView() {
+        if (isLoading) {
+          showLoadingState();
+          return;
+        }
+
+        if (currentViewMode === 'table') {
+          if (tableContainer) tableContainer.style.display = 'block';
+          if (paginationWrap && parsedTable) paginationWrap.style.display = 'flex';
+          if (mapContainer) mapContainer.style.display = 'none';
+          if (chartContainer) chartContainer.style.display = 'none';
+          renderTable();
+        } else if (currentViewMode === 'map') {
+          if (tableContainer) tableContainer.style.display = 'none';
+          if (paginationWrap) paginationWrap.style.display = 'none';
+          if (chartContainer) chartContainer.style.display = 'none';
+          if (mapContainer) {
+            mapContainer.style.display = 'block';
+            renderMap();
+          }
+        } else if (currentViewMode === 'chart') {
+          if (tableContainer) tableContainer.style.display = 'none';
+          if (paginationWrap) paginationWrap.style.display = 'none';
+          if (mapContainer) mapContainer.style.display = 'none';
+          if (chartContainer) {
+            chartContainer.style.display = 'block';
+            renderChart();
+          }
+        }
+      }
 
       // Sub-tabs switcher
       tabBtns.forEach((btn) => {
@@ -534,15 +700,10 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         fetchViaTypeScriptClient();
       });
 
-      // Fetch tabular data using TypeScript DataMeshClient
+      // Fetch tabular data using TypeScript DataMeshClient with CORS proxy fallback
       async function fetchViaTypeScriptClient() {
-        if (!tableContainer) return;
         isLoading = true;
-        tableContainer.innerHTML = `
-          <div class="explorer-loading-state">
-            <div class="loading-spinner"></div>
-            <p>Cargando...</p>
-          </div>`;
+        showLoadingState();
 
         if (format === 'parquet') {
           isLoading = false;
@@ -551,17 +712,68 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         }
 
         try {
-          // Direct fetch using client SDK with common canonical triad URI
-          const result = await client.query({
-            resource_uri: triad || remoteUrl,
-          });
+          const directTarget = normalizeResourceUrl(remoteUrl);
+          let resolvedTarget = directTarget;
 
-          parsedTable = {
-            columns: result.columns,
-            rows: result.rows,
+          if (!resolvedTarget && triad) {
+            try {
+              resolvedTarget = await client.resolveResource(triad);
+              resolvedTarget = normalizeResourceUrl(resolvedTarget);
+            } catch {
+              resolvedTarget = directTarget || remoteUrl;
+            }
+          }
+
+          let parsed: { columns: string[]; rows: string[][] } | null = null;
+
+          const updateStatus = (msg: string) => {
+            container.querySelectorAll('.explorer-loading-substatus').forEach((el) => {
+              el.textContent = msg;
+            });
           };
 
-          if (paginationWrap) paginationWrap.style.display = 'flex';
+          // Si el dominio tiene restricciones conocidas de CORS, descargar directamente vía proxy
+          if (resolvedTarget && isCorsRestrictedDomain(resolvedTarget)) {
+            updateStatus('Conectando mediante proxy CORS de respaldo...');
+            const resp = await fetchWithCorsProxy(resolvedTarget);
+            const text = await resp.text();
+            parsed = parseCsv(text);
+          } else {
+            // Intentar fetch directo con URL normalizada
+            try {
+              if (resolvedTarget) {
+                const resp = await fetch(resolvedTarget);
+                if (resp.ok) {
+                  const text = await resp.text();
+                  parsed = parseCsv(text);
+                } else {
+                  throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+                }
+              } else {
+                const result = await client.query({
+                  resource_uri: triad || remoteUrl,
+                });
+                parsed = {
+                  columns: result.columns,
+                  rows: result.rows,
+                };
+              }
+            } catch (queryErr: any) {
+              // Si falla por CORS o red, reintentar con fetchWithCorsProxy
+              if (resolvedTarget) {
+                updateStatus('Reintentando descarga mediante proxy CORS...');
+                const resp = await fetchWithCorsProxy(resolvedTarget);
+                const text = await resp.text();
+                parsed = parseCsv(text);
+              } else {
+                throw queryErr;
+              }
+            }
+          }
+
+          parsedTable = parsed;
+          isLoading = false;
+
           executeClientQuery();
         } catch (err: any) {
           isLoading = false;
@@ -584,7 +796,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
           offset: offset,
         });
 
-        renderTable();
+        renderCurrentView();
       }
 
       // Run Client-Side SQL
@@ -605,7 +817,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
             total_count: sqlRes.total_count,
           };
           currentPage = 1;
-          renderTable();
+          renderCurrentView();
           if (recordInfo) {
             recordInfo.textContent = `Consulta SQL cliente completada: ${sqlRes.row_count} filas`;
           }
@@ -683,8 +895,351 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         });
       }
 
+      const BOLIVIA_DEPT_NAMES: Record<string, string> = {
+        '1': 'Chuquisaca', '2': 'La Paz', '3': 'Cochabamba', '4': 'Oruro',
+        '5': 'Potosí', '6': 'Tarija', '7': 'Santa Cruz', '8': 'Beni', '9': 'Pando'
+      };
+
+      let selectedChartCat: string | null = null;
+      let selectedChartMetric: string | null = null;
+
+      function renderMap() {
+        if (!mapContainer || !parsedTable) return;
+        const { columns, rows } = parsedTable;
+
+        const latIdx = columns.findIndex((c) => /^(lat|latitude|latitud|lat_geo|y)$/i.test(c.trim()));
+        const lonIdx = columns.findIndex((c) => /^(lon|lng|longitude|longitud|lon_geo|x)$/i.test(c.trim()));
+        const deptIdx = columns.findIndex((c) => /(departamento|depto|ciudad|region|id_departamento)/i.test(c.trim()));
+        const labelIdx = columns.findIndex((c) => /(nombre|name|estacion|station|lugar|municipio|entidad|title|label)/i.test(c.trim()));
+
+        if (latIdx !== -1 && lonIdx !== -1) {
+          const points = rows
+            .map((r, i) => {
+              const lat = parseFloat(r[latIdx]);
+              const lon = parseFloat(r[lonIdx]);
+              const label = labelIdx !== -1 ? (r[labelIdx] || `Punto ${i + 1}`) : `Punto ${i + 1}`;
+              return { lat, lon, label };
+            })
+            .filter((p) => !isNaN(p.lat) && !isNaN(p.lon));
+
+          if (points.length === 0) {
+            mapContainer.innerHTML = `
+              <div style="padding: 2rem; text-align: center; color: var(--color-text-muted); font-size: 0.85rem;">
+                No se encontraron valores numéricos válidos en las columnas de latitud y longitud.
+              </div>`;
+            return;
+          }
+
+          const lats = points.map((p) => p.lat);
+          const lons = points.map((p) => p.lon);
+          const minLat = Math.min(...lats);
+          const maxLat = Math.max(...lats);
+          const minLon = Math.min(...lons);
+          const maxLon = Math.max(...lons);
+          const ranLat = maxLat - minLat || 0.1;
+          const ranLon = maxLon - minLon || 0.1;
+
+          const w = 580, h = 300;
+          const padL = 60, padR = 25, padT = 36, padB = 40;
+          const innerW = w - padL - padR, innerH = h - padT - padB;
+
+          const dotsSvg = points.slice(0, 500).map((p) => {
+            const cx = padL + ((p.lon - minLon) / ranLon) * innerW;
+            const cy = padT + innerH - ((p.lat - minLat) / ranLat) * innerH;
+            return `
+              <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.5" fill="var(--color-primary)" fill-opacity="0.75" stroke="#ffffff" stroke-width="0.75">
+                <title>${escapeHtml(p.label)} (${p.lat.toFixed(3)}, ${p.lon.toFixed(3)})</title>
+              </circle>`;
+          }).join('');
+
+          const gridLines = [0, 0.5, 1].map((t) => {
+            const gx = padL + t * innerW;
+            const gy = padT + (1 - t) * innerH;
+            const lonVal = (minLon + t * ranLon).toFixed(2);
+            const latVal = (minLat + t * ranLat).toFixed(2);
+            return `
+              <line x1="${gx.toFixed(1)}" y1="${padT}" x2="${gx.toFixed(1)}" y2="${padT + innerH}" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="2,3"/>
+              <text x="${gx.toFixed(1)}" y="${h - padB + 16}" font-size="7.5" font-family="var(--font-mono)" fill="var(--color-text-muted)" text-anchor="middle">${lonVal}&deg;O</text>
+              <line x1="${padL}" y1="${gy.toFixed(1)}" x2="${padL + innerW}" y2="${gy.toFixed(1)}" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="2,3"/>
+              <text x="${padL - 6}" y="${(gy + 3).toFixed(1)}" font-size="7.5" font-family="var(--font-mono)" fill="var(--color-text-muted)" text-anchor="end">${latVal}&deg;S</text>
+            `;
+          }).join('');
+
+          // Desglose territorial complementario si existe columna de departamento
+          let deptSummaryHtml = '';
+          if (deptIdx !== -1) {
+            const counts: Record<string, number> = {};
+            rows.forEach((r) => {
+              const raw = (r[deptIdx] || '').trim();
+              const deptName = BOLIVIA_DEPT_NAMES[raw] || raw || 'Otro';
+              counts[deptName] = (counts[deptName] || 0) + 1;
+            });
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            const maxCount = Math.max(...sorted.map((s) => s[1]), 1);
+
+            const itemsHtml = sorted.map(([dept, count]) => {
+              const pct = ((count / maxCount) * 100).toFixed(0);
+              return `
+                <div style="display: grid; grid-template-columns: 105px 1fr 50px; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-family: var(--font-mono);">
+                  <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text);">${escapeHtml(dept)}</span>
+                  <div style="background: var(--color-surface-hover); height: 6px; border-radius: 2px; overflow: hidden; border: 1px solid var(--color-border);">
+                    <div style="width: ${pct}%; height: 100%; background: var(--color-primary);"></div>
+                  </div>
+                  <span style="text-align: right; font-weight: 600; color: var(--color-text);">${count.toLocaleString()}</span>
+                </div>
+              `;
+            }).join('');
+
+            deptSummaryHtml = `
+              <div style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px dashed var(--color-border);">
+                <div style="font-size: 0.75rem; font-weight: 600; color: var(--color-text); margin-bottom: 0.5rem; font-family: var(--font-mono);">
+                  Distribución por Departamento (${escapeHtml(columns[deptIdx])}):
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.5rem;">
+                  ${itemsHtml}
+                </div>
+              </div>
+            `;
+          }
+
+          mapContainer.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+              <h4 style="font-size: 0.95rem; font-family: var(--font-serif); margin: 0;">Dispersión Geoespacial de Coordenadas</h4>
+              <span style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--color-primary); font-weight: 600;">${points.length} puntos mapeados</span>
+            </div>
+            <div style="max-width: 620px; margin: 0 auto; overflow: hidden;">
+              <svg viewBox="0 0 ${w} ${h}" class="chart-scatter-svg" style="width: 100%; display: block;">
+                ${gridLines}
+                <rect x="${padL}" y="${padT}" width="${innerW}" height="${innerH}" fill="none" stroke="var(--color-border)" stroke-width="1"/>
+                <text x="${padL}" y="${padT - 12}" font-size="8.5" font-family="var(--font-mono)" fill="var(--color-text)" font-weight="600">Eje Y: Latitud Sur (&deg;S)</text>
+                <text x="${w - padR}" y="${h - 8}" font-size="8.5" font-family="var(--font-mono)" fill="var(--color-text-muted)" font-weight="600" text-anchor="end">Eje X: Longitud Oeste (&deg;O)</text>
+                ${dotsSvg}
+              </svg>
+              ${deptSummaryHtml}
+            </div>
+          `;
+          return;
+        }
+
+        if (deptIdx !== -1) {
+          const counts: Record<string, number> = {};
+          rows.forEach((r) => {
+            const raw = (r[deptIdx] || '').trim();
+            const deptName = BOLIVIA_DEPT_NAMES[raw] || raw || 'No especificado';
+            counts[deptName] = (counts[deptName] || 0) + 1;
+          });
+          const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+          const maxCount = Math.max(...sorted.map((s) => s[1]), 1);
+
+          const itemsHtml = sorted.slice(0, 10).map(([dept, count]) => {
+            const pct = ((count / maxCount) * 100).toFixed(0);
+            return `
+              <div style="display: grid; grid-template-columns: 120px 1fr 60px; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-family: var(--font-mono);">
+                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text);">${escapeHtml(dept)}</span>
+                <div style="background: var(--color-surface-hover); height: 8px; border-radius: 2px; overflow: hidden; border: 1px solid var(--color-border);">
+                  <div style="width: ${pct}%; height: 100%; background: var(--color-primary);"></div>
+                </div>
+                <span style="text-align: right; font-weight: 600; color: var(--color-text);">${count.toLocaleString()}</span>
+              </div>
+            `;
+          }).join('');
+
+          mapContainer.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+              <h4 style="font-size: 0.95rem; font-family: var(--font-serif); margin: 0;">Distribución por Departamento / Región</h4>
+              <span style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--color-primary); font-weight: 600;">Columna: ${escapeHtml(columns[deptIdx])}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 580px; margin: 0 auto; padding: 0.5rem 0;">
+              ${itemsHtml}
+            </div>
+          `;
+          return;
+        }
+
+        mapContainer.innerHTML = `
+          <div style="padding: 2.25rem 1rem; text-align: center; color: var(--color-text-muted);">
+            <p style="font-weight: 600; color: var(--color-text); margin-bottom: 0.35rem;">
+              Vista Geoespacial No Disponible
+            </p>
+            <p style="font-size: 0.8rem; margin-bottom: 1rem; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.45;">
+              Este recurso no cuenta con columnas detectables de coordenadas (latitud/longitud) ni departamentos de Bolivia.
+            </p>
+            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+              <button type="button" class="btn btn-secondary btn-sm switch-to-table-btn">Ver Tabla de Datos</button>
+              <button type="button" class="btn btn-secondary btn-sm switch-to-chart-btn">Ver Gráfico Analítico</button>
+            </div>
+          </div>
+        `;
+        mapContainer.querySelector('.switch-to-table-btn')?.addEventListener('click', () => switchViewMode('table'));
+        mapContainer.querySelector('.switch-to-chart-btn')?.addEventListener('click', () => switchViewMode('chart'));
+      }
+
+      function renderChart() {
+        if (!chartContainer || !parsedTable) return;
+        const { columns, rows } = parsedTable;
+
+        if (rows.length === 0) {
+          chartContainer.innerHTML = `
+            <div style="padding: 2.5rem; text-align: center; color: var(--color-text-muted); font-size: 0.85rem;">
+              No hay datos para graficar.
+            </div>`;
+          return;
+        }
+
+        // Identificar columnas cuantitativas (excluyendo IDs y coordenadas)
+        const isNumericCol = (cIdx: number) => {
+          let numCount = 0;
+          for (let r = 0; r < Math.min(rows.length, 15); r++) {
+            const v = parseFloat(rows[r][cIdx]);
+            if (!isNaN(v)) numCount++;
+          }
+          return numCount >= 5;
+        };
+
+        const isIdOrCoordCol = (colName: string) => {
+          return /^(id|_id|id_|codigo|code|lat|latitude|latitud|lon|longitude|longitud|x|y)$/i.test(colName.trim());
+        };
+
+        const numericCols = columns.filter((col, idx) => isNumericCol(idx) && !isIdOrCoordCol(col));
+
+        // Selección predeterminada inteligente de categoría
+        if (!selectedChartCat || !columns.includes(selectedChartCat)) {
+          // Prioridad: departamento > tipo/categoria > entidad/estacion > primera columna de texto
+          const bestCat = columns.find(c => /(departamento|depto|ciudad|municipio|id_departamento)/i.test(c))
+            || columns.find(c => /(tipo|categoria|grupo|desgrupo|entidad|banco|station|estacion|nombre|name)/i.test(c))
+            || columns.find(c => !isNumericCol(columns.indexOf(c)))
+            || columns[0];
+          selectedChartCat = bestCat;
+        }
+
+        // Selección predeterminada de métrica
+        if (!selectedChartMetric) {
+          selectedChartMetric = numericCols.length > 0 ? numericCols[0] : '__count__';
+        }
+
+        const catCol = selectedChartCat;
+        const metricCol = selectedChartMetric;
+        const catIdx = columns.indexOf(catCol);
+        const metricIdx = metricCol === '__count__' ? -1 : columns.indexOf(metricCol);
+
+        // Agregación de datos
+        const isIdDept = /^id_departamento$/i.test(catCol);
+        const groups: Record<string, { sum: number; count: number }> = {};
+
+        rows.forEach((r) => {
+          let key = (r[catIdx] || '').trim();
+          if (isIdDept && BOLIVIA_DEPT_NAMES[key]) {
+            key = BOLIVIA_DEPT_NAMES[key];
+          } else if (!key) {
+            key = 'Sin dato';
+          }
+
+          if (!groups[key]) {
+            groups[key] = { sum: 0, count: 0 };
+          }
+          groups[key].count += 1;
+
+          if (metricIdx !== -1) {
+            const v = parseFloat(r[metricIdx]);
+            if (!isNaN(v)) {
+              groups[key].sum += v;
+            }
+          }
+        });
+
+        const isCountMetric = metricCol === '__count__';
+        const chartData = Object.entries(groups)
+          .map(([label, g]) => ({
+            label,
+            val: isCountMetric ? g.count : (g.count > 0 ? Math.round((g.sum / g.count) * 10) / 10 : 0),
+          }))
+          .sort((a, b) => b.val - a.val)
+          .slice(0, 10);
+
+        const maxVal = Math.max(...chartData.map((d) => d.val), 1);
+        const w = 580;
+        const labelW = 150;
+        const padT = 32, padB = 30;
+        const trackW = w - labelW - 95;
+        const rowH = 26;
+        const contentH = chartData.length * rowH;
+        const totalH = padT + contentH + padB;
+
+        const metricLabel = isCountMetric ? 'Frecuencia (Registros)' : `${escapeHtml(metricCol)} (Promedio)`;
+
+        const barsSvg = chartData.map((d, i) => {
+          const y = padT + i * rowH;
+          const bw = Math.max(2, (d.val / maxVal) * trackW);
+          const lbl = d.label.length > 20 ? d.label.slice(0, 19) + '…' : d.label;
+          return `
+            <text x="${labelW - 10}" y="${y + 14}" text-anchor="end" font-size="9.5" font-family="var(--font-mono)" fill="var(--color-text)">${escapeHtml(lbl)}</text>
+            <rect x="${labelW}" y="${y + 3}" width="${trackW}" height="15" rx="3" fill="var(--color-surface-hover)" stroke="var(--color-border)" stroke-width="0.5"/>
+            <rect x="${labelW}" y="${y + 3}" width="${bw.toFixed(1)}" height="15" rx="3" fill="var(--color-primary)"/>
+            <text x="${(labelW + bw + 6).toFixed(1)}" y="${y + 14}" font-size="9" font-family="var(--font-mono)" fill="var(--color-text)" font-weight="600">${d.val.toLocaleString()}</text>
+          `;
+        }).join('');
+
+        const gridSvg = [0, 0.5, 1].map((t) => {
+          const gx = (labelW + t * trackW).toFixed(1);
+          const v = Math.round(t * maxVal);
+          return `
+            <line x1="${gx}" y1="${padT}" x2="${gx}" y2="${padT + contentH}" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="3,3"/>
+            <text x="${gx}" y="${padT - 8}" font-size="8" font-family="var(--font-mono)" fill="var(--color-text-muted)" text-anchor="middle">${v.toLocaleString()}</text>
+          `;
+        }).join('');
+
+        // Selectores de categoría y métrica interactivos
+        const catOptions = columns.map(c => `<option value="${escapeHtml(c)}"${c === selectedChartCat ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('');
+        const metricOptions = [
+          `<option value="__count__"${selectedChartMetric === '__count__' ? ' selected' : ''}>Recuento de Registros (Frecuencia)</option>`,
+          ...numericCols.map(c => `<option value="${escapeHtml(c)}"${c === selectedChartMetric ? ' selected' : ''}>Promedio de ${escapeHtml(c)}</option>`)
+        ].join('');
+
+        chartContainer.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.6rem; padding-bottom: 0.65rem; border-bottom: 1px solid var(--color-border);">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <label style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-text-muted);">
+                Categoría:
+                <select class="chart-selector-cat" style="font-size: 0.75rem; padding: 0.2rem 0.45rem; font-family: var(--font-mono); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text);">
+                  ${catOptions}
+                </select>
+              </label>
+              <label style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-text-muted);">
+                Métrica:
+                <select class="chart-selector-metric" style="font-size: 0.75rem; padding: 0.2rem 0.45rem; font-family: var(--font-mono); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text);">
+                  ${metricOptions}
+                </select>
+              </label>
+            </div>
+            <span style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--color-primary); font-weight: 600;">
+              Top 10 &bull; ${escapeHtml(metricLabel)}
+            </span>
+          </div>
+          <div style="max-width: 620px; margin: 0 auto; overflow: hidden;">
+            <svg viewBox="0 0 ${w} ${totalH}" class="chart-bar-svg" style="width: 100%; display: block;">
+              ${gridSvg}
+              <line x1="${labelW}" y1="${padT}" x2="${labelW}" y2="${padT + contentH}" stroke="var(--color-text-muted)" stroke-width="1.5"/>
+              ${barsSvg}
+            </svg>
+          </div>
+        `;
+
+        chartContainer.querySelector('.chart-selector-cat')?.addEventListener('change', (e: any) => {
+          selectedChartCat = e.target.value;
+          renderChart();
+        });
+        chartContainer.querySelector('.chart-selector-metric')?.addEventListener('change', (e: any) => {
+          selectedChartMetric = e.target.value;
+          renderChart();
+        });
+      }
+
       function renderErrorMessage(msg: string) {
         if (!tableContainer) return;
+        if (mapContainer) mapContainer.style.display = 'none';
+        if (chartContainer) chartContainer.style.display = 'none';
+        if (paginationWrap) paginationWrap.style.display = 'none';
+        tableContainer.style.display = 'block';
         tableContainer.innerHTML = `
           <div style="padding: 2rem 1.5rem; text-align: center; color: var(--color-text-muted);">
             <p style="margin-bottom: 0.5rem; font-weight: 600; color: var(--color-text);">
@@ -702,6 +1257,10 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
 
       function renderUnsupportedFormatMessage(formatName: string) {
         if (!tableContainer) return;
+        if (mapContainer) mapContainer.style.display = 'none';
+        if (chartContainer) chartContainer.style.display = 'none';
+        if (paginationWrap) paginationWrap.style.display = 'none';
+        tableContainer.style.display = 'block';
         tableContainer.innerHTML = `
           <div style="padding: 2rem 1.5rem; text-align: center; color: var(--color-text-muted);">
             <p style="margin-bottom: 0.5rem; font-weight: 600; color: var(--color-text);">

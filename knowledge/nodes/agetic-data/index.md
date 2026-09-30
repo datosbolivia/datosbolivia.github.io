@@ -31,28 +31,30 @@ Este dataset está enriquecido semánticamente utilizando vocabularios controlad
 - [Ciudadanía Digital](concepts/digital_citizenship.md) - [Q5275815](https://www.wikidata.org/wiki/Q5275815)
 - [Interoperabilidad](concepts/interoperability.md) - [Q730006](https://www.wikidata.org/wiki/Q730006)
 
-```chart
-{
-  "type": "area",
-  "title": "Crecimiento de la Ciudadanía Digital en Bolivia",
-  "subtitle": "Registros y autentificaciones anuales en la plataforma de identidad digital AGETIC",
-  "source": "AGETIC — Agencia de Gobierno Electrónico y TIC del Estado",
-  "sql": "SELECT \"Año\" AS anio, \"Registros\" AS registros, \"Autentificaciones\" AS autentificaciones FROM agetic_data_estadisticas_ciudadania_digital ORDER BY \"Año\"",
-  "xKey": "anio",
-  "yKeys": ["registros", "autentificaciones"],
-  "colors": ["#2563eb", "#059669"]
-}
-```
+```ojs
+// Cargar estadísticas de AGETIC con DataMesh TypeScript SDK
+const resourcePath = dataset?.resources?.[0]?.path || "data/ciudadania.csv";
+const res = await datamesh.query({ resource_uri: resourcePath });
 
-```chart
-{
-  "type": "bar",
-  "title": "Emisión de Facturas Electrónicas por Año",
-  "subtitle": "Total de facturas electrónicas emitidas vía plataforma AGETIC",
-  "source": "AGETIC — Agencia de Gobierno Electrónico y TIC del Estado",
-  "sql": "SELECT \"Año\" AS anio, \"Cantidad\" AS cantidad FROM agetic_data_estadisticas_emision_facturas ORDER BY \"Año\"",
-  "xKey": "anio",
-  "yKeys": ["cantidad"],
-  "colors": ["#7c3aed"]
-}
+const yearCol = res.columns.find(c => /año|anio|year/i.test(c)) || res.columns[0];
+const regCol = res.columns.find(c => /registro/i.test(c)) || res.columns[1];
+const yearIdx = res.columns.indexOf(yearCol);
+const regIdx = res.columns.indexOf(regCol);
+
+const data = res.rows.map(r => ({
+  anio: String(r[yearIdx]),
+  registros: parseFloat(r[regIdx]) || 0
+}));
+
+return Plot.plot({
+  title: "Crecimiento de Ciudadanía Digital (AGETIC)",
+  subtitle: "Registros anuales",
+  x: { label: "Año" },
+  y: { grid: true, label: "Registros" },
+  marks: [
+    Plot.lineY(data, { x: "anio", y: "registros", stroke: "var(--color-primary)", strokeWidth: 2.5 }),
+    Plot.dot(data, { x: "anio", y: "registros", fill: "var(--color-primary)", r: 4 }),
+    Plot.ruleY([0])
+  ]
+});
 ```

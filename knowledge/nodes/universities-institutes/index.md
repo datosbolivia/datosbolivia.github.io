@@ -14,32 +14,25 @@ Este dataset contiene información sobre la oferta académica a nivel universita
 - **Cruce de datos**: Se puede integrar con datos demográficos o de demanda laboral para planificar y ajustar la oferta académica del país.
 - **Dashboard recomendado**: Panel de control con filtros por Universidad y Sede, gráficos de barras de carreras con mayor/menor cantidad de plazas disponibles.
 
----
+```ojs
+// Cargar universidades y carreras con DataMesh TypeScript SDK
+const resourcePath = dataset?.resources?.[0]?.path || "data/universidades.csv";
+const res = await datamesh.query({ resource_uri: resourcePath });
 
-# Gráficos del Dataset
+const uIdx = res.columns.findIndex(c => /universidad/i.test(c));
+const data = res.rows
+  .map(r => ({ universidad: (r[uIdx] || '').trim() }))
+  .filter(d => d.universidad);
 
-```chart
-{
-  "type": "bar",
-  "title": "Universidades con Mayor Oferta de Carreras en Bolivia",
-  "subtitle": "Número de carreras registradas por universidad en el catálogo oficial",
-  "source": "Ministerio de Educación de Bolivia vía DataMesh",
-  "sql": "SELECT \"UNIVERSIDAD\", COUNT(DISTINCT \"CARRERA ASIGNADA\") AS carreras FROM universities_institutes_universidades_y_carreras GROUP BY \"UNIVERSIDAD\" ORDER BY carreras DESC LIMIT 12",
-  "xKey": "UNIVERSIDAD",
-  "yKeys": ["carreras"],
-  "colors": ["#2563eb"]
-}
-```
-
-```chart
-{
-  "type": "bar",
-  "title": "Total de Plazas Disponibles por Universidad",
-  "subtitle": "Capacidad total de admisión por institución universitaria",
-  "source": "Ministerio de Educación de Bolivia vía DataMesh",
-  "sql": "SELECT \"UNIVERSIDAD\", SUM(\"PLAZAS DISPONIBLES\") AS plazas FROM universities_institutes_universidades_y_carreras WHERE \"PLAZAS DISPONIBLES\" IS NOT NULL GROUP BY \"UNIVERSIDAD\" ORDER BY plazas DESC LIMIT 12",
-  "xKey": "UNIVERSIDAD",
-  "yKeys": ["plazas"],
-  "colors": ["#059669"]
-}
+return Plot.plot({
+  title: "Universidades con Mayor Oferta de Carreras",
+  subtitle: "Distribución analítica",
+  marginLeft: 140,
+  x: { grid: true, label: "Número de Carreras Registradas" },
+  y: { label: null },
+  marks: [
+    Plot.barX(data, Plot.groupY({ x: "count" }, { y: "universidad", sort: { y: "-x", limit: 10 }, fill: "var(--color-primary)" })),
+    Plot.ruleX([0])
+  ]
+});
 ```

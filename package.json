@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@datosbolivia/datamesh-client": "github:datosbolivia/datamesh#main",
+    "@observablehq/plot": "^0.6.17",
     "astro": "^5.4.2",
     "js-yaml": "^4.1.0"
   },

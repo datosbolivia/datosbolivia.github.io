@@ -23,6 +23,7 @@ export const KNOWN_CORS_RESTRICTED_DOMAINS: string[] = [
  * Proveedores estándar de proxy CORS y sus generadores de URL.
  */
 export const DEFAULT_PROXY_PROVIDERS: Record<string, (url: string) => string> = {
+  local: (url: string) => `http://localhost:8000/proxy?url=${encodeURIComponent(url)}`,
   allorigins: (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   corsproxy: (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
 };
@@ -71,6 +72,64 @@ let activeConfig: CorsProxyConfig = {
   restrictedDomains: [...DEFAULT_PROXY_CONFIG.restrictedDomains],
 };
 
+// Inicialización dinámica desde localStorage en navegadores
+if (typeof window !== 'undefined' && window.localStorage) {
+  try {
+    const savedCustomProxy = window.localStorage.getItem('datamesh_custom_proxy');
+    const savedProxyEnabled = window.localStorage.getItem('datamesh_proxy_enabled');
+    if (savedCustomProxy) {
+      activeConfig.providers = [savedCustomProxy, ...DEFAULT_PROXY_CONFIG.providers.filter((p) => p !== savedCustomProxy)];
+    }
+    if (savedProxyEnabled !== null) {
+      activeConfig.enabled = savedProxyEnabled === 'true';
+    }
+  } catch {
+    // localStorage no disponible o restringido
+  }
+}
+
+/**
+ * Guarda y activa un proxy personalizado elegido por el usuario (persiste en localStorage).
+ */
+export function setUserCustomProxy(proxyUrlOrTemplate: string, enabled: boolean = true): CorsProxyConfig {
+  const trimmed = proxyUrlOrTemplate.trim();
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      if (trimmed) {
+        window.localStorage.setItem('datamesh_custom_proxy', trimmed);
+      } else {
+        window.localStorage.removeItem('datamesh_custom_proxy');
+      }
+      window.localStorage.setItem('datamesh_proxy_enabled', enabled ? 'true' : 'false');
+    } catch {
+      // Ignorar fallos de almacenamiento
+    }
+  }
+
+  activeConfig.enabled = enabled;
+  if (trimmed) {
+    activeConfig.providers = [trimmed, ...DEFAULT_PROXY_CONFIG.providers.filter((p) => p !== trimmed)];
+  } else {
+    activeConfig.providers = [...DEFAULT_PROXY_CONFIG.providers];
+  }
+
+  return getCorsProxyConfig();
+}
+
+/**
+ * Obtiene el proxy personalizado guardado por el usuario, o cadena vacía si no hay ninguno.
+ */
+export function getUserCustomProxy(): string {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      return window.localStorage.getItem('datamesh_custom_proxy') || '';
+    } catch {
+      return '';
+    }
+  }
+  return '';
+}
+
 /**
  * Obtiene la configuración actual de proxies CORS.
  */
@@ -99,6 +158,14 @@ export function configureCorsProxy(options: Partial<CorsProxyConfig>): CorsProxy
  * Restaura la configuración de proxies CORS a sus valores por defecto.
  */
 export function resetCorsProxyConfig(): void {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      window.localStorage.removeItem('datamesh_custom_proxy');
+      window.localStorage.removeItem('datamesh_proxy_enabled');
+    } catch {
+      // ignore
+    }
+  }
   activeConfig = {
     ...DEFAULT_PROXY_CONFIG,
     providers: [...DEFAULT_PROXY_CONFIG.providers],

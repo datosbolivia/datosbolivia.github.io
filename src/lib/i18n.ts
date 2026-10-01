@@ -101,7 +101,7 @@ export const translations = {
     'explorer.of': 'de',
     'explorer.prev_page': 'Anterior',
     'explorer.next_page': 'Siguiente',
-    'explorer.export_csv': 'Exportar CSV',
+    'explorer.export_csv': 'Exportar',
     'explorer.triad_label': 'Tríada Canónica:',
     'explorer.copy_cli': 'Copiar Comando CLI',
     'explorer.copy_python': 'Copiar Python SDK',
@@ -159,6 +159,7 @@ export const translations = {
 
     // Pie de Página
     'footer.install': 'Instalar',
+    'footer.settings': 'Configuración',
 
     // Acciones Generales y Accesibilidad
     'action.skip_link': 'Saltar al contenido principal',
@@ -321,6 +322,7 @@ export const translations = {
 
     // Footer
     'footer.install': 'Install',
+    'footer.settings': 'Settings',
 
     // General Actions and Accessibility
     'action.skip_link': 'Skip to main content',

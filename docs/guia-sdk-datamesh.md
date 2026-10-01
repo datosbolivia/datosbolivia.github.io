@@ -209,7 +209,17 @@ datamesh sql "SELECT lugar_nombre, ROUND(AVG(valor_ica), 1) AS promedio_ica FROM
 
 # Exportar el resultado a formato JSON o CSV
 datamesh sql "SELECT * FROM 'bolivia:agetic_data:estadisticas_ciudadania_digital'" --format=json > ciudadania.json
+
+# Iniciar el servidor unificado HTTP REST, Proxy CORS y MCP (datamesh serve)
+datamesh serve --port 8000 --host 0.0.0.0
 ```
+
+### Servidor (`datamesh serve`)
+
+El comando `datamesh serve` inicia un daemon local que provee:
+- **Proxy CORS Transparente (`GET /proxy?url=...`):** Permite a aplicaciones web y navegadores eludir restricciones de orígenes cruzados en datasets remotos.
+- **API REST (`GET /api/catalog`, `POST /api/sql`):** Ejecución remota de SQL sobre DuckDB y exploración del catálogo federado.
+- **Protocolo MCP (`POST /mcp`):** Servidor JSON-RPC 2.0 para agentes autónomos y LLMs sin requerir pipes stdio directos.
 
 ---
 
@@ -220,7 +230,11 @@ DataMesh incluye un servidor nativo compatible con el estándar **Model Context 
 ### Iniciar el Servidor MCP
 
 ```bash
+# Modo Stdio tradicional (para Claude Desktop / Cursor CLI)
 datamesh mcp-serve
+
+# Modo HTTP / Daemon de red con proxy CORS integrado
+datamesh serve --port 8000
 ```
 
 ### Configuración en Claude Desktop

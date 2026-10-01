@@ -39,6 +39,12 @@ export interface McpServerConfig {
  * Obtiene la URL por defecto del backend/MCP configurada en variables de entorno.
  */
 export function getDefaultBackendUrl(): string {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const saved = window.localStorage.getItem('datamesh_mcp_url');
+      if (saved) return saved;
+    } catch {}
+  }
   if (typeof import.meta !== 'undefined' && (import.meta as any).env?.PUBLIC_DATAMESH_MCP_URL) {
     return (import.meta as any).env.PUBLIC_DATAMESH_MCP_URL;
   }
@@ -49,6 +55,23 @@ export function getDefaultBackendUrl(): string {
     return process.env.DATAMESH_MCP_URL;
   }
   return 'http://localhost:8000/mcp';
+}
+
+/**
+ * Persiste la URL de servidor MCP en localStorage.
+ */
+export function setCustomMcpUrl(url: string) {
+  const trimmed = url.trim();
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      if (trimmed) {
+        window.localStorage.setItem('datamesh_mcp_url', trimmed);
+      } else {
+        window.localStorage.removeItem('datamesh_mcp_url');
+      }
+    } catch {}
+  }
+  datameshMcp.setServerUrl(trimmed || getDefaultBackendUrl());
 }
 
 /**

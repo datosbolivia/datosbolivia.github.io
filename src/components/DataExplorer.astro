@@ -96,7 +96,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       </select>
 
       <div class="explorer-toolbar-actions">
-        <!-- Selector de modo de vista: Tabla, Mapa Leaflet, Gráfico -->
+        <!-- Selector de modo de vista: Tabla, Mapa, Gráfico -->
         <div class="explorer-view-modes" role="group" aria-label="Modo de Visualización">
           <button type="button" class="view-mode-btn active" data-view-mode="table" title="Vista Tabla de Datos">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="21"></line></svg>
@@ -104,7 +104,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
           </button>
           <button type="button" class="view-mode-btn" data-view-mode="map" title="Vista Mapa Geoespacial con Leaflet">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
-            <span>Mapa Leaflet</span>
+            <span>Mapa</span>
           </button>
           <button type="button" class="view-mode-btn" data-view-mode="chart" title="Vista Gráfico Analítico">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
@@ -115,7 +115,13 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         <!-- Botón Toggle Consola SQL DuckDB -->
         <button type="button" class="btn btn-secondary btn-sm toggle-sql-btn" title="Mostrar u ocultar consola SQL DuckDB">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-          <span>SQL DuckDB</span>
+          <span>SQL</span>
+        </button>
+
+        <!-- Botón Configuración Global SDK (Modal) -->
+        <button type="button" class="btn btn-secondary btn-sm open-sdk-settings-btn" title="Configuración global del SDK (Proxy CORS, Backend MCP, DuckDB)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span data-i18n="footer.settings">Configuración</span>
         </button>
 
         <select class="explorer-page-size" title="Registros por página">
@@ -131,7 +137,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
-          <span data-i18n="explorer.export_csv">Exportar CSV</span>
+          <span data-i18n="explorer.export_csv">Exportar</span>
         </button>
       </div>
     </div>
@@ -146,15 +152,8 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
           placeholder="Ej: SELECT * FROM resource WHERE columna = 'valor' LIMIT 20"
         />
         <button type="button" class="btn btn-primary btn-sm client-sql-run-btn">
-          Ejecutar SQL
+          Ejecutar
         </button>
-      </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.35rem; font-size: 0.72rem; font-family: var(--font-mono); color: var(--color-text-muted); flex-wrap: wrap; gap: 0.5rem;">
-        <label style="display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer;">
-          <input type="checkbox" class="mcp-mode-checkbox" />
-          <span>Ejecutar en Backend MCP (delegar cálculo DuckDB / evitar límites y CORS de navegador)</span>
-        </label>
-        <span class="sql-backend-status">Motor: DuckDB-WASM Local</span>
       </div>
     </div>
 
@@ -173,10 +172,10 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       </div>
     </div>
 
-    <!-- Contenedor de Mapa Geoespacial con Leaflet -->
+    <!-- Contenedor de Mapa Geoespacial -->
     <div class="explorer-map-container" style="display: none; padding: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background-color: var(--color-surface); margin-bottom: 0.5rem;">
       <div class="map-status-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; font-family: var(--font-mono); font-size: 0.75rem;">
-        <span class="map-title-label" style="font-weight: 600; color: var(--color-text);">Mapa Interactivo Leaflet</span>
+        <span class="map-title-label" style="font-weight: 600; color: var(--color-text);">Mapa Interactivo</span>
         <span class="map-points-count" style="color: var(--color-primary); font-weight: 600;"></span>
       </div>
       <div class="leaflet-map-element" id={`leaflet-map-${explorerId}`}></div>
@@ -603,7 +602,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
 
 <script>
   import { DataMeshClient, parseCsv, normalizeResourceUrl } from '@datosbolivia/datamesh-client';
-  import { fetchWithCorsProxy, isCorsRestrictedDomain } from '../lib/proxy';
+  import { fetchWithCorsProxy, isCorsRestrictedDomain, setUserCustomProxy, getUserCustomProxy, getCorsProxyConfig } from '../lib/proxy';
   import { datameshMcp } from '../lib/mcp';
   import L from 'leaflet';
   import 'leaflet/dist/leaflet.css';

@@ -2,6 +2,7 @@
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import PwaPrompt from '../components/PwaPrompt.astro';
+import SettingsModal from '../components/SettingsModal.astro';
 import { config } from '../../portal.config';
 import '../styles/theme.css';
 
@@ -56,6 +57,8 @@ const {
     </main>
 
     {!noFooter && <Footer />}
+
+    <SettingsModal />
 
     <script is:inline>
       // Portapapeles para bloques de código

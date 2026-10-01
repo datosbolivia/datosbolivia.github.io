@@ -114,20 +114,17 @@ print(pl_df.head())
 
 ---
 
-## 3. Uso con TypeScript / Node.js
+## 3. Uso con TypeScript / Node.js & Navegador
 
-El cliente `@datosbolivia/datamesh-client` permite consultar el catálogo federado y recuperar datos tabulares estructurados:
+El cliente `@datosbolivia/datamesh-client` permite consultar el catálogo federado, recuperar datos tabulares estructurados y graficar reactivamente con **Observable JS (OJS)**:
 
 ```typescript
-import { datamesh } from '@datosbolivia/datamesh-client';
+import { datamesh, DataMeshClient } from '@datosbolivia/datamesh-client';
 
 async function main() {
   // 1. Descubrir recursos disponibles
-  const catalog = await datamesh.discover({
-    catalogUrl: 'https://datosbolivia.github.io/llms.txt'
-  });
-
-  console.log(`Datasets indexados: ${catalog.length}`);
+  const catalog = await datamesh.discover();
+  console.log(`Datasets indexados: ${catalog.entries.length}`);
 
   // 2. Ejecutar consulta sobre una tríada específica
   const records = await datamesh.query({
@@ -142,6 +139,51 @@ async function main() {
 }
 
 main().catch(console.error);
+```
+
+### Gráficos Reactivos con Observable JS (` ```ojs `)
+
+Los archivos Markdown de los nodos soportan bloques interactivos ` ```ojs ` evaluados en el navegador mediante `@observablehq/plot` y `@datosbolivia/datamesh-client`:
+
+```markdown
+\`\`\`ojs
+const data = await datamesh.query({
+  resource_uri: "financial_entities:financial_entities_places",
+  limit: 200
+});
+
+return Plot.plot({
+  title: "Puntos de Atención Financiera por Departamento",
+  marks: [
+    Plot.barX(data.rows, Plot.groupY({ x: "count" }, {
+      y: (d) => d[data.columns.indexOf("departamento")],
+      fill: "var(--color-primary, #0284c7)",
+      sort: { y: "-x" }
+    }))
+  ]
+});
+\`\`\`
+```
+
+### Conexión a Backend y Servidor MCP (Bypass de CORS y Cómputo Pesado)
+
+Para procesar datasets masivos o consultar fuentes con restricciones CORS, el SDK soporta delegación remota mediante el cliente MCP (`DataMeshMcpClient`):
+
+```typescript
+import { DataMeshMcpClient } from './src/lib/mcp';
+
+const mcpClient = new DataMeshMcpClient({
+  serverUrl: 'http://localhost:8000/mcp' // Configurable vía PUBLIC_DATAMESH_MCP_URL
+});
+
+// Ejecuta SQL remoto en el servidor DuckDB del backend
+const resultado = await mcpClient.querySql(`
+  SELECT departamento, COUNT(*) AS total
+  FROM 'anh-dispatch-reports:anh_dispatch'
+  GROUP BY departamento
+  ORDER BY total DESC;
+`);
+console.log(resultado.rows);
 ```
 
 ---

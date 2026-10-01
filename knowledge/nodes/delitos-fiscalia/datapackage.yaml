@@ -1,0 +1,129 @@
+name: delitos-fiscalia
+title: Casos de delitos denunciados de la Fiscalia Boliviana
+resources:
+- name: delitos-robos
+  type: table
+  path: https://www.andreschirinos.com/portales.mp.gob.bo/data/delitos-por-robo-2025/DELITOS_POR%20ROBO%202025_publico__1.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: hash
+      type: string
+      description: Codigo Unico de Caso
+    - name: delito
+      type: string
+      description: Delito Acontecido
+    - name: hecho_gestion
+      type: string
+      description: Año del hecho
+    - name: hecho_mes
+      type: string
+      description: Mes del hecho
+    - name: hecho_dia
+      type: string
+      description: Día del hecho
+    - name: hecho_dia_semana
+      type: string
+      description: Día de la semana del hecho
+    - name: hecho_hora
+      type: string
+      description: Hora del hecho
+    - name: hecho_departamento
+      type: string
+      description: Departamento donde ocurrió el robo
+    - name: hecho_municipio
+      type: string
+      description: Municipio donde ocurrió el robo
+    - name: denuncia_fecha_hora
+      type: string
+      description: Fecha y Hora de la denuncia
+    - name: victima_sexo
+      type: string
+      description: Sexo de la Victima
+    - name: victima_edad
+      type: string
+      description: Edad de la Victima
+    - name: agresor_sexo
+      type: string
+      description: Sexo del agresor
+    - name: agresor_edad
+      type: string
+      description: Edad del agresor
+    - name: agresor_nivel_educacion
+      type: string
+      description: Nivel de educación del agresor
+    - name: victima_discapacidad
+      type: string
+      description: Discapacidad de la víctima
+    - name: victima_nivel_educacion
+      type: string
+      description: Nivel de educación de la víctima
+    - name: relato_victima
+      type: string
+      description: Relato de la víctima
+- name: delitos-violencia-domestica
+  type: table
+  path: https://www.andreschirinos.com/portales.mp.gob.bo/data/violencia-domestica-2025/VIOLENCIA_DOMESTICA%202025_publico__1.csv
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: utf-8
+  schema:
+    fields:
+    - name: hash
+      type: string
+      description: Codigo Unico de Caso
+    - name: delito
+      type: string
+      description: Delito Acontecido
+    - name: hecho_gestion
+      type: string
+      description: Año del hecho
+    - name: hecho_mes
+      type: string
+      description: Mes del hecho
+    - name: hecho_dia
+      type: string
+      description: Día del hecho
+    - name: hecho_dia_semana
+      type: string
+      description: Día de la semana del hecho
+    - name: hecho_hora
+      type: string
+      description: Hora del hecho
+    - name: hecho_departamento
+      type: string
+      description: Departamento donde ocurrió el robo
+    - name: hecho_municipio
+      type: string
+      description: Municipio donde ocurrió el robo
+    - name: denuncia_fecha_hora
+      type: string
+      description: Fecha y Hora de la denuncia
+    - name: victima_sexo
+      type: string
+      description: Sexo de la Victima
+    - name: victima_edad
+      type: string
+      description: Edad de la Victima
+    - name: agresor_sexo
+      type: string
+      description: Sexo del agresor
+    - name: agresor_edad
+      type: string
+      description: Edad del agresor
+    - name: agresor_nivel_educacion
+      type: string
+      description: Nivel de educación del agresor
+    - name: victima_discapacidad
+      type: string
+      description: Discapacidad de la víctima
+    - name: victima_nivel_educacion
+      type: string
+      description: Nivel de educación de la víctima
+    - name: relato_victima
+      type: string
+      description: Relato de la víctima

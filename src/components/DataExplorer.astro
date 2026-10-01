@@ -88,24 +88,35 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
           placeholder="Filtrar registros en tiempo real..." 
           data-i18n-placeholder="explorer.search_placeholder" 
         />
+        <button type="button" class="explorer-clear-filter-btn" title="Limpiar filtro" style="display: none;">&times;</button>
       </div>
 
+      <select class="explorer-filter-col" title="Filtrar por columna específica">
+        <option value="">Todas las columnas</option>
+      </select>
+
       <div class="explorer-toolbar-actions">
-        <!-- Selector de modo de vista: Tabla, Mapa, Gráfico -->
+        <!-- Selector de modo de vista: Tabla, Mapa Leaflet, Gráfico -->
         <div class="explorer-view-modes" role="group" aria-label="Modo de Visualización">
           <button type="button" class="view-mode-btn active" data-view-mode="table" title="Vista Tabla de Datos">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="21"></line></svg>
             <span>Tabla</span>
           </button>
-          <button type="button" class="view-mode-btn" data-view-mode="map" title="Vista Mapa Geoespacial">
+          <button type="button" class="view-mode-btn" data-view-mode="map" title="Vista Mapa Geoespacial con Leaflet">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
-            <span>Mapa</span>
+            <span>Mapa Leaflet</span>
           </button>
           <button type="button" class="view-mode-btn" data-view-mode="chart" title="Vista Gráfico Analítico">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
             <span>Gráfico</span>
           </button>
         </div>
+
+        <!-- Botón Toggle Consola SQL DuckDB -->
+        <button type="button" class="btn btn-secondary btn-sm toggle-sql-btn" title="Mostrar u ocultar consola SQL DuckDB">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+          <span>SQL DuckDB</span>
+        </button>
 
         <select class="explorer-page-size" title="Registros por página">
           <option value="10">10 / pág</option>
@@ -125,17 +136,26 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       </div>
     </div>
 
-    <!-- Consola Rápida SQL Client-Side -->
-    <div class="client-sql-bar">
-      <input 
-        type="text" 
-        class="client-sql-input" 
-        value={defaultClientSql} 
-        placeholder="Ej: SELECT * FROM resource WHERE columna = 'valor' LIMIT 20"
-      />
-      <button type="button" class="btn btn-primary btn-sm client-sql-run-btn">
-        Ejecutar SQL
-      </button>
+    <!-- Consola Rápida SQL Client-Side / Backend MCP -->
+    <div class="client-sql-bar" style="display: none;">
+      <div style="display: flex; gap: 0.5rem; width: 100%;">
+        <input 
+          type="text" 
+          class="client-sql-input" 
+          value={defaultClientSql} 
+          placeholder="Ej: SELECT * FROM resource WHERE columna = 'valor' LIMIT 20"
+        />
+        <button type="button" class="btn btn-primary btn-sm client-sql-run-btn">
+          Ejecutar SQL
+        </button>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.35rem; font-size: 0.72rem; font-family: var(--font-mono); color: var(--color-text-muted); flex-wrap: wrap; gap: 0.5rem;">
+        <label style="display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+          <input type="checkbox" class="mcp-mode-checkbox" />
+          <span>Ejecutar en Backend MCP (delegar cálculo DuckDB / evitar límites y CORS de navegador)</span>
+        </label>
+        <span class="sql-backend-status">Motor: DuckDB-WASM Local</span>
+      </div>
     </div>
 
     <!-- Contenedor de la Tabla de Datos -->
@@ -153,8 +173,14 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       </div>
     </div>
 
-    <!-- Contenedor de Mapa Geoespacial -->
+    <!-- Contenedor de Mapa Geoespacial con Leaflet -->
     <div class="explorer-map-container" style="display: none; padding: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background-color: var(--color-surface); margin-bottom: 0.5rem;">
+      <div class="map-status-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; font-family: var(--font-mono); font-size: 0.75rem;">
+        <span class="map-title-label" style="font-weight: 600; color: var(--color-text);">Mapa Interactivo Leaflet</span>
+        <span class="map-points-count" style="color: var(--color-primary); font-weight: 600;"></span>
+      </div>
+      <div class="leaflet-map-element" id={`leaflet-map-${explorerId}`}></div>
+      <div class="map-department-breakdown" style="margin-top: 1rem;"></div>
     </div>
 
     <!-- Contenedor de Gráfico Analítico -->
@@ -301,7 +327,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
 
   .explorer-filter-input {
     width: 100%;
-    padding: 0.45rem 0.75rem 0.45rem 2.25rem;
+    padding: 0.45rem 2rem 0.45rem 2.25rem;
     font-size: 0.85rem;
     font-family: var(--font-sans);
     border-radius: var(--radius-sm);
@@ -316,10 +342,48 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
     box-shadow: 0 0 0 2px var(--color-primary-subtle);
   }
 
+  .explorer-clear-filter-btn {
+    all: unset;
+    position: absolute;
+    right: 0.65rem;
+    font-size: 1.15rem;
+    line-height: 1;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 0 0.2rem;
+  }
+
+  .explorer-clear-filter-btn:hover {
+    color: var(--color-text);
+  }
+
+  .explorer-filter-col {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.775rem;
+    font-family: var(--font-mono);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    max-width: 160px;
+  }
+
+  .toggle-sql-btn.active {
+    background-color: var(--color-surface-hover);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
   .client-sql-bar {
     display: flex;
+    flex-direction: column;
     gap: 0.5rem;
     margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    background-color: var(--color-surface-hover);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
   }
 
   .client-sql-input {
@@ -540,6 +604,9 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
 <script>
   import { DataMeshClient, parseCsv, normalizeResourceUrl } from '@datosbolivia/datamesh-client';
   import { fetchWithCorsProxy, isCorsRestrictedDomain } from '../lib/proxy';
+  import { datameshMcp } from '../lib/mcp';
+  import L from 'leaflet';
+  import 'leaflet/dist/leaflet.css';
 
   // Usa DuckDB en cliente con catálogo por defecto de la misma página (origen actual /llms.txt)
   const client = new DataMeshClient({ engine: 'duckdb' });
@@ -554,10 +621,17 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       const remoteUrl = container.getAttribute('data-remote-url') || '';
       const triad = container.getAttribute('data-triad') || '';
       const format = container.getAttribute('data-format') || 'csv';
+      const explorerId = container.id || 'explorer';
 
       const tabBtns = container.querySelectorAll<HTMLButtonElement>('.subnav-tab-btn');
       const tabPanes = container.querySelectorAll<HTMLElement>('.subtab-pane');
       const filterInput = container.querySelector<HTMLInputElement>('.explorer-filter-input');
+      const clearFilterBtn = container.querySelector<HTMLButtonElement>('.explorer-clear-filter-btn');
+      const filterColSelect = container.querySelector<HTMLSelectElement>('.explorer-filter-col');
+      const toggleSqlBtn = container.querySelector<HTMLButtonElement>('.toggle-sql-btn');
+      const clientSqlBar = container.querySelector<HTMLElement>('.client-sql-bar');
+      const mcpModeCheckbox = container.querySelector<HTMLInputElement>('.mcp-mode-checkbox');
+      const sqlBackendStatus = container.querySelector<HTMLElement>('.sql-backend-status');
       const pageSizeSelect = container.querySelector<HTMLSelectElement>('.explorer-page-size');
       const exportBtn = container.querySelector<HTMLButtonElement>('.export-btn');
       const prevBtn = container.querySelector<HTMLButtonElement>('.pagination-prev');
@@ -581,6 +655,8 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       let sortDir: 'asc' | 'desc' = 'asc';
       let isLoading = false;
       let currentViewMode: 'table' | 'map' | 'chart' = 'table';
+      let leafletMap: L.Map | null = null;
+      let leafletLayerGroup: L.LayerGroup | null = null;
 
       // Alternador de modos de vista (Tabla, Mapa, Gráfico)
       viewModeBtns.forEach((btn) => {
@@ -588,6 +664,27 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
           const mode = (btn.getAttribute('data-view-mode') || 'table') as 'table' | 'map' | 'chart';
           switchViewMode(mode);
         });
+      });
+
+      // Botón Toggle Consola SQL
+      toggleSqlBtn?.addEventListener('click', () => {
+        const isHidden = !clientSqlBar || clientSqlBar.style.display === 'none';
+        if (clientSqlBar) {
+          clientSqlBar.style.display = isHidden ? 'flex' : 'none';
+        }
+        toggleSqlBtn.classList.toggle('active', isHidden);
+        if (isHidden) {
+          sqlInput?.focus();
+        }
+      });
+
+      // Selector de modo MCP
+      mcpModeCheckbox?.addEventListener('change', () => {
+        if (sqlBackendStatus) {
+          sqlBackendStatus.textContent = mcpModeCheckbox.checked
+            ? 'Motor: Backend MCP (Remoto / JSON-RPC)'
+            : 'Motor: DuckDB-WASM Local';
+        }
       });
 
       async function switchViewMode(mode: 'table' | 'map' | 'chart') {
@@ -599,14 +696,20 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         }
 
         renderCurrentView();
+
+        if (mode === 'map') {
+          setTimeout(() => {
+            leafletMap?.invalidateSize();
+          }, 80);
+        }
       }
 
       function showLoadingState() {
         let title = 'Cargando recurso tabular...';
         let substatus = 'Descargando datos y montando motor analítico DuckDB en cliente';
         if (currentViewMode === 'map') {
-          title = 'Cargando visualización geoespacial...';
-          substatus = 'Procesando coordenadas territoriales y límites departamentales';
+          title = 'Cargando mapa interactivo Leaflet...';
+          substatus = 'Procesando coordenadas territoriales y capas geoespaciales';
         } else if (currentViewMode === 'chart') {
           title = 'Cargando gráfico analítico...';
           substatus = 'Calculando agregaciones de métricas y dimensiones de datos';
@@ -774,6 +877,12 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
           parsedTable = parsed;
           isLoading = false;
 
+          // Poblar selector de columnas para filtro
+          if (filterColSelect && filterColSelect.options.length <= 1) {
+            filterColSelect.innerHTML = '<option value="">Todas las columnas</option>' +
+              parsed.columns.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+          }
+
           executeClientQuery();
         } catch (err: any) {
           isLoading = false;
@@ -781,33 +890,98 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         }
       }
 
-      // Query table with in-memory TypeScript Client
+      // Query table with in-memory TypeScript Client + Column Filter
       function executeClientQuery() {
         if (!parsedTable) return;
 
         const searchKeyword = (filterInput?.value || '').trim();
+        const selectedCol = (filterColSelect?.value || '').trim();
         const offset = (currentPage - 1) * pageSize;
 
-        activeQueryResult = client.queryTable(parsedTable, {
-          search: searchKeyword,
-          sort_by: sortCol,
-          sort_direction: sortDir,
-          limit: pageSize,
-          offset: offset,
-        });
+        if (clearFilterBtn) {
+          clearFilterBtn.style.display = searchKeyword ? 'inline-block' : 'none';
+        }
+
+        let filteredRows = parsedTable.rows;
+        if (searchKeyword) {
+          const lowerKw = searchKeyword.toLowerCase();
+          if (selectedCol) {
+            const colIdx = parsedTable.columns.indexOf(selectedCol);
+            if (colIdx !== -1) {
+              filteredRows = filteredRows.filter((r) => (r[colIdx] || '').toLowerCase().includes(lowerKw));
+            }
+          } else {
+            filteredRows = filteredRows.filter((r) => r.some((cell) => (cell || '').toLowerCase().includes(lowerKw)));
+          }
+        }
+
+        // Sorting
+        if (sortCol) {
+          const sIdx = parsedTable.columns.indexOf(sortCol);
+          if (sIdx !== -1) {
+            filteredRows = [...filteredRows].sort((a, b) => {
+              const va = a[sIdx] || '';
+              const vb = b[sIdx] || '';
+              const na = parseFloat(va);
+              const nb = parseFloat(vb);
+              if (!isNaN(na) && !isNaN(nb)) {
+                return sortDir === 'asc' ? na - nb : nb - na;
+              }
+              return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+            });
+          }
+        }
+
+        activeQueryResult = {
+          columns: parsedTable.columns,
+          rows: filteredRows.slice(offset, offset + pageSize),
+          total_count: filteredRows.length,
+        };
 
         renderCurrentView();
       }
 
-      // Run Client-Side SQL
+      // Run SQL (DuckDB Local o Backend MCP)
       sqlRunBtn?.addEventListener('click', async () => {
+        const sql = sqlInput?.value.trim() || '';
+        if (!sql) return;
+
+        if (mcpModeCheckbox?.checked) {
+          try {
+            sqlRunBtn.disabled = true;
+            sqlRunBtn.textContent = 'Consultando MCP...';
+            const mcpRes = await datameshMcp.querySql(sql, {
+              catalog: 'catalogo-datamesh',
+              dataset: container.getAttribute('data-dataset') || undefined,
+              resource: triad || undefined,
+            });
+            activeQueryResult = {
+              columns: mcpRes.columns,
+              rows: mcpRes.rows.map((r) => r.map((c) => String(c ?? ''))),
+              total_count: mcpRes.row_count,
+            };
+            currentPage = 1;
+            renderCurrentView();
+            if (recordInfo) {
+              recordInfo.textContent = `Backend MCP: ${mcpRes.row_count} registros devueltos`;
+            }
+          } catch (mcpErr: any) {
+            alert(`Backend MCP no disponible (${mcpErr?.message || mcpErr}). Evaluando en DuckDB local...`);
+            runDuckDbLocal(sql);
+          } finally {
+            sqlRunBtn.disabled = false;
+            sqlRunBtn.textContent = 'Ejecutar SQL';
+          }
+        } else {
+          runDuckDbLocal(sql);
+        }
+      });
+
+      async function runDuckDbLocal(sql: string) {
         if (!parsedTable) {
           await fetchViaTypeScriptClient();
           if (!parsedTable) return;
         }
-
-        const sql = sqlInput?.value.trim() || '';
-        if (!sql) return;
 
         try {
           const sqlRes = await client.sql(sql, parsedTable, triad);
@@ -819,12 +993,12 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
           currentPage = 1;
           renderCurrentView();
           if (recordInfo) {
-            recordInfo.textContent = `Consulta SQL cliente completada: ${sqlRes.row_count} filas`;
+            recordInfo.textContent = `DuckDB local: ${sqlRes.row_count} filas procesadas`;
           }
         } catch (e: any) {
-          alert(`Error en consulta SQL cliente: ${e?.message}`);
+          alert(`Error en consulta SQL DuckDB: ${e?.message}`);
         }
-      });
+      }
 
       function renderTable() {
         if (!tableContainer || !activeQueryResult) return;
@@ -900,6 +1074,19 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         '5': 'Potosí', '6': 'Tarija', '7': 'Santa Cruz', '8': 'Beni', '9': 'Pando'
       };
 
+      const BOLIVIA_DEPT_CENTROIDS: Record<string, [number, number]> = {
+        'la paz': [-16.5, -68.15],
+        'santa cruz': [-17.8, -63.18],
+        'cochabamba': [-17.38, -66.16],
+        'oruro': [-17.98, -67.11],
+        'potosi': [-19.58, -65.75],
+        'potosí': [-19.58, -65.75],
+        'chuquisaca': [-19.03, -65.26],
+        'tarija': [-21.53, -64.73],
+        'beni': [-14.83, -64.9],
+        'pando': [-11.02, -68.76],
+      };
+
       let selectedChartCat: string | null = null;
       let selectedChartMetric: string | null = null;
 
@@ -909,80 +1096,137 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
 
         const latIdx = columns.findIndex((c) => /^(lat|latitude|latitud|lat_geo|y)$/i.test(c.trim()));
         const lonIdx = columns.findIndex((c) => /^(lon|lng|longitude|longitud|lon_geo|x)$/i.test(c.trim()));
-        const deptIdx = columns.findIndex((c) => /(departamento|depto|ciudad|region|id_departamento)/i.test(c.trim()));
-        const labelIdx = columns.findIndex((c) => /(nombre|name|estacion|station|lugar|municipio|entidad|title|label)/i.test(c.trim()));
+        const deptIdx = columns.findIndex((c) => /(departamento|depto|ciudad|region|id_departamento|nameDepartment)/i.test(c.trim()));
+        const labelIdx = columns.findIndex((c) => /(nombre|name|estacion|station|lugar|municipio|entidad|title|label|paf|entidad)/i.test(c.trim()));
 
+        const mapEl = mapContainer.querySelector<HTMLElement>('.leaflet-map-element');
+        const countEl = mapContainer.querySelector<HTMLElement>('.map-points-count');
+        const deptEl = mapContainer.querySelector<HTMLElement>('.map-department-breakdown');
+        if (!mapEl) return;
+
+        // Inicializar Leaflet map sólo una vez
+        if (!leafletMap) {
+          leafletMap = L.map(mapEl, {
+            center: [-16.5, -64.5],
+            zoom: 6,
+            scrollWheelZoom: false,
+          });
+
+          L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
+          }).addTo(leafletMap);
+
+          leafletLayerGroup = L.layerGroup().addTo(leafletMap);
+        }
+
+        if (leafletLayerGroup) {
+          leafletLayerGroup.clearLayers();
+        }
+
+        // 1. Mapeo de coordenadas puntuales (lat / lon)
         if (latIdx !== -1 && lonIdx !== -1) {
           const points = rows
             .map((r, i) => {
               const lat = parseFloat(r[latIdx]);
               const lon = parseFloat(r[lonIdx]);
               const label = labelIdx !== -1 ? (r[labelIdx] || `Punto ${i + 1}`) : `Punto ${i + 1}`;
-              return { lat, lon, label };
+              const dept = deptIdx !== -1 ? (r[deptIdx] || '') : '';
+              return { lat, lon, label, dept };
             })
-            .filter((p) => !isNaN(p.lat) && !isNaN(p.lon));
+            .filter((p) => !isNaN(p.lat) && !isNaN(p.lon) && p.lat >= -25 && p.lat <= -9 && p.lon >= -72 && p.lon <= -55);
 
-          if (points.length === 0) {
-            mapContainer.innerHTML = `
-              <div style="padding: 2rem; text-align: center; color: var(--color-text-muted); font-size: 0.85rem;">
-                No se encontraron valores numéricos válidos en las columnas de latitud y longitud.
-              </div>`;
+          if (points.length > 0) {
+            if (countEl) countEl.textContent = `${points.length} ubicaciones georreferenciadas`;
+
+            const bounds: L.LatLngExpression[] = [];
+            points.slice(0, 1000).forEach((p) => {
+              bounds.push([p.lat, p.lon]);
+              const marker = L.circleMarker([p.lat, p.lon], {
+                radius: 6,
+                fillColor: '#0284c7',
+                color: '#ffffff',
+                weight: 1.5,
+                opacity: 1,
+                fillOpacity: 0.85,
+              });
+
+              const popupContent = `
+                <div style="font-family: var(--font-sans); font-size: 0.8rem; line-height: 1.4;">
+                  <div style="font-weight: 600; color: var(--color-text); margin-bottom: 0.25rem;">${escapeHtml(p.label)}</div>
+                  ${p.dept ? `<div style="font-size: 0.72rem; color: var(--color-text-muted); font-family: var(--font-mono);">${escapeHtml(p.dept)}</div>` : ''}
+                  <div style="font-size: 0.7rem; color: var(--color-text-muted); margin-top: 0.25rem; font-family: var(--font-mono);">
+                    ${p.lat.toFixed(4)}&deg; S, ${p.lon.toFixed(4)}&deg; O
+                  </div>
+                </div>
+              `;
+              marker.bindPopup(popupContent);
+              leafletLayerGroup?.addLayer(marker);
+            });
+
+            if (bounds.length > 0) {
+              leafletMap.fitBounds(L.latLngBounds(bounds), { padding: [25, 25], maxZoom: 14 });
+            }
+
+            if (deptEl) {
+              deptEl.innerHTML = '';
+            }
+
+            setTimeout(() => leafletMap?.invalidateSize(), 80);
             return;
           }
+        }
 
-          const lats = points.map((p) => p.lat);
-          const lons = points.map((p) => p.lon);
-          const minLat = Math.min(...lats);
-          const maxLat = Math.max(...lats);
-          const minLon = Math.min(...lons);
-          const maxLon = Math.max(...lons);
-          const ranLat = maxLat - minLat || 0.1;
-          const ranLon = maxLon - minLon || 0.1;
+        // 2. Mapeo por departamentos bolivianos
+        if (deptIdx !== -1) {
+          const counts: Record<string, number> = {};
+          rows.forEach((r) => {
+            const raw = (r[deptIdx] || '').trim();
+            const norm = BOLIVIA_DEPT_NAMES[raw] || raw || 'Sin clasificar';
+            counts[norm] = (counts[norm] || 0) + 1;
+          });
 
-          const w = 580, h = 300;
-          const padL = 60, padR = 25, padT = 36, padB = 40;
-          const innerW = w - padL - padR, innerH = h - padT - padB;
+          const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+          const maxCount = Math.max(...sorted.map((s) => s[1]), 1);
 
-          const dotsSvg = points.slice(0, 500).map((p) => {
-            const cx = padL + ((p.lon - minLon) / ranLon) * innerW;
-            const cy = padT + innerH - ((p.lat - minLat) / ranLat) * innerH;
-            return `
-              <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.5" fill="var(--color-primary)" fill-opacity="0.75" stroke="#ffffff" stroke-width="0.75">
-                <title>${escapeHtml(p.label)} (${p.lat.toFixed(3)}, ${p.lon.toFixed(3)})</title>
-              </circle>`;
-          }).join('');
+          if (countEl) countEl.textContent = `Distribución departamental (${sorted.length} regiones)`;
 
-          const gridLines = [0, 0.5, 1].map((t) => {
-            const gx = padL + t * innerW;
-            const gy = padT + (1 - t) * innerH;
-            const lonVal = (minLon + t * ranLon).toFixed(2);
-            const latVal = (minLat + t * ranLat).toFixed(2);
-            return `
-              <line x1="${gx.toFixed(1)}" y1="${padT}" x2="${gx.toFixed(1)}" y2="${padT + innerH}" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="2,3"/>
-              <text x="${gx.toFixed(1)}" y="${h - padB + 16}" font-size="7.5" font-family="var(--font-mono)" fill="var(--color-text-muted)" text-anchor="middle">${lonVal}&deg;O</text>
-              <line x1="${padL}" y1="${gy.toFixed(1)}" x2="${padL + innerW}" y2="${gy.toFixed(1)}" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="2,3"/>
-              <text x="${padL - 6}" y="${(gy + 3).toFixed(1)}" font-size="7.5" font-family="var(--font-mono)" fill="var(--color-text-muted)" text-anchor="end">${latVal}&deg;S</text>
-            `;
-          }).join('');
+          sorted.forEach(([dept, count]) => {
+            const cleanKey = dept.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const centroid = BOLIVIA_DEPT_CENTROIDS[cleanKey] || BOLIVIA_DEPT_CENTROIDS[dept.toLowerCase()];
+            if (centroid) {
+              const radius = Math.max(7, Math.min(28, (count / maxCount) * 24 + 7));
+              const marker = L.circleMarker(centroid, {
+                radius,
+                fillColor: '#0284c7',
+                color: '#ffffff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8,
+              });
 
-          // Desglose territorial complementario si existe columna de departamento
-          let deptSummaryHtml = '';
-          if (deptIdx !== -1) {
-            const counts: Record<string, number> = {};
-            rows.forEach((r) => {
-              const raw = (r[deptIdx] || '').trim();
-              const deptName = BOLIVIA_DEPT_NAMES[raw] || raw || 'Otro';
-              counts[deptName] = (counts[deptName] || 0) + 1;
-            });
-            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-            const maxCount = Math.max(...sorted.map((s) => s[1]), 1);
+              const popupContent = `
+                <div style="font-family: var(--font-sans); font-size: 0.825rem;">
+                  <strong style="color: var(--color-text);">${escapeHtml(dept)}</strong>
+                  <div style="font-family: var(--font-mono); font-size: 0.75rem; color: #0284c7; margin-top: 0.2rem; font-weight: 600;">
+                    ${count.toLocaleString()} registros (${((count / rows.length) * 100).toFixed(1)}%)
+                  </div>
+                </div>
+              `;
+              marker.bindPopup(popupContent);
+              leafletLayerGroup?.addLayer(marker);
+            }
+          });
 
+          leafletMap.setView([-16.5, -64.5], 6);
+
+          if (deptEl) {
             const itemsHtml = sorted.map(([dept, count]) => {
               const pct = ((count / maxCount) * 100).toFixed(0);
               return `
-                <div style="display: grid; grid-template-columns: 105px 1fr 50px; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-family: var(--font-mono);">
+                <div style="display: grid; grid-template-columns: 110px 1fr 60px; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-family: var(--font-mono);">
                   <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text);">${escapeHtml(dept)}</span>
-                  <div style="background: var(--color-surface-hover); height: 6px; border-radius: 2px; overflow: hidden; border: 1px solid var(--color-border);">
+                  <div style="background: var(--color-surface-hover); height: 8px; border-radius: 2px; overflow: hidden; border: 1px solid var(--color-border);">
                     <div style="width: ${pct}%; height: 100%; background: var(--color-primary);"></div>
                   </div>
                   <span style="text-align: right; font-weight: 600; color: var(--color-text);">${count.toLocaleString()}</span>
@@ -990,88 +1234,32 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
               `;
             }).join('');
 
-            deptSummaryHtml = `
-              <div style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px dashed var(--color-border);">
+            deptEl.innerHTML = `
+              <div style="padding-top: 0.75rem; border-top: 1px dashed var(--color-border);">
                 <div style="font-size: 0.75rem; font-weight: 600; color: var(--color-text); margin-bottom: 0.5rem; font-family: var(--font-mono);">
-                  Distribución por Departamento (${escapeHtml(columns[deptIdx])}):
+                  Desglose Territorial (${escapeHtml(columns[deptIdx])}):
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.5rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.45rem;">
                   ${itemsHtml}
                 </div>
               </div>
             `;
           }
 
-          mapContainer.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-              <h4 style="font-size: 0.95rem; font-family: var(--font-serif); margin: 0;">Dispersión Geoespacial de Coordenadas</h4>
-              <span style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--color-primary); font-weight: 600;">${points.length} puntos mapeados</span>
-            </div>
-            <div style="max-width: 620px; margin: 0 auto; overflow: hidden;">
-              <svg viewBox="0 0 ${w} ${h}" class="chart-scatter-svg" style="width: 100%; display: block;">
-                ${gridLines}
-                <rect x="${padL}" y="${padT}" width="${innerW}" height="${innerH}" fill="none" stroke="var(--color-border)" stroke-width="1"/>
-                <text x="${padL}" y="${padT - 12}" font-size="8.5" font-family="var(--font-mono)" fill="var(--color-text)" font-weight="600">Eje Y: Latitud Sur (&deg;S)</text>
-                <text x="${w - padR}" y="${h - 8}" font-size="8.5" font-family="var(--font-mono)" fill="var(--color-text-muted)" font-weight="600" text-anchor="end">Eje X: Longitud Oeste (&deg;O)</text>
-                ${dotsSvg}
-              </svg>
-              ${deptSummaryHtml}
-            </div>
-          `;
+          setTimeout(() => leafletMap?.invalidateSize(), 80);
           return;
         }
 
-        if (deptIdx !== -1) {
-          const counts: Record<string, number> = {};
-          rows.forEach((r) => {
-            const raw = (r[deptIdx] || '').trim();
-            const deptName = BOLIVIA_DEPT_NAMES[raw] || raw || 'No especificado';
-            counts[deptName] = (counts[deptName] || 0) + 1;
-          });
-          const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-          const maxCount = Math.max(...sorted.map((s) => s[1]), 1);
-
-          const itemsHtml = sorted.slice(0, 10).map(([dept, count]) => {
-            const pct = ((count / maxCount) * 100).toFixed(0);
-            return `
-              <div style="display: grid; grid-template-columns: 120px 1fr 60px; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-family: var(--font-mono);">
-                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text);">${escapeHtml(dept)}</span>
-                <div style="background: var(--color-surface-hover); height: 8px; border-radius: 2px; overflow: hidden; border: 1px solid var(--color-border);">
-                  <div style="width: ${pct}%; height: 100%; background: var(--color-primary);"></div>
-                </div>
-                <span style="text-align: right; font-weight: 600; color: var(--color-text);">${count.toLocaleString()}</span>
-              </div>
-            `;
-          }).join('');
-
-          mapContainer.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-              <h4 style="font-size: 0.95rem; font-family: var(--font-serif); margin: 0;">Distribución por Departamento / Región</h4>
-              <span style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--color-primary); font-weight: 600;">Columna: ${escapeHtml(columns[deptIdx])}</span>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 580px; margin: 0 auto; padding: 0.5rem 0;">
-              ${itemsHtml}
+        // 3. Ni coordenadas ni departamento
+        if (countEl) countEl.textContent = 'Sin atributos espaciales';
+        if (deptEl) {
+          deptEl.innerHTML = `
+            <div style="padding: 1.5rem; text-align: center; color: var(--color-text-muted); font-size: 0.8rem;">
+              Este dataset no cuenta con coordenadas numéricas ni columnas departamentales reconocibles.
+              Usa la pestaña <strong>Tabla</strong> o <strong>Gráficos</strong> para inspeccionar los registros.
             </div>
           `;
-          return;
         }
-
-        mapContainer.innerHTML = `
-          <div style="padding: 2.25rem 1rem; text-align: center; color: var(--color-text-muted);">
-            <p style="font-weight: 600; color: var(--color-text); margin-bottom: 0.35rem;">
-              Vista Geoespacial No Disponible
-            </p>
-            <p style="font-size: 0.8rem; margin-bottom: 1rem; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.45;">
-              Este recurso no cuenta con columnas detectables de coordenadas (latitud/longitud) ni departamentos de Bolivia.
-            </p>
-            <div style="display: flex; gap: 0.5rem; justify-content: center;">
-              <button type="button" class="btn btn-secondary btn-sm switch-to-table-btn">Ver Tabla de Datos</button>
-              <button type="button" class="btn btn-secondary btn-sm switch-to-chart-btn">Ver Gráfico Analítico</button>
-            </div>
-          </div>
-        `;
-        mapContainer.querySelector('.switch-to-table-btn')?.addEventListener('click', () => switchViewMode('table'));
-        mapContainer.querySelector('.switch-to-chart-btn')?.addEventListener('click', () => switchViewMode('chart'));
       }
 
       function renderChart() {

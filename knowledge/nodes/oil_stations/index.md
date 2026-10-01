@@ -17,7 +17,7 @@ Este dataset es geoespacial de eventos: cada fila es una alerta con su zona de c
 
 ```ojs
 // Cargar recurso de estaciones mediante DataMesh TypeScript SDK
-const resourcePath = dataset?.resources?.[0]?.path || "https://github.com/sociedatos/bo-combustible/blob/main/stations.csv";
+const resourcePath = dataset?.resources?.[0]?.path;
 const res = await datamesh.query({ resource_uri: resourcePath });
 
 const depts = { "1": "Chuquisaca", "2": "La Paz", "3": "Cochabamba", "4": "Oruro", "5": "Potosí", "6": "Tarija", "7": "Santa Cruz", "8": "Beni", "9": "Pando" };

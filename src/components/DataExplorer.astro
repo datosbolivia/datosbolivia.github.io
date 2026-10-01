@@ -174,10 +174,39 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
 
     <!-- Contenedor de Mapa Geoespacial -->
     <div class="explorer-map-container" style="display: none; padding: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background-color: var(--color-surface); margin-bottom: 0.5rem;">
-      <div class="map-status-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; font-family: var(--font-mono); font-size: 0.75rem;">
-        <span class="map-title-label" style="font-weight: 600; color: var(--color-text);">Mapa Interactivo</span>
+      <div class="map-status-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; font-family: var(--font-mono); font-size: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+        <span class="map-title-label" style="font-weight: 600; color: var(--color-text);">Mapa Interactivo (Leaflet)</span>
         <span class="map-points-count" style="color: var(--color-primary); font-weight: 600;"></span>
       </div>
+
+      <!-- Controles de Configuración de Coordenadas (Latitud / Longitud / Etiqueta) -->
+      <div class="map-config-toolbar" style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.85rem; padding: 0.5rem 0.75rem; background-color: var(--color-surface-hover); border: 1px solid var(--color-border); border-radius: var(--radius-sm); flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.775rem;">
+        <div style="display: flex; align-items: center; gap: 0.35rem;">
+          <label style="font-weight: 600; color: var(--color-text-muted);">Latitud (Y):</label>
+          <select class="map-lat-select sdk-input" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+            <option value="">Auto-detectar</option>
+          </select>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.35rem;">
+          <label style="font-weight: 600; color: var(--color-text-muted);">Longitud (X):</label>
+          <select class="map-lon-select sdk-input" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+            <option value="">Auto-detectar</option>
+          </select>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.35rem;">
+          <label style="font-weight: 600; color: var(--color-text-muted);">Etiqueta / Popup:</label>
+          <select class="map-label-select sdk-input" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+            <option value="">Auto-detectar</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn btn-secondary btn-sm map-apply-coords-btn" style="padding: 0.25rem 0.55rem; font-size: 0.725rem;">
+          Actualizar Mapa
+        </button>
+      </div>
+
       <div class="leaflet-map-element" id={`leaflet-map-${explorerId}`}></div>
       <div class="map-department-breakdown" style="margin-top: 1rem;"></div>
     </div>
@@ -603,7 +632,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
 <script>
   import { DataMeshClient, parseCsv, normalizeResourceUrl } from '@datosbolivia/datamesh-client';
   import { fetchWithCorsProxy, isCorsRestrictedDomain, setUserCustomProxy, getUserCustomProxy, getCorsProxyConfig } from '../lib/proxy';
-  import { datameshMcp } from '../lib/mcp';
+  import { datameshMcp, isMcpEnabled } from '../lib/mcp';
   import L from 'leaflet';
   import 'leaflet/dist/leaflet.css';
 
@@ -645,6 +674,10 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       const loadDirectBtn = container.querySelector<HTMLButtonElement>('.load-direct-btn');
       const sqlInput = container.querySelector<HTMLInputElement>('.client-sql-input');
       const sqlRunBtn = container.querySelector<HTMLButtonElement>('.client-sql-run-btn');
+      const mapLatSelect = container.querySelector<HTMLSelectElement>('.map-lat-select');
+      const mapLonSelect = container.querySelector<HTMLSelectElement>('.map-lon-select');
+      const mapLabelSelect = container.querySelector<HTMLSelectElement>('.map-label-select');
+      const mapApplyBtn = container.querySelector<HTMLButtonElement>('.map-apply-coords-btn');
 
       let parsedTable: { columns: string[]; rows: string[][] } | null = null;
       let activeQueryResult: { columns: string[]; rows: string[][]; total_count: number } | null = null;
@@ -656,6 +689,9 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       let currentViewMode: 'table' | 'map' | 'chart' = 'table';
       let leafletMap: L.Map | null = null;
       let leafletLayerGroup: L.LayerGroup | null = null;
+      let selectedMapLat: string = '';
+      let selectedMapLon: string = '';
+      let selectedMapLabel: string = '';
 
       // Alternador de modos de vista (Tabla, Mapa, Gráfico)
       viewModeBtns.forEach((btn) => {
@@ -675,6 +711,23 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         if (isHidden) {
           sqlInput?.focus();
         }
+      });
+
+      // Controles de Configuración de Coordenadas del Mapa
+      mapLatSelect?.addEventListener('change', () => {
+        selectedMapLat = mapLatSelect.value;
+      });
+      mapLonSelect?.addEventListener('change', () => {
+        selectedMapLon = mapLonSelect.value;
+      });
+      mapLabelSelect?.addEventListener('change', () => {
+        selectedMapLabel = mapLabelSelect.value;
+      });
+      mapApplyBtn?.addEventListener('click', () => {
+        selectedMapLat = mapLatSelect?.value || '';
+        selectedMapLon = mapLonSelect?.value || '';
+        selectedMapLabel = mapLabelSelect?.value || '';
+        renderMap();
       });
 
       // Selector de modo MCP
@@ -834,41 +887,66 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
             });
           };
 
-          // Si el dominio tiene restricciones conocidas de CORS, descargar directamente vía proxy
-          if (resolvedTarget && isCorsRestrictedDomain(resolvedTarget)) {
-            updateStatus('Conectando mediante proxy CORS de respaldo...');
-            const resp = await fetchWithCorsProxy(resolvedTarget);
-            const text = await resp.text();
-            parsed = parseCsv(text);
-          } else {
-            // Intentar fetch directo con URL normalizada
+          // 1. Si MCP está habilitado globalmente, el servidor MCP realiza la descarga y resolución
+          if (isMcpEnabled()) {
             try {
-              if (resolvedTarget) {
-                const resp = await fetch(resolvedTarget);
-                if (resp.ok) {
+              updateStatus('Descargando y resolviendo recurso a través del daemon MCP / Backend...');
+              const targetRef = resolvedTarget || triad || remoteUrl;
+              const mcpData = await datameshMcp.callTool<{ columns: string[]; rows: any[][]; row_count: number }>('read_resource', {
+                uri: targetRef,
+                limit: 5000,
+              });
+
+              if (mcpData && Array.isArray(mcpData.columns) && Array.isArray(mcpData.rows) && mcpData.columns.length > 0) {
+                parsed = {
+                  columns: mcpData.columns,
+                  rows: mcpData.rows.map((r) => r.map((c) => String(c ?? ''))),
+                };
+              }
+            } catch (mcpDownloadErr: any) {
+              console.warn('[DataExplorer] Fallo de descarga vía MCP:', mcpDownloadErr);
+              updateStatus('Fallo MCP. Intentando descarga cliente...');
+            }
+          }
+
+          // 2. Si no se descargó vía MCP, usar fetch en cliente (directo o proxy)
+          if (!parsed) {
+            // Si el dominio tiene restricciones conocidas de CORS, descargar directamente vía proxy
+            if (resolvedTarget && isCorsRestrictedDomain(resolvedTarget)) {
+              updateStatus('Conectando mediante proxy CORS...');
+              const resp = await fetchWithCorsProxy(resolvedTarget);
+              const text = await resp.text();
+              parsed = parseCsv(text);
+            } else {
+              // Intentar fetch directo con URL normalizada
+              try {
+                if (resolvedTarget) {
+                  const resp = await fetch(resolvedTarget);
+                  if (resp.ok) {
+                    const text = await resp.text();
+                    parsed = parseCsv(text);
+                  } else {
+                    throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+                  }
+                } else {
+                  const result = await client.query({
+                    resource_uri: triad || remoteUrl,
+                  });
+                  parsed = {
+                    columns: result.columns,
+                    rows: result.rows,
+                  };
+                }
+              } catch (queryErr: any) {
+                // Si falla por CORS o red, reintentar con fetchWithCorsProxy
+                if (resolvedTarget) {
+                  updateStatus('Reintentando descarga mediante proxy CORS...');
+                  const resp = await fetchWithCorsProxy(resolvedTarget);
                   const text = await resp.text();
                   parsed = parseCsv(text);
                 } else {
-                  throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+                  throw queryErr;
                 }
-              } else {
-                const result = await client.query({
-                  resource_uri: triad || remoteUrl,
-                });
-                parsed = {
-                  columns: result.columns,
-                  rows: result.rows,
-                };
-              }
-            } catch (queryErr: any) {
-              // Si falla por CORS o red, reintentar con fetchWithCorsProxy
-              if (resolvedTarget) {
-                updateStatus('Reintentando descarga mediante proxy CORS...');
-                const resp = await fetchWithCorsProxy(resolvedTarget);
-                const text = await resp.text();
-                parsed = parseCsv(text);
-              } else {
-                throw queryErr;
               }
             }
           }
@@ -945,7 +1023,9 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         const sql = sqlInput?.value.trim() || '';
         if (!sql) return;
 
-        if (mcpModeCheckbox?.checked) {
+        const useMcp = isMcpEnabled() && (mcpModeCheckbox?.checked ?? false);
+
+        if (useMcp) {
           try {
             sqlRunBtn.disabled = true;
             sqlRunBtn.textContent = 'Consultando MCP...';
@@ -1093,10 +1173,48 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         if (!mapContainer || !parsedTable) return;
         const { columns, rows } = parsedTable;
 
-        const latIdx = columns.findIndex((c) => /^(lat|latitude|latitud|lat_geo|y)$/i.test(c.trim()));
-        const lonIdx = columns.findIndex((c) => /^(lon|lng|longitude|longitud|lon_geo|x)$/i.test(c.trim()));
+        // Poblar selects de coordenadas si no están poblados
+        if (mapLatSelect && mapLatSelect.options.length <= 1) {
+          mapLatSelect.innerHTML = '<option value="">Auto-detectar</option>' +
+            columns.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        }
+        if (mapLonSelect && mapLonSelect.options.length <= 1) {
+          mapLonSelect.innerHTML = '<option value="">Auto-detectar</option>' +
+            columns.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        }
+        if (mapLabelSelect && mapLabelSelect.options.length <= 1) {
+          mapLabelSelect.innerHTML = '<option value="">Auto-detectar</option>' +
+            columns.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        }
+
+        // Detectar índices con fallback a selecciones explícitas del usuario
+        let latIdx = selectedMapLat ? columns.indexOf(selectedMapLat) : -1;
+        if (latIdx === -1) {
+          latIdx = columns.findIndex((c) => /^(lat|latitude|latitud|lat_geo|y)$/i.test(c.trim()));
+        }
+
+        let lonIdx = selectedMapLon ? columns.indexOf(selectedMapLon) : -1;
+        if (lonIdx === -1) {
+          lonIdx = columns.findIndex((c) => /^(lon|lng|longitude|longitud|lon_geo|x)$/i.test(c.trim()));
+        }
+
+        let labelIdx = selectedMapLabel ? columns.indexOf(selectedMapLabel) : -1;
+        if (labelIdx === -1) {
+          labelIdx = columns.findIndex((c) => /(nombre|name|estacion|station|lugar|municipio|entidad|title|label|paf|entidad)/i.test(c.trim()));
+        }
+
         const deptIdx = columns.findIndex((c) => /(departamento|depto|ciudad|region|id_departamento|nameDepartment)/i.test(c.trim()));
-        const labelIdx = columns.findIndex((c) => /(nombre|name|estacion|station|lugar|municipio|entidad|title|label|paf|entidad)/i.test(c.trim()));
+
+        // Sincronizar selectores con los valores detectados si estaban vacíos
+        if (mapLatSelect && latIdx !== -1 && !mapLatSelect.value) {
+          mapLatSelect.value = columns[latIdx];
+        }
+        if (mapLonSelect && lonIdx !== -1 && !mapLonSelect.value) {
+          mapLonSelect.value = columns[lonIdx];
+        }
+        if (mapLabelSelect && labelIdx !== -1 && !mapLabelSelect.value) {
+          mapLabelSelect.value = columns[labelIdx];
+        }
 
         const mapEl = mapContainer.querySelector<HTMLElement>('.leaflet-map-element');
         const countEl = mapContainer.querySelector<HTMLElement>('.map-points-count');
@@ -1136,7 +1254,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
             .filter((p) => !isNaN(p.lat) && !isNaN(p.lon) && p.lat >= -25 && p.lat <= -9 && p.lon >= -72 && p.lon <= -55);
 
           if (points.length > 0) {
-            if (countEl) countEl.textContent = `${points.length} ubicaciones georreferenciadas`;
+            if (countEl) countEl.textContent = `${points.length} ubicaciones georreferenciadas (${columns[latIdx]}, ${columns[lonIdx]})`;
 
             const bounds: L.LatLngExpression[] = [];
             points.slice(0, 1000).forEach((p) => {
@@ -1254,8 +1372,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         if (deptEl) {
           deptEl.innerHTML = `
             <div style="padding: 1.5rem; text-align: center; color: var(--color-text-muted); font-size: 0.8rem;">
-              Este dataset no cuenta con coordenadas numéricas ni columnas departamentales reconocibles.
-              Usa la pestaña <strong>Tabla</strong> o <strong>Gráficos</strong> para inspeccionar los registros.
+              Selecciona manualmente en los controles superiores las columnas que contienen la <strong>Latitud</strong> y <strong>Longitud</strong>.
             </div>
           `;
         }

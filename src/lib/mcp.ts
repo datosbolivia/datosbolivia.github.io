@@ -58,6 +58,32 @@ export function getDefaultBackendUrl(): string {
 }
 
 /**
+ * Comprueba si la conexión al servidor MCP / Backend está habilitada globalmente.
+ */
+export function isMcpEnabled(): boolean {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const saved = window.localStorage.getItem('datamesh_mcp_enabled');
+      if (saved !== null) {
+        return saved === 'true';
+      }
+    } catch {}
+  }
+  return true; // Habilitado por defecto si existe backend local
+}
+
+/**
+ * Habilita o deshabilita la conexión al servidor MCP / Backend (persiste en localStorage).
+ */
+export function setMcpEnabled(enabled: boolean): void {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      window.localStorage.setItem('datamesh_mcp_enabled', enabled ? 'true' : 'false');
+    } catch {}
+  }
+}
+
+/**
  * Persiste la URL de servidor MCP en localStorage.
  */
 export function setCustomMcpUrl(url: string) {

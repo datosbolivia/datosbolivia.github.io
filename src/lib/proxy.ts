@@ -29,6 +29,36 @@ export const DEFAULT_PROXY_PROVIDERS: Record<string, (url: string) => string> = 
 };
 
 /**
+ * Realiza un ping a un proxy o servidor backend para verificar conectividad.
+ */
+export async function pingProxy(urlOrTemplate: string, timeoutMs: number = 2500): Promise<{ ok: boolean; status?: number; error?: string }> {
+  try {
+    let testUrl = urlOrTemplate;
+    if (testUrl === 'local' || testUrl.includes('localhost:8000')) {
+      testUrl = 'http://localhost:8000/ping';
+    } else if (testUrl === 'allorigins') {
+      testUrl = 'https://api.allorigins.win/raw?url=https%3A%2F%2Ficanhazip.com';
+    } else if (testUrl === 'corsproxy') {
+      testUrl = 'https://corsproxy.io/?url=https%3A%2F%2Ficanhazip.com';
+    } else if (testUrl.includes('{url}')) {
+      testUrl = testUrl.replace('{url}', encodeURIComponent('https://icanhazip.com'));
+    } else if (testUrl.endsWith('=')) {
+      testUrl = `${testUrl}${encodeURIComponent('https://icanhazip.com')}`;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const resp = await fetch(testUrl, { method: 'GET', signal: controller.signal }).catch((err) => {
+      throw err;
+    });
+    clearTimeout(timer);
+    return { ok: resp.ok, status: resp.status };
+  } catch (err: any) {
+    return { ok: false, error: err?.message || 'Error de conexión' };
+  }
+}
+
+/**
  * Configuración de proxies CORS.
  */
 export interface CorsProxyConfig {
@@ -40,7 +70,7 @@ export interface CorsProxyConfig {
 
   /**
    * Proveedores o plantillas de proxy en orden de prioridad.
-   * Valores posibles: 'allorigins', 'corsproxy', o una URL con '{url}' o '?url='.
+   * Valores posibles: 'local', 'allorigins', 'corsproxy', o una URL con '{url}' o '?url='.
    */
   providers: string[];
 
@@ -61,7 +91,7 @@ const isEnvProxyEnabled =
 
 export const DEFAULT_PROXY_CONFIG: CorsProxyConfig = {
   enabled: isEnvProxyEnabled,
-  providers: ['allorigins', 'corsproxy'],
+  providers: ['local', 'allorigins', 'corsproxy'],
   restrictedDomains: [...KNOWN_CORS_RESTRICTED_DOMAINS],
   timeoutMs: 15000,
 };
@@ -342,59 +372,56 @@ export async function fetchWithCorsProxy(url: string, options?: RequestInit): Pr
     });
   }
 
-  // 2. Si los proxies están deshabilitados en .env, no intentar proxies de terceros
-  if (!config.enabled) {
+  // 2. Si los proxies están deshabilitados, lanzar error directamente
+  if (!config.enabled || config.providers.length === 0) {
     throw new CorsProxyError(url, attempts);
   }
 
-  // 3. Reintento secuencial a través de los proxies configurados
-  for (const provider of config.providers) {
-    const proxyUrl = buildProxyUrl(url, provider);
+  // 3. Intento único en el proxy configurado (sin fallback secundario en cascada)
+  const provider = config.providers[0];
+  const proxyUrl = buildProxyUrl(url, provider);
 
-    try {
-      let signal = options?.signal;
-      let timeoutId: any;
+  let signal = options?.signal;
+  let timeoutId: any;
 
-      if (!signal && config.timeoutMs && config.timeoutMs > 0) {
-        if (typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal) {
-          signal = AbortSignal.timeout(config.timeoutMs);
-        } else if (typeof AbortController !== 'undefined') {
-          const controller = new AbortController();
-          timeoutId = setTimeout(() => controller.abort(), config.timeoutMs);
-          signal = controller.signal;
-        }
-      }
-
-      try {
-        const proxyResponse = await fetch(proxyUrl, {
-          ...options,
-          signal,
-        });
-
-        if (proxyResponse.ok) {
-          return proxyResponse;
-        }
-
-        attempts.push({
-          provider,
-          url: proxyUrl,
-          status: proxyResponse.status,
-          error: `HTTP ${proxyResponse.status} ${proxyResponse.statusText}`,
-        });
-      } finally {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
-      }
-    } catch (err: any) {
-      attempts.push({
-        provider,
-        url: proxyUrl,
-        error: err?.message || 'Error de conexión con servicio proxy',
-      });
+  if (!signal && config.timeoutMs && config.timeoutMs > 0) {
+    if (typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal) {
+      signal = AbortSignal.timeout(config.timeoutMs);
+    } else if (typeof AbortController !== 'undefined') {
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), config.timeoutMs);
+      signal = controller.signal;
     }
   }
 
-  // 3. Si todos los métodos fallaron
+  try {
+    const proxyResponse = await fetch(proxyUrl, {
+      ...options,
+      signal,
+    });
+
+    if (proxyResponse.ok) {
+      return proxyResponse;
+    }
+
+    attempts.push({
+      provider,
+      url: proxyUrl,
+      status: proxyResponse.status,
+      error: `HTTP ${proxyResponse.status} ${proxyResponse.statusText}`,
+    });
+  } catch (err: any) {
+    attempts.push({
+      provider,
+      url: proxyUrl,
+      error: err?.message || 'Error de conexión con servicio proxy',
+    });
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  // Falló la solicitud: salir con error directo sin fallback a otros proxies
   throw new CorsProxyError(url, attempts);
 }

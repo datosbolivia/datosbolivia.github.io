@@ -32,20 +32,28 @@
           </label>
         </div>
         <p class="sdk-section-desc">
-          Resuelve problemas de acceso en orígenes restringidos (Kaggle, Google Drive, portales gubernamentales .gob.bo).
+          Resuelve problemas de acceso en orígenes restringidos (Kaggle, Google Drive, portales gubernamentales .gob.bo). Ejecuta la descarga a través del proxy seleccionado directamente.
         </p>
 
         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-          <label style="font-size: 0.775rem; font-family: var(--font-mono); font-weight: 600; color: var(--color-text-muted);">
-            Proveedor de Proxy:
-          </label>
-          <select id="modal-proxy-provider" class="sdk-input">
-            <option value="direct">Fetch Directo (Sin proxy)</option>
-            <option value="local">DataMesh Serve Local (http://localhost:8000/proxy?url=...)</option>
-            <option value="allorigins">AllOrigins (https://api.allorigins.win/raw?url=...)</option>
-            <option value="corsproxy">CORSProxy.io (https://corsproxy.io/?url=...)</option>
-            <option value="custom">Personalizado (Plantilla URL)...</option>
-          </select>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label style="font-size: 0.775rem; font-family: var(--font-mono); font-weight: 600; color: var(--color-text-muted);">
+              Proveedor de Proxy:
+            </label>
+            <span id="modal-proxy-status" class="sdk-badge-status">Comprobando...</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <select id="modal-proxy-provider" class="sdk-input" style="flex: 1;">
+              <option value="direct">Fetch Directo (Sin proxy)</option>
+              <option value="local">DataMesh Serve Local (http://localhost:8000/proxy?url=...)</option>
+              <option value="allorigins">AllOrigins (https://api.allorigins.win/raw?url=...)</option>
+              <option value="corsproxy">CORSProxy.io (https://corsproxy.io/?url=...)</option>
+              <option value="custom">Personalizado (Plantilla URL)...</option>
+            </select>
+            <button type="button" id="modal-proxy-test-btn" class="btn btn-secondary btn-sm" style="white-space: nowrap;">
+              Probar Ping
+            </button>
+          </div>
 
           <input 
             type="text" 
@@ -63,7 +71,13 @@
           <h3 style="margin: 0; font-size: 0.95rem; font-family: var(--font-sans); font-weight: 600;">
             2. Servidor MCP / Backend (DuckDB & Cómputo Pesado)
           </h3>
-          <span id="modal-mcp-status" class="sdk-badge-status">Comprobando...</span>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <label class="sdk-checkbox-label">
+              <input type="checkbox" id="modal-mcp-enable" checked />
+              <span>Habilitar MCP</span>
+            </label>
+            <span id="modal-mcp-status" class="sdk-badge-status">Comprobando...</span>
+          </div>
         </div>
         <p class="sdk-section-desc">
           Conexión JSON-RPC 2.0 al daemon `datamesh serve` o backend remoto para cálculo SQL pesado DuckDB y evasión de límites de memoria en navegador.
@@ -240,8 +254,8 @@
 </style>
 
 <script>
-  import { setUserCustomProxy, getUserCustomProxy, getCorsProxyConfig } from '../lib/proxy';
-  import { setCustomMcpUrl, getDefaultBackendUrl } from '../lib/mcp';
+  import { setUserCustomProxy, getUserCustomProxy, getCorsProxyConfig, pingProxy } from '../lib/proxy';
+  import { setCustomMcpUrl, getDefaultBackendUrl, isMcpEnabled, setMcpEnabled } from '../lib/mcp';
 
   function initSettingsModal() {
     const modal = document.getElementById('sdk-settings-modal');
@@ -253,6 +267,9 @@
     const proxyEnableCheck = document.getElementById('modal-proxy-enable') as HTMLInputElement;
     const proxyProviderSel = document.getElementById('modal-proxy-provider') as HTMLSelectElement;
     const proxyCustomIn = document.getElementById('modal-proxy-custom') as HTMLInputElement;
+    const proxyTestBtn = document.getElementById('modal-proxy-test-btn');
+    const proxyStatusBadge = document.getElementById('modal-proxy-status');
+    const mcpEnableCheck = document.getElementById('modal-mcp-enable') as HTMLInputElement;
     const mcpUrlIn = document.getElementById('modal-mcp-url') as HTMLInputElement;
     const mcpTestBtn = document.getElementById('modal-mcp-test-btn');
     const mcpStatusBadge = document.getElementById('modal-mcp-status');
@@ -288,14 +305,51 @@
       }
 
       // 2. MCP
+      if (mcpEnableCheck) {
+        mcpEnableCheck.checked = isMcpEnabled();
+      }
       if (mcpUrlIn) {
         mcpUrlIn.value = getDefaultBackendUrl();
       }
+      checkProxyOnline();
       checkMcpOnline();
+    }
+
+    async function checkProxyOnline() {
+      if (!proxyStatusBadge) return;
+      const prov = proxyProviderSel?.value || 'direct';
+      if (prov === 'direct') {
+        proxyStatusBadge.textContent = 'Modo Directo';
+        proxyStatusBadge.className = 'sdk-badge-status';
+        return;
+      }
+
+      proxyStatusBadge.textContent = 'Verificando...';
+      proxyStatusBadge.className = 'sdk-badge-status';
+
+      let target = prov;
+      if (prov === 'custom' && proxyCustomIn) {
+        target = proxyCustomIn.value.trim() || 'local';
+      }
+
+      const res = await pingProxy(target);
+      if (res.ok) {
+        proxyStatusBadge.textContent = 'En Línea (200 OK)';
+        proxyStatusBadge.className = 'sdk-badge-status online';
+      } else {
+        proxyStatusBadge.textContent = 'Desconectado';
+        proxyStatusBadge.className = 'sdk-badge-status offline';
+      }
     }
 
     async function checkMcpOnline() {
       if (!mcpStatusBadge) return;
+      if (mcpEnableCheck && !mcpEnableCheck.checked) {
+        mcpStatusBadge.textContent = 'Deshabilitado';
+        mcpStatusBadge.className = 'sdk-badge-status';
+        return;
+      }
+
       mcpStatusBadge.textContent = 'Verificando...';
       mcpStatusBadge.className = 'sdk-badge-status';
 
@@ -366,8 +420,14 @@
       if (proxyEnableCheck) {
         proxyEnableCheck.checked = val !== 'direct';
       }
+      checkProxyOnline();
     });
 
+    mcpEnableCheck?.addEventListener('change', () => {
+      checkMcpOnline();
+    });
+
+    proxyTestBtn?.addEventListener('click', checkProxyOnline);
     mcpTestBtn?.addEventListener('click', checkMcpOnline);
 
     saveBtn?.addEventListener('click', () => {
@@ -388,6 +448,9 @@
       setUserCustomProxy(template, isEnabled);
 
       // 2. Guardar MCP
+      if (mcpEnableCheck) {
+        setMcpEnabled(mcpEnableCheck.checked);
+      }
       if (mcpUrlIn) {
         const mcpVal = mcpUrlIn.value.trim();
         setCustomMcpUrl(mcpVal);

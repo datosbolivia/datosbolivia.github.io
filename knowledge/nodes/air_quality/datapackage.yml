@@ -1,3 +1,18 @@
+spatial:
+  country: "BO"
+  regions: ["BO-L", "BO-C", "BO-S"]
+  granularity: "point"
+
+temporal:
+  start: "2020-01-01T00:00:00Z"
+  end: "2026-06-30T23:59:59Z"
+  frequency: "irregular"
+  timezone: "America/La_Paz"
+
+quality:
+  status: "verified"
+  completeness: 0.98
+
 resources:
   - name: Compilación de datos de calidad del aire de Bolivia
     type: table
@@ -14,6 +29,7 @@ resources:
         - name: lugar_nombre
           type: string
           description: Nombre del lugar
+          concept: "concepts/air_quality_index.md"
         - name: latitude
           type: number
           description: Latitud del lugar

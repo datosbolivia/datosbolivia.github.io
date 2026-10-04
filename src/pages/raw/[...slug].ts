@@ -24,7 +24,18 @@ export function getStaticPaths() {
   const knowledgeDir = path.join(rootDir, 'knowledge');
   const docsDir = path.join(rootDir, 'docs');
 
-  const knowledgeFiles = getFilesRecursively(knowledgeDir).map(f => ({
+  const baseFiles = getFilesRecursively(knowledgeDir);
+  const aliasFiles: Array<{ slug: string; fullPath: string }> = [];
+
+  for (const f of baseFiles) {
+    if (f.slug.endsWith('/datapackage.yml')) {
+      aliasFiles.push({ slug: f.slug.replace(/\/datapackage\.yml$/, '/datapackage.yaml'), fullPath: f.fullPath });
+    } else if (f.slug.endsWith('/datapackage.yaml')) {
+      aliasFiles.push({ slug: f.slug.replace(/\/datapackage\.yaml$/, '/datapackage.yml'), fullPath: f.fullPath });
+    }
+  }
+
+  const knowledgeFiles = [...baseFiles, ...aliasFiles].map(f => ({
     params: { slug: f.slug },
     props: { fullPath: f.fullPath }
   }));

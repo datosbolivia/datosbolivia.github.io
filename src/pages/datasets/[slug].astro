@@ -227,7 +227,7 @@ function getCleanResourceName(res: any): string {
             <span class="obsidian-crumb-sep obsidian-crumb-root">/</span>
             <a href="/datasets" class="obsidian-crumb-link obsidian-crumb-root" data-i18n="nav.datasets">Datasets</a>
             <span class="obsidian-crumb-sep obsidian-crumb-root">/</span>
-            <span class="obsidian-crumb-slug">{dataset.slug}</span>
+            <span class="obsidian-crumb-slug" title={`Dataset: ${dataset.slug}`}>{dataset.slug}</span>
             <span class="obsidian-crumb-sep">/</span>
             <span id="active-filename" class="obsidian-crumb-file">index.md</span>
           </nav>
@@ -250,6 +250,28 @@ function getCleanResourceName(res: any): string {
       <div class="obsidian-doc-viewport" id="doc-viewport">
         <!-- 1. TAB CONTEXTO PRINCIPAL (index.md) - ACTIVO POR DEFECTO -->
         <div class="obsidian-file-tab active" id="tab-index">
+          {(dataset.spatial || dataset.temporal || dataset.quality) && (
+            <div style="background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; font-size: 0.8rem; display: flex; flex-wrap: wrap; gap: 1.25rem;">
+              {dataset.spatial && (
+                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                  <span style="font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; font-size: 0.7rem;">Espacial:</span>
+                  <span>{dataset.spatial.country || ''} {dataset.spatial.regions ? `(${dataset.spatial.regions.join(', ')})` : ''} {dataset.spatial.granularity ? `[${dataset.spatial.granularity}]` : ''}</span>
+                </div>
+              )}
+              {dataset.temporal && (
+                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                  <span style="font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; font-size: 0.7rem;">Temporal:</span>
+                  <span>{dataset.temporal.start || '?'} &rarr; {dataset.temporal.end || '?'} {dataset.temporal.frequency ? `(${dataset.temporal.frequency})` : ''}</span>
+                </div>
+              )}
+              {dataset.quality && (
+                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                  <span style="font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; font-size: 0.7rem;">Calidad:</span>
+                  <span style="text-transform: capitalize;">{dataset.quality.status || 'Curated'} {dataset.quality.completeness ? `• ${Math.round(dataset.quality.completeness * 100)}% completitud` : ''}</span>
+                </div>
+              )}
+            </div>
+          )}
           <article class="prose" set:html={renderedIndexHtml} />
         </div>
 

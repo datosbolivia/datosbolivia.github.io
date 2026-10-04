@@ -3,9 +3,10 @@ import type { DataResource } from '../lib/catalog';
 
 interface Props {
   resource: DataResource;
+  datasetSlug?: string;
 }
 
-const { resource } = Astro.props;
+const { resource, datasetSlug } = Astro.props;
 const fields = resource.schema?.fields || [];
 ---
 
@@ -41,6 +42,18 @@ const fields = resource.schema?.fields || [];
               </td>
               <td style="color: var(--color-text-muted);">
                 {f.description || '—'}
+                {f.concept && (
+                  <div style="margin-top: 0.25rem;">
+                    <a href={datasetSlug ? `/datasets/${datasetSlug}#doc-${f.concept.replace(/\//g, '-').replace('.md', '')}` : `#doc-${f.concept.replace(/\//g, '-').replace('.md', '')}`} class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.1rem 0.4rem; display: inline-flex;">
+                      Concepto: {f.concept}
+                    </a>
+                  </div>
+                )}
+                {f.value_mapping && (
+                  <div style="margin-top: 0.25rem; font-size: 0.7rem; font-family: var(--font-mono); color: var(--color-text-muted);">
+                    Mapeo: {Object.keys(f.value_mapping).length} categorías asociadas a conceptos
+                  </div>
+                )}
               </td>
             </tr>
           ))}

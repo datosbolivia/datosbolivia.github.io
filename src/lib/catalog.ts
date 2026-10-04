@@ -55,6 +55,9 @@ export interface DatasetNode {
   status: 'active' | 'federated';
   dimensions: string[];
   contracts: Array<{ type: string; path: string }>;
+  spatial?: any;
+  temporal?: any;
+  quality?: any;
   lineage?: {
     source?: Array<{ url: string; title?: string }>;
     version?: string;
@@ -316,6 +319,9 @@ export function getAllDatasets(): DatasetNode[] {
       status: 'active',
       dimensions,
       contracts,
+      spatial: frontmatter.spatial || datapackage?.spatial,
+      temporal: frontmatter.temporal || datapackage?.temporal,
+      quality: frontmatter.quality || datapackage?.quality,
       tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
       timestamp: frontmatter.timestamp,
       datapackage,

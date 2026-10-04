@@ -196,6 +196,22 @@ function auditDatapackageFile(filePath) {
     return;
   }
 
+  // Validación de metadatos espaciales y temporales si están presentes
+  if (dp.spatial && typeof dp.spatial === 'object') {
+    if (dp.spatial.bbox && (!Array.isArray(dp.spatial.bbox) || dp.spatial.bbox.length !== 4)) {
+      recordFinding(filePath, 'WARN', 'El campo "spatial.bbox" debe ser un arreglo de 4 números [minX, minY, maxX, maxY]');
+    }
+  }
+
+  if (dp.temporal && typeof dp.temporal === 'object') {
+    if (dp.temporal.start && isNaN(Date.parse(dp.temporal.start))) {
+      recordFinding(filePath, 'WARN', `Fecha temporal.start no es formato ISO 8601 válido: "${dp.temporal.start}"`);
+    }
+    if (dp.temporal.end && isNaN(Date.parse(dp.temporal.end))) {
+      recordFinding(filePath, 'WARN', `Fecha temporal.end no es formato ISO 8601 válido: "${dp.temporal.end}"`);
+    }
+  }
+
   for (let idx = 0; idx < dp.resources.length; idx++) {
     const res = dp.resources[idx];
     const resLabel = res.name || `recurso #${idx + 1}`;

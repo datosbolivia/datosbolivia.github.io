@@ -30,10 +30,9 @@ Este dataset está enriquecido semánticamente utilizando terminologías estánd
 
 [1] Escala ICA EPA — https://www.airnow.gov/aqi/aqi-basics/
 
-
 ```ojs
 // Cargar datos de calidad del aire con DataMesh TypeScript SDK
-const resourcePath = dataset?.resources?.[0]?.path || "data/calidad_aire.csv";
+const resourcePath = "air_quality:Compilación de datos de calidad del aire de Bolivia";
 const res = await datamesh.query({ resource_uri: resourcePath });
 
 const placeIdx = res.columns.indexOf("lugar_nombre");

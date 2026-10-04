@@ -10,7 +10,11 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@datosbolivia/datamesh-client": [
+        "../datamesh-sdk/bindings/typescript/src/index.ts",
+        "node_modules/@datosbolivia/datamesh-client/bindings/typescript/dist/index.d.ts"
+      ]
     }
   },
   "include": ["src/**/*", "portal.config.ts", "scripts/**/*"]

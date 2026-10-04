@@ -1,9 +1,28 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
-import type { DataPackage, DataResource, ResourceField } from '@datosbolivia/datamesh-client';
+import { 
+  type DataPackage, 
+  type DataResource, 
+  type ResourceField,
+  parseDataPackageManifest,
+  toCanonicalTriad,
+  parseCanonicalUri
+} from '@datosbolivia/datamesh-client';
 
 export type { DataPackage, DataResource, ResourceField };
+export { toCanonicalTriad, parseCanonicalUri };
+
+/**
+ * Helper unificado para leer y parsear manifiestos de contratos sintácticos
+ * delegando la deserialización y normalización al SDK.
+ */
+export function readManifest(content: string, filePath?: string): DataPackage | null {
+  return parseDataPackageManifest(content, {
+    filePath,
+    yamlParser: (text) => yaml.load(text)
+  });
+}
 
 export interface SkosConcept {
   id: string;
@@ -223,12 +242,9 @@ export function getAllDatasets(): DatasetNode[] {
       if (fs.existsSync(dpPath)) {
         try {
           const content = fs.readFileSync(dpPath, 'utf-8');
-          if (dpPath.endsWith('.json')) {
-            datapackage = JSON.parse(content);
-          } else {
-            datapackage = yaml.load(content) as DataPackage;
-          }
-          if (datapackage && Array.isArray(datapackage.resources)) {
+          const parsed = readManifest(content, dpPath);
+          if (parsed && Array.isArray(parsed.resources)) {
+            datapackage = parsed;
             break;
           }
         } catch (e) {
@@ -373,7 +389,7 @@ export function getAllDatasets(): DatasetNode[] {
           if (fs.existsSync(siblingDpPath)) {
             try {
               const rawDp = fs.readFileSync(siblingDpPath, 'utf-8');
-              const parsedDp = yaml.load(rawDp) as DataPackage;
+              const parsedDp = readManifest(rawDp, siblingDpPath);
               if (parsedDp && Array.isArray(parsedDp.resources)) {
                 // Reconciliar rutas relativas a URLs remotas públicas del repositorio
                 const rawBaseUrl = remoteUrl.replace(/\/index\.md$/, '').replace(/\/knowledge$/, '');

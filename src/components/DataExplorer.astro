@@ -1,5 +1,5 @@
 ---
-import type { DataResource } from '../lib/catalog';
+import { type DataResource, toCanonicalTriad } from '../lib/catalog';
 import SchemaTable from './SchemaTable.astro';
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
 
 const { datasetSlug, resource, resourceIndex } = Astro.props;
 
-const triadName = `${datasetSlug}:${resource.name}`;
+const triadName = toCanonicalTriad({ dataset: datasetSlug, resource: resource.name });
 const remoteUrl = resource.path || '';
 const format = (resource.format || 'csv').toLowerCase();
 const explorerId = `explorer-${datasetSlug}-${resourceIndex}`;
@@ -866,6 +866,13 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
           return;
         }
 
+        // Si la ruta del recurso apunta a un patrón wildcard / particionado (ej. *.csv)
+        if (remoteUrl && remoteUrl.includes('*')) {
+          isLoading = false;
+          renderMultiFileWildcardMessage();
+          return;
+        }
+
         try {
           const directTarget = normalizeResourceUrl(remoteUrl);
           let resolvedTarget = directTarget;
@@ -1574,6 +1581,28 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
               Los archivos Parquet son procesados en streaming con motor columnar local DuckDB a través del SDK / CLI de DataMesh.
             </p>
             <pre class="code-pre" style="margin: 0 auto; max-width: 550px; text-align: left; padding: 0.6rem 0.9rem;"><code class="language-bash">datamesh sql "SELECT * FROM '${triad}' LIMIT 10"</code></pre>
+          </div>`;
+      }
+
+      function renderMultiFileWildcardMessage() {
+        if (!tableContainer) return;
+        if (mapContainer) mapContainer.style.display = 'none';
+        if (chartContainer) chartContainer.style.display = 'none';
+        if (paginationWrap) paginationWrap.style.display = 'none';
+        tableContainer.style.display = 'block';
+        tableContainer.innerHTML = `
+          <div style="padding: 2.25rem 1.5rem; text-align: center; color: var(--color-text-muted);">
+            <p style="margin-bottom: 0.5rem; font-weight: 600; font-size: 1rem; color: var(--color-text);">
+              Conjunto de Datos Particionado Multi-Archivo
+            </p>
+            <p style="font-size: 0.825rem; margin-bottom: 1.15rem; line-height: 1.5; max-width: 600px; margin-left: auto; margin-right: auto;">
+              Este recurso representa una colección particionada por periodos temporales (<code>${escapeHtml(remoteUrl)}</code>). Los navegadores web no resuelven patrones comodín (glob <code>*</code>) directamente por HTTP. DuckDB y el CLI de DataMesh unen las particiones en tiempo real:
+            </p>
+            <div style="margin: 0 auto; max-width: 580px; text-align: left; display: flex; flex-direction: column; gap: 0.65rem;">
+              <pre class="code-pre" style="margin: 0; padding: 0.65rem 0.9rem;"><code class="language-bash">datamesh sql "SELECT * FROM '${triad}' LIMIT 25"</code></pre>
+              <pre class="code-pre" style="margin: 0; padding: 0.65rem 0.9rem;"><code class="language-python">import datamesh as dm
+df = dm.sql("SELECT * FROM '${triad}' LIMIT 25")</code></pre>
+            </div>
           </div>`;
       }
 

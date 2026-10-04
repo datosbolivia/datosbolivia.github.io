@@ -31,7 +31,7 @@ Este conjunto de datos unifica las memorias de la Autoridad de Supervisión del 
 const resourceUrl = dataset.resources?.[0]?.path;
 const data = await datamesh.query({
   resource_uri: resourceUrl || "cartera-creditos:creditos",
-  limit: 250
+  limit: 2500
 });
 
 const deptoIdx = data.columns.indexOf("departamento");

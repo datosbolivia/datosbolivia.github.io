@@ -524,9 +524,60 @@ function getCleanResourceName(res: any): string {
           runCode
         );
 
+        const scopedDatamesh = new Proxy(datamesh, {
+          get(target, prop, receiver) {
+            if (prop === 'query') {
+              return (req: any, ctx?: any) => {
+                const activeCtx = ctx || datasetContext;
+                const resourceUri = req?.resource_uri;
+                if (resourceUri && activeCtx?.resources && Array.isArray(activeCtx.resources)) {
+                  const clean = String(resourceUri).trim().toLowerCase();
+                  const found = activeCtx.resources.find((r: any) => {
+                    const rName = String(r.name || '').toLowerCase();
+                    const rPath = String(r.path || '').toLowerCase();
+                    return (
+                      rName === clean ||
+                      rPath === clean ||
+                      rPath.endsWith('/' + clean) ||
+                      rPath.endsWith('\\' + clean)
+                    );
+                  });
+                  if (found && found.path) {
+                    return target.query({ ...req, resource_uri: found.path });
+                  }
+                }
+                return (target as any).query(req, activeCtx);
+              };
+            }
+            if (prop === 'resolveResource') {
+              return (uriOrTriad: string, ctx?: any) => {
+                const activeCtx = ctx || datasetContext;
+                if (uriOrTriad && activeCtx?.resources && Array.isArray(activeCtx.resources)) {
+                  const clean = String(uriOrTriad).trim().toLowerCase();
+                  const found = activeCtx.resources.find((r: any) => {
+                    const rName = String(r.name || '').toLowerCase();
+                    const rPath = String(r.path || '').toLowerCase();
+                    return (
+                      rName === clean ||
+                      rPath === clean ||
+                      rPath.endsWith('/' + clean) ||
+                      rPath.endsWith('\\' + clean)
+                    );
+                  });
+                  if (found && found.path) {
+                    return normalizeResourceUrl(found.path);
+                  }
+                }
+                return (target as any).resolveResource(uriOrTriad, activeCtx);
+              };
+            }
+            return Reflect.get(target, prop, receiver);
+          }
+        });
+
         const result = await runner(
           Plot,
-          datamesh,
+          scopedDatamesh,
           DataMeshClient,
           datasetContext,
           normalizeResourceUrl,

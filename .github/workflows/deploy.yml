@@ -37,7 +37,9 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci || npm install
+        run: |
+          npm ci || npm install
+          npm install --no-save @datosbolivia/datamesh-client@github:datosbolivia/datamesh#main
 
       - name: Validate OKF & ODKF v0.2 Schemas
         run: npm run lint:okf

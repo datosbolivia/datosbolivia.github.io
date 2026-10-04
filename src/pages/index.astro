@@ -13,6 +13,16 @@ const blogPosts = getBlogPosts();
 const totalDatasets = allDatasets.length;
 const totalResources = allDatasets.reduce((acc, d) => acc + (d.datapackage?.resources?.length || 1), 0);
 const categoriesCount = new Set(allDatasets.map((d) => d.category)).size;
+
+// Categorías dinámicas prioritarias para el hero
+const categoryCounts = allDatasets.reduce((acc, d) => {
+  acc[d.category] = (acc[d.category] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+
+const heroTopics = Object.keys(categoryCounts)
+  .sort((a, b) => categoryCounts[b] - categoryCounts[a])
+  .slice(0, 5);
 ---
 
 <BaseLayout title={homeContent.title}>
@@ -102,18 +112,17 @@ const categoriesCount = new Set(allDatasets.map((d) => d.category)).size;
         </button>
       </form>
 
-      <!-- Temas Cívicos Prioritarios -->
+      <!-- Temas Cívicos Prioritarios (Generados Dinámicamente) -->
       <div class="civic-topics">
         <span class="civic-topics-label" data-i18n="hero.topics_label">Temáticas:</span>
-        <a href="/datasets?cat=Economía" class="civic-topic-link" data-i18n="topics.economy">Economía</a>
-        <span>•</span>
-        <a href="/datasets?cat=Medio%20Ambiente" class="civic-topic-link" data-i18n="topics.environment">Calidad del Aire</a>
-        <span>•</span>
-        <a href="/datasets?cat=Energía" class="civic-topic-link" data-i18n="topics.energy">Combustibles</a>
-        <span>•</span>
-        <a href="/datasets?cat=Demografía" class="civic-topic-link" data-i18n="topics.health">Salud Pública</a>
-        <span>•</span>
-        <a href="/datasets?cat=Gobierno" class="civic-topic-link" data-i18n="topics.government">Trámites</a>
+        {heroTopics.map((topic, idx) => (
+          <>
+            <a href={`/datasets?cat=${encodeURIComponent(topic)}`} class="civic-topic-link">
+              {topic}
+            </a>
+            {idx < heroTopics.length - 1 && <span>•</span>}
+          </>
+        ))}
       </div>
 
       <!-- Enlaces Secundarios -->

@@ -44,6 +44,7 @@ Este es el catálogo de entrada principal (Discovery Phase 1). Los siguientes no
 ### Infraestructura, Transporte y Energía
 - [Despacho de Carga y Operación Eléctrica - CNDC](/nodes/despacho-carga/index.md)
 - [Estaciones de Servicio e Inventario de Combustibles](/nodes/oil_stations/index.md)
+- [Monitoreo y Abastecimiento de Combustible en Bolivia (ANH / YPFB)](https://raw.githubusercontent.com/sociedatos/bo-combustible/refs/heads/main/knowledge/index.md)
 - [Despacho y Distribución de Combustibles - ANH](/nodes/anh-dispatch-reports/index.md)
 - [Transitabilidad y Estado de Carreteras - ABC](/nodes/transitability/index.md)
 

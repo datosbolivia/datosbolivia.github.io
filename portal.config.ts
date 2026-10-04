@@ -38,7 +38,7 @@ export const config: PortalConfig = {
     name: "Datos Bolivia",
     slug: "datos-bolivia",
     url: "https://datos-bolivia.github.io",
-    github: "https://github.com/andres-chirinos/catalogo-datamesh",
+    github: "https://github.com/datosbolivia/catalogo-datamesh",
     description: "Iniciativa colaborativa y abierta de datos federados de Bolivia."
   },
   site: {
@@ -58,7 +58,7 @@ export const config: PortalConfig = {
   desktopApp: {
     enabled: true,
     name: "DataMesh Bolivia Desktop",
-    downloadUrl: "https://github.com/andres-chirinos/catalogo-datamesh/releases",
+    downloadUrl: "https://github.com/datosbolivia/catalogo-datamesh/releases",
     enableLocalProcessing: true
   },
   nav: [

@@ -21,7 +21,7 @@ export const GET: APIRoute = async () => {
   ];
 
   for (const d of datasets) {
-    const rawUrl = `/raw/nodes/${d.slug}/index.md`;
+    const rawUrl = d.remoteUrl || `/raw/nodes/${d.slug}/index.md`;
     const resourcesDesc = d.datapackage?.resources
       ? d.datapackage.resources.map(r => r.name).join(', ')
       : 'Recursos tabulares';

@@ -74,6 +74,7 @@ export interface DatasetNode {
   chartConfig?: any;
   rawMarkdown: string;
   bodyMarkdown: string;
+  remoteUrl?: string;
 }
 
 export interface CategoryGroup {
@@ -333,6 +334,154 @@ export function getAllDatasets(): DatasetNode[] {
       rawMarkdown,
       bodyMarkdown: body
     });
+  }
+
+  // Descubrir e indexar nodos remotos / federados declarados en knowledge/index.md
+  if (fs.existsSync(indexFile)) {
+    const indexContent = fs.readFileSync(indexFile, 'utf-8');
+    let currentCategory = 'General';
+    const lines = indexContent.split('\n');
+
+    for (const line of lines) {
+      if (line.startsWith('### ')) {
+        currentCategory = line.replace('### ', '').trim();
+        continue;
+      }
+      const remoteMatch = line.match(/^-\s*\[(.*?)\]\((https?:\/\/[^\s)]+)\)/);
+      if (remoteMatch) {
+        const linkTitle = remoteMatch[1].trim();
+        const remoteUrl = remoteMatch[2].trim();
+
+        // Derivar slug del repositorio o ruta URL
+        let derivedSlug = '';
+        const githubMatch = remoteUrl.match(/githubusercontent\.com\/[^/]+\/([^/]+)/);
+        if (githubMatch && githubMatch[1]) {
+          derivedSlug = githubMatch[1];
+        } else {
+          const parts = remoteUrl.replace(/\/index\.md$/, '').split('/');
+          derivedSlug = parts[parts.length - 1] || 'remote-dataset';
+        }
+
+        // Si ya está indexado localmente, omitir
+        if (datasets.some(d => d.slug === derivedSlug)) continue;
+
+        // Descubrimiento dinámico de metadatos y recursos del nodo federado
+        let fedDatapackage: DataPackage | undefined;
+        let fedResources: DataResource[] = [];
+        let fedTitle = linkTitle;
+        let fedDescription = `Nodo federado soberano. Datos distribuidos desde ${remoteUrl}.`;
+        let fedBody = `# ${linkTitle}\n\n${fedDescription}\n\n### Enlace Normativo Externo\n- [Repositorio / Manifiesto Oficial OKF](${remoteUrl})\n\n### Recursos Distribuidos\nEste nodo se encuentra federado externamente bajo la red soberana DataMesh.`;
+        let fedDimensions: string[] = [];
+        let fedContracts: Array<{ type: string; path: string }> = [{ type: 'datapackage', path: remoteUrl }];
+        let fedTags: string[] = ['federado'];
+        let fedReferenceDocs: NodeReferenceDoc[] = [];
+
+        // 1. Intentar descubrir desde repositorio hermano local (ej. ../bo-combustible/knowledge)
+        const siblingKnowledgeDir = path.resolve(rootDir, '..', derivedSlug, 'knowledge');
+        const siblingIndexPath = path.join(siblingKnowledgeDir, 'index.md');
+        const siblingDpPath = path.join(siblingKnowledgeDir, 'datapackage.yaml');
+
+        if (fs.existsSync(siblingKnowledgeDir)) {
+          if (fs.existsSync(siblingIndexPath)) {
+            const rawIndex = fs.readFileSync(siblingIndexPath, 'utf-8');
+            const parsed = parseFrontmatter(rawIndex);
+            if (parsed.frontmatter.title) fedTitle = parsed.frontmatter.title;
+            if (Array.isArray(parsed.frontmatter.dimensions)) fedDimensions = parsed.frontmatter.dimensions;
+            if (Array.isArray(parsed.frontmatter.tags)) fedTags = parsed.frontmatter.tags;
+            if (parsed.body) {
+              fedBody = parsed.body;
+              fedDescription = parsed.frontmatter.description || extractFirstParagraph(parsed.body) || fedDescription;
+            }
+          }
+
+          if (fs.existsSync(siblingDpPath)) {
+            try {
+              const rawDp = fs.readFileSync(siblingDpPath, 'utf-8');
+              const parsedDp = yaml.load(rawDp) as DataPackage;
+              if (parsedDp && Array.isArray(parsedDp.resources)) {
+                // Reconciliar rutas relativas a URLs remotas públicas del repositorio
+                const rawBaseUrl = remoteUrl.replace(/\/index\.md$/, '').replace(/\/knowledge$/, '');
+                fedResources = parsedDp.resources.map(r => {
+                  let resPath = r.path || '';
+                  if (resPath && !resPath.startsWith('http://') && !resPath.startsWith('https://')) {
+                    const normPath = path.posix.normalize(path.posix.join('knowledge', resPath));
+                    resPath = `${rawBaseUrl}/${normPath}`;
+                  }
+                  return {
+                    ...r,
+                    path: resPath,
+                    format: r.format || 'csv',
+                    policy: r.policy || 'allow_all'
+                  };
+                });
+                fedDatapackage = {
+                  name: parsedDp.name || derivedSlug,
+                  title: parsedDp.title || fedTitle,
+                  description: parsedDp.description || fedDescription,
+                  resources: fedResources
+                };
+              }
+            } catch (e) {
+              console.warn(`Error al leer datapackage en nodo hermano ${siblingDpPath}:`, e);
+            }
+          }
+
+          fedReferenceDocs = scanNodeReferenceDocs(siblingKnowledgeDir, derivedSlug);
+        } else {
+          // Fallback dinámico genérico para nodos puramente remotos sin copia local
+          fedResources = [
+            {
+              name: 'raw_manifest',
+              path: remoteUrl,
+              format: 'md',
+              policy: 'allow_all',
+              description: 'Manifiesto remoto OKF v0.2'
+            }
+          ];
+          fedDatapackage = {
+            name: derivedSlug,
+            title: fedTitle,
+            description: fedDescription,
+            resources: fedResources
+          };
+        }
+
+        // Si no se encontraron dimensiones en frontmatter, inferir del slug o categoría
+        if (fedDimensions.length === 0) {
+          fedDimensions = [derivedSlug.replace(/[^a-zA-Z0-9]+/g, '_')];
+        }
+
+        datasets.push({
+          slug: derivedSlug,
+          title: fedTitle,
+          description: fedDescription,
+          type: 'dataset',
+          category: currentCategory,
+          status: 'federated',
+          dimensions: fedDimensions,
+          contracts: fedContracts,
+          tags: fedTags,
+          datapackage: fedDatapackage,
+          allResources: fedResources,
+          concepts: fedReferenceDocs
+            .filter(d => d.relativePath.startsWith('concepts/'))
+            .map(d => ({
+              id: d.cleanPath.replace('concepts/', ''),
+              title: d.title,
+              prefLabel: d.frontmatter.skos?.prefLabel,
+              altLabel: d.frontmatter.skos?.altLabel,
+              exactMatch: d.frontmatter.skos?.exactMatch,
+              broader: d.frontmatter.skos?.broader,
+              content: d.bodyMarkdown,
+              rawMarkdown: d.rawMarkdown
+            })),
+          referenceDocs: fedReferenceDocs,
+          rawMarkdown: `---\ntype: dataset\ntitle: "${fedTitle}"\nstatus: federated\n---\n\n${fedBody}`,
+          bodyMarkdown: fedBody,
+          remoteUrl
+        });
+      }
+    }
   }
 
   return datasets.sort((a, b) => a.title.localeCompare(b.title));

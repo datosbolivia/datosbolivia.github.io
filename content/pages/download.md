@@ -132,13 +132,13 @@ Configuración para `claude_desktop_config.json`:
 
 Para estaciones de trabajo que requieran procesamiento analítico local y validación continua sin conexión a internet:
 
-- [Descargar Instalador Desktop (GitHub Releases)](https://github.com/andres-chirinos/catalogo-datamesh/releases)
+- [Descargar Instalador Desktop (GitHub Releases)](https://github.com/datosbolivia/catalogo-datamesh/releases)
 
 ### Compilación desde Código Fuente
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/andres-chirinos/catalogo-datamesh.git
+git clone https://github.com/datosbolivia/catalogo-datamesh.git
 cd catalogo-datamesh
 
 # 2. Instalar dependencias

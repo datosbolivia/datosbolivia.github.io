@@ -17,6 +17,7 @@ const { dataset } = Astro.props;
 const resources = dataset.allResources || [];
 const referenceDocs = dataset.referenceDocs || [];
 const contracts = dataset.contracts || [];
+const rawIndexUrl = dataset.remoteUrl || `/raw/nodes/${dataset.slug}/index.md`;
 
 // Renderizar el contenido completo de index.md con enlaces reescritos
 const renderedIndexHtml = renderMarkdown(dataset.bodyMarkdown, { datasetSlug: dataset.slug });
@@ -89,7 +90,7 @@ function getCleanResourceName(res: any): string {
             class="obsidian-file-item active" 
             data-target="tab-index"
             data-path={`${dataset.slug}/index.md`}
-            data-raw={`/raw/nodes/${dataset.slug}/index.md`}
+            data-raw={rawIndexUrl}
             title="index.md"
           >
             <svg class="file-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -235,7 +236,7 @@ function getCleanResourceName(res: any): string {
         <div class="obsidian-pane-actions" style="flex-shrink: 0;">
           <a 
             id="pane-raw-link" 
-            href={`/raw/nodes/${dataset.slug}/index.md`} 
+            href={rawIndexUrl} 
             target="_blank" 
             class="btn btn-secondary btn-sm"
             style="font-family: var(--font-mono); font-size: 0.75rem; white-space: nowrap;"

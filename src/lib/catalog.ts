@@ -373,16 +373,23 @@ export function getAllDatasets(): DatasetNode[] {
         let fedContracts: Array<{ type: string; path: string }> = [{ type: 'datapackage', path: remoteUrl }];
         let fedTags: string[] = ['federado'];
         let fedReferenceDocs: NodeReferenceDoc[] = [];
+        let parsedFrontmatter: Record<string, any> = {};
 
-        // 1. Intentar descubrir desde repositorio hermano local (ej. ../bo-combustible/knowledge)
-        const siblingKnowledgeDir = path.resolve(rootDir, '..', derivedSlug, 'knowledge');
-        const siblingIndexPath = path.join(siblingKnowledgeDir, 'index.md');
-        const siblingDpPath = path.join(siblingKnowledgeDir, 'datapackage.yaml');
+        // 1. Intentar descubrir desde repositorio hermano local (ej. ../bo-combustible/knowledge o ../sismos)
+        const siblingBaseDir = path.resolve(rootDir, '..', derivedSlug);
+        const siblingKnowledgeDir = path.join(siblingBaseDir, 'knowledge');
+        const siblingEffectiveDir = fs.existsSync(siblingKnowledgeDir) ? siblingKnowledgeDir : siblingBaseDir;
+        const siblingIndexPath = path.join(siblingEffectiveDir, 'index.md');
+        let siblingDpPath = path.join(siblingEffectiveDir, 'datapackage.yaml');
+        if (!fs.existsSync(siblingDpPath) && fs.existsSync(path.join(siblingEffectiveDir, 'datapackage.yml'))) {
+          siblingDpPath = path.join(siblingEffectiveDir, 'datapackage.yml');
+        }
 
-        if (fs.existsSync(siblingKnowledgeDir)) {
+        if (fs.existsSync(siblingEffectiveDir)) {
           if (fs.existsSync(siblingIndexPath)) {
             const rawIndex = fs.readFileSync(siblingIndexPath, 'utf-8');
             const parsed = parseFrontmatter(rawIndex);
+            parsedFrontmatter = parsed.frontmatter || {};
             if (parsed.frontmatter.title) fedTitle = parsed.frontmatter.title;
             if (Array.isArray(parsed.frontmatter.dimensions)) fedDimensions = parsed.frontmatter.dimensions;
             if (Array.isArray(parsed.frontmatter.tags)) fedTags = parsed.frontmatter.tags;
@@ -399,10 +406,13 @@ export function getAllDatasets(): DatasetNode[] {
               if (parsedDp && Array.isArray(parsedDp.resources)) {
                 // Reconciliar rutas relativas a URLs remotas públicas del repositorio
                 const rawBaseUrl = remoteUrl.replace(/\/index\.md$/, '').replace(/\/knowledge$/, '');
+                const isKnowledgeDir = siblingDpPath.includes(`${path.sep}knowledge${path.sep}`);
                 fedResources = parsedDp.resources.map(r => {
                   let resPath = r.path || '';
                   if (resPath && !resPath.startsWith('http://') && !resPath.startsWith('https://')) {
-                    const normPath = path.posix.normalize(path.posix.join('knowledge', resPath));
+                    const normPath = isKnowledgeDir
+                      ? path.posix.normalize(path.posix.join('knowledge', resPath))
+                      : path.posix.normalize(resPath);
                     resPath = `${rawBaseUrl}/${normPath}`;
                   }
                   return {
@@ -416,7 +426,10 @@ export function getAllDatasets(): DatasetNode[] {
                   name: parsedDp.name || derivedSlug,
                   title: parsedDp.title || fedTitle,
                   description: parsedDp.description || fedDescription,
-                  resources: fedResources
+                  resources: fedResources,
+                  spatial: parsedDp.spatial,
+                  temporal: parsedDp.temporal,
+                  quality: parsedDp.quality
                 };
               }
             } catch (e) {
@@ -424,7 +437,10 @@ export function getAllDatasets(): DatasetNode[] {
             }
           }
 
-          fedReferenceDocs = scanNodeReferenceDocs(siblingKnowledgeDir, derivedSlug);
+          fedReferenceDocs = scanNodeReferenceDocs(siblingEffectiveDir, derivedSlug);
+          if (fedReferenceDocs.length === 0 && siblingEffectiveDir !== siblingBaseDir) {
+            fedReferenceDocs = scanNodeReferenceDocs(siblingBaseDir, derivedSlug);
+          }
         } else {
           // Fallback dinámico genérico para nodos puramente remotos sin copia local
           fedResources = [
@@ -458,6 +474,9 @@ export function getAllDatasets(): DatasetNode[] {
           status: 'federated',
           dimensions: fedDimensions,
           contracts: fedContracts,
+          spatial: parsedFrontmatter.spatial || fedDatapackage?.spatial,
+          temporal: parsedFrontmatter.temporal || fedDatapackage?.temporal,
+          quality: parsedFrontmatter.quality || fedDatapackage?.quality,
           tags: fedTags,
           datapackage: fedDatapackage,
           allResources: fedResources,

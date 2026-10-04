@@ -39,7 +39,7 @@ Este es el catálogo de entrada principal (Discovery Phase 1). Los siguientes no
 - [Alertas Meteorológicas - SENAMHI](/nodes/alerts/index.md)
 - [Indicadores de Sequía por Macroregión](/nodes/sequia/index.md)
 - [Calidad del Aire - Red Mónica](/nodes/air_quality/index.md)
-- [Registro Sísmico - Observatorio San Calixto](/nodes/sismology/index.md)
+- [Sismología de Bolivia - Observatorio San Calixto](https://raw.githubusercontent.com/andres-chirinos/sismos/refs/heads/main/knowledge/index.md)
 
 ### Infraestructura, Transporte y Energía
 - [Despacho de Carga y Operación Eléctrica - CNDC](/nodes/despacho-carga/index.md)

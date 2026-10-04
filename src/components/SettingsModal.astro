@@ -456,6 +456,16 @@
         setCustomMcpUrl(mcpVal);
       }
 
+      // Notificar a todos los componentes y celdas del SDK
+      window.dispatchEvent(new CustomEvent('datamesh:settings-changed', {
+        detail: {
+          proxyEnabled: isEnabled,
+          proxyTemplate: template,
+          mcpEnabled: mcpEnableCheck ? mcpEnableCheck.checked : true,
+          mcpUrl: mcpUrlIn ? mcpUrlIn.value.trim() : '',
+        }
+      }));
+
       if (statusMsg) {
         statusMsg.style.display = 'block';
         statusMsg.style.backgroundColor = 'rgba(2, 132, 199, 0.1)';

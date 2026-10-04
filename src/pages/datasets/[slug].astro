@@ -463,8 +463,14 @@ function getCleanResourceName(res: any): string {
 <script>
   import * as Plot from '@observablehq/plot';
   import { DataMeshClient, datamesh, normalizeResourceUrl, parseCsv } from '@datosbolivia/datamesh-client';
+  import { getActiveProxyTemplate } from '../../lib/proxy';
 
   function initOjsCells() {
+    // Sincronizar proxy activo global en la instancia datamesh
+    const activeProxy = getActiveProxyTemplate();
+    if (activeProxy) {
+      datamesh.setProxy(activeProxy);
+    }
     const cells = document.querySelectorAll<HTMLElement>('[data-ojs-cell="true"]');
     if (cells.length === 0) return;
 
@@ -613,5 +619,16 @@ function getCleanResourceName(res: any): string {
     document.addEventListener('DOMContentLoaded', initOjsCells);
   } else {
     initOjsCells();
+  }
+
+  // Si el usuario cambia la configuración global (proxy o mcp), re-ejecutar celdas OJS
+  if (typeof window !== 'undefined') {
+    window.addEventListener('datamesh:settings-changed', () => {
+      const cells = document.querySelectorAll<HTMLElement>('[data-ojs-cell="true"]');
+      cells.forEach((cell) => {
+        delete cell.dataset.initialized;
+      });
+      initOjsCells();
+    });
   }
 </script>

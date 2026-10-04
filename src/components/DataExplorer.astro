@@ -631,13 +631,21 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
 
 <script>
   import { DataMeshClient, parseCsv, normalizeResourceUrl } from '@datosbolivia/datamesh-client';
-  import { fetchWithCorsProxy, isCorsRestrictedDomain, setUserCustomProxy, getUserCustomProxy, getCorsProxyConfig } from '../lib/proxy';
+  import { fetchWithCorsProxy, isCorsRestrictedDomain, setUserCustomProxy, getUserCustomProxy, getCorsProxyConfig, getActiveProxyTemplate } from '../lib/proxy';
   import { datameshMcp, isMcpEnabled } from '../lib/mcp';
   import L from 'leaflet';
   import 'leaflet/dist/leaflet.css';
 
   // Usa DuckDB en cliente con catálogo por defecto de la misma página (origen actual /llms.txt)
-  const client = new DataMeshClient({ engine: 'duckdb' });
+  const client = new DataMeshClient({ engine: 'duckdb', proxyUrl: getActiveProxyTemplate() });
+
+  // Escuchar cambios de configuración global
+  if (typeof window !== 'undefined') {
+    window.addEventListener('datamesh:settings-changed', (e: any) => {
+      const { proxyTemplate, proxyEnabled } = e.detail || {};
+      client.setProxy(proxyEnabled ? proxyTemplate : undefined);
+    });
+  }
 
   function setupExplorers() {
     const wrappers = document.querySelectorAll<HTMLElement>('[data-explorer-container]');

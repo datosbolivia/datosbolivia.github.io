@@ -116,6 +116,21 @@ export function getUserCustomProxy(): string {
 }
 
 /**
+ * Comprueba si el proxy CORS está habilitado globalmente.
+ */
+export function isCorsProxyEnabled(): boolean {
+  return activeConfig.enabled;
+}
+
+/**
+ * Obtiene la plantilla del proxy actualmente activo (ej. para inyectar en DataMeshClient).
+ */
+export function getActiveProxyTemplate(): string | undefined {
+  if (!activeConfig.enabled) return undefined;
+  return activeConfig.providers[0];
+}
+
+/**
  * Obtiene la configuración actual de proxies CORS.
  */
 export function getCorsProxyConfig(): CorsProxyConfig {

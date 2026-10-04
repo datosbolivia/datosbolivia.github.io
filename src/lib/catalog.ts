@@ -1,6 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
+import type { DataPackage, DataResource, ResourceField } from '@datosbolivia/datamesh-client';
+
+export type { DataPackage, DataResource, ResourceField };
 
 export interface SkosConcept {
   id: string;
@@ -11,33 +14,6 @@ export interface SkosConcept {
   broader?: string;
   content: string;
   rawMarkdown: string;
-}
-
-export interface ResourceField {
-  name: string;
-  type: string;
-  description?: string;
-  format?: string;
-  constraints?: Record<string, any>;
-}
-
-export interface DataResource {
-  name: string;
-  path: string;
-  format?: string;
-  mediatype?: string;
-  schema?: {
-    fields?: ResourceField[];
-  };
-  policy?: string;
-  description?: string;
-}
-
-export interface DataPackage {
-  name?: string;
-  title?: string;
-  description?: string;
-  resources: DataResource[];
 }
 
 export interface NodeReferenceDoc {

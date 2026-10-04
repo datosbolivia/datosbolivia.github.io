@@ -4,59 +4,14 @@
  * de navegador (Kaggle, Google Docs/Sheets, APIs gubernamentales bolivianas .gob.bo, etc.).
  */
 
-/**
- * Lista de dominios y sufijos con restricciones conocidas de CORS en navegadores web.
- */
-export const KNOWN_CORS_RESTRICTED_DOMAINS: string[] = [
-  'kaggle.com',
-  'docs.google.com',
-  'drive.google.com',
-  'sheets.googleapis.com',
-  'dropbox.com',
-  'onedrive.live.com',
-  '1drv.ms',
-  'gob.bo',
-  'bo',
-];
+import {
+  KNOWN_CORS_RESTRICTED_DOMAINS,
+  DEFAULT_PROXY_PROVIDERS,
+  pingProxy,
+  isCorsRestrictedDomain as sdkIsCorsRestrictedDomain,
+} from '@datosbolivia/datamesh-client';
 
-/**
- * Proveedores estándar de proxy CORS y sus generadores de URL.
- */
-export const DEFAULT_PROXY_PROVIDERS: Record<string, (url: string) => string> = {
-  local: (url: string) => `http://localhost:8000/proxy?url=${encodeURIComponent(url)}`,
-  allorigins: (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  corsproxy: (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-};
-
-/**
- * Realiza un ping a un proxy o servidor backend para verificar conectividad.
- */
-export async function pingProxy(urlOrTemplate: string, timeoutMs: number = 2500): Promise<{ ok: boolean; status?: number; error?: string }> {
-  try {
-    let testUrl = urlOrTemplate;
-    if (testUrl === 'local' || testUrl.includes('localhost:8000')) {
-      testUrl = 'http://localhost:8000/ping';
-    } else if (testUrl === 'allorigins') {
-      testUrl = 'https://api.allorigins.win/raw?url=https%3A%2F%2Ficanhazip.com';
-    } else if (testUrl === 'corsproxy') {
-      testUrl = 'https://corsproxy.io/?url=https%3A%2F%2Ficanhazip.com';
-    } else if (testUrl.includes('{url}')) {
-      testUrl = testUrl.replace('{url}', encodeURIComponent('https://icanhazip.com'));
-    } else if (testUrl.endsWith('=')) {
-      testUrl = `${testUrl}${encodeURIComponent('https://icanhazip.com')}`;
-    }
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    const resp = await fetch(testUrl, { method: 'GET', signal: controller.signal }).catch((err) => {
-      throw err;
-    });
-    clearTimeout(timer);
-    return { ok: resp.ok, status: resp.status };
-  } catch (err: any) {
-    return { ok: false, error: err?.message || 'Error de conexión' };
-  }
-}
+export { KNOWN_CORS_RESTRICTED_DOMAINS, DEFAULT_PROXY_PROVIDERS, pingProxy };
 
 /**
  * Configuración de proxies CORS.
@@ -208,30 +163,12 @@ export function resetCorsProxyConfig(): void {
  */
 export function isCorsRestrictedDomain(url: string, customDomains?: string[]): boolean {
   if (!url || typeof url !== 'string') return false;
-
   const trimmed = url.trim();
   if (trimmed.startsWith('/') || trimmed.startsWith('./') || trimmed.startsWith('../')) {
     return false;
   }
-
-  try {
-    const parsed = new URL(trimmed, 'http://localhost');
-    // Si era relativa y se resolvió con el fallback base, no es restringida
-    if (parsed.origin === 'http://localhost' && !trimmed.includes('localhost')) {
-      return false;
-    }
-
-    const hostname = parsed.hostname.toLowerCase();
-    const domainsToCheck = customDomains || activeConfig.restrictedDomains;
-
-    return domainsToCheck.some((domain) => {
-      const d = domain.toLowerCase().trim();
-      if (!d) return false;
-      return hostname === d || hostname.endsWith(`.${d}`);
-    });
-  } catch {
-    return false;
-  }
+  const domainsToCheck = customDomains || activeConfig.restrictedDomains;
+  return sdkIsCorsRestrictedDomain(trimmed, domainsToCheck);
 }
 
 /**

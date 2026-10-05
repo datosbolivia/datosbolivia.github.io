@@ -7,12 +7,13 @@ import {
   type DataResource, 
   type ResourceField,
   parseDataPackageManifest,
+  normalizeManifestResources,
   toCanonicalTriad,
   parseCanonicalUri
 } from '@datosbolivia/datamesh-client';
 
 export type { DataPackage, DataResource, ResourceField };
-export { toCanonicalTriad, parseCanonicalUri };
+export { toCanonicalTriad, parseCanonicalUri, normalizeManifestResources };
 
 /**
  * Helper unificado para leer y parsear manifiestos de contratos sintácticos
@@ -257,13 +258,15 @@ export function getAllDatasets(): DatasetNode[] {
       }
     }
 
-    // 3. Consolidar TODOS los recursos
+    // 3. Consolidar TODOS los recursos (desempaquetando zips y contenedores internos)
     const allResources: DataResource[] = [];
     if (datapackage?.resources && Array.isArray(datapackage.resources)) {
+      datapackage.resources = normalizeManifestResources(datapackage.resources);
       allResources.push(...datapackage.resources);
     }
     if (Array.isArray(frontmatter.resources)) {
-      for (const res of frontmatter.resources) {
+      const normFm = normalizeManifestResources(frontmatter.resources);
+      for (const res of normFm) {
         if (!allResources.some(r => r.name === res.name)) {
           allResources.push(res);
         }
@@ -483,7 +486,8 @@ export function getAllDatasets(): DatasetNode[] {
                 const parsedDp = readManifest(dpText, candUrl);
                 if (parsedDp && Array.isArray(parsedDp.resources) && parsedDp.resources.length > 0) {
                   const isKnowledgeCand = candUrl.includes('/knowledge/');
-                  fedResources = parsedDp.resources.map(r => {
+                  const normResources = normalizeManifestResources(parsedDp.resources);
+                  fedResources = normResources.map(r => {
                     let resPath = r.path || '';
                     if (resPath && !resPath.startsWith('http://') && !resPath.startsWith('https://')) {
                       const normPath = isKnowledgeCand
@@ -491,9 +495,17 @@ export function getAllDatasets(): DatasetNode[] {
                         : path.posix.normalize(resPath);
                       resPath = `${rawBaseUrl}/${normPath}`;
                     }
+                    let containerPath = r.container_path;
+                    if (containerPath && !containerPath.startsWith('http://') && !containerPath.startsWith('https://')) {
+                      const normContPath = isKnowledgeCand
+                        ? path.posix.normalize(path.posix.join('knowledge', containerPath))
+                        : path.posix.normalize(containerPath);
+                      containerPath = `${rawBaseUrl}/${normContPath}`;
+                    }
                     return {
                       ...r,
                       path: resPath,
+                      container_path: containerPath,
                       format: r.format || 'csv',
                       policy: r.policy || 'allow_all'
                     };

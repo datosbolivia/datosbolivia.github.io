@@ -11,7 +11,9 @@ interface Props {
 const { datasetSlug, resource, resourceIndex } = Astro.props;
 
 const triadName = toCanonicalTriad({ dataset: datasetSlug, resource: resource.name });
-const remoteUrl = resource.path || '';
+const remoteUrl = resource.container_path || resource.path || '';
+const containerPath = resource.container_path || '';
+const innerPath = resource.path || '';
 const format = (resource.format || 'csv').toLowerCase();
 const explorerId = `explorer-${datasetSlug}-${resourceIndex}`;
 
@@ -21,7 +23,17 @@ const cliSnippet = `datamesh sql "SELECT * FROM '${triadName}' LIMIT 25"`;
 const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n// Breve filtro\nconst res = await datamesh.query({\n  resource_uri: '${triadName}',\n  limit: 25\n});\nconsole.log(res);`;
 ---
 
-<div class="data-explorer-wrapper" id={explorerId} data-explorer-container data-dataset={datasetSlug} data-remote-url={remoteUrl} data-format={format} data-triad={triadName}>
+<div 
+  class="data-explorer-wrapper" 
+  id={explorerId} 
+  data-explorer-container 
+  data-dataset={datasetSlug} 
+  data-remote-url={remoteUrl} 
+  data-container-url={containerPath}
+  data-inner-path={innerPath}
+  data-format={format} 
+  data-triad={triadName}
+>
   <!-- Subnavegación de Vistas del Recurso -->
   <div class="resource-subnav" role="tablist">
     <button 
@@ -164,7 +176,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
           Exploración Interactiva en Cliente
         </p>
         <p style="font-size: 0.8rem; margin-bottom: 1.15rem; color: var(--color-text-muted);">
-          Recurso: {resource.name} ({format.toUpperCase()}) &bull; Motor DuckDB y proxy CORS automático
+          Recurso: {resource.name} ({format.toUpperCase()}) {resource.container_path ? `• Archivo contenedor ZIP` : ''} &bull; Motor DuckDB y proxy CORS automático
         </p>
         <button type="button" class="btn btn-primary btn-sm load-direct-btn">
           Cargar y Explorar Recurso
@@ -655,6 +667,8 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       container.dataset.initialized = 'true';
 
       const remoteUrl = container.getAttribute('data-remote-url') || '';
+      const containerUrl = container.getAttribute('data-container-url') || '';
+      const innerPath = container.getAttribute('data-inner-path') || '';
       const triad = container.getAttribute('data-triad') || '';
       const format = container.getAttribute('data-format') || 'csv';
       const explorerId = container.id || 'explorer';
@@ -906,7 +920,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
           if (isMcpEnabled()) {
             try {
               updateStatus('Descargando y resolviendo recurso a través del daemon MCP / Backend...');
-              const targetRef = resolvedTarget || triad || remoteUrl;
+              const targetRef = triad || resolvedTarget || remoteUrl;
               const mcpData = await datameshMcp.callTool<{ columns: string[]; rows: any[][]; row_count: number }>('read_resource', {
                 uri: targetRef,
                 limit: 5000,
@@ -924,8 +938,17 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
             }
           }
 
+          const isZipOrArchive = Boolean(containerUrl) || format === 'zip' || (Boolean(resolvedTarget) && !resolvedTarget.startsWith('http://') && !resolvedTarget.startsWith('https://')) || (Boolean(remoteUrl) && remoteUrl.toLowerCase().endsWith('.zip'));
+
           // 2. Si no se descargó vía MCP, usar fetch en cliente (directo o proxy)
           if (!parsed) {
+            // Si el recurso proviene de un contenedor ZIP o no es una URL pública HTTP, requiere el backend sovereign
+            if (isZipOrArchive) {
+              isLoading = false;
+              renderZipServerRequiredMessage(containerUrl || remoteUrl);
+              return;
+            }
+
             // Si el dominio tiene restricciones conocidas de CORS, descargar directamente vía proxy
             if (resolvedTarget && isCorsRestrictedDomain(resolvedTarget)) {
               updateStatus('Conectando mediante proxy CORS...');
@@ -933,9 +956,9 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
               const text = await resp.text();
               parsed = parseCsv(text);
             } else {
-              // Intentar fetch directo con URL normalizada
+              // Intentar fetch directo con URL normalizada sólo si es HTTP(S)
               try {
-                if (resolvedTarget) {
+                if (resolvedTarget && (resolvedTarget.startsWith('http://') || resolvedTarget.startsWith('https://'))) {
                   const resp = await fetch(resolvedTarget);
                   if (resp.ok) {
                     const text = await resp.text();
@@ -943,7 +966,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
                   } else {
                     throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
                   }
-                } else {
+                } else if (!isZipOrArchive) {
                   const result = await client.query({
                     resource_uri: triad || remoteUrl,
                   });
@@ -951,10 +974,14 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
                     columns: result.columns,
                     rows: result.rows,
                   };
+                } else {
+                  isLoading = false;
+                  renderZipServerRequiredMessage(containerUrl || remoteUrl);
+                  return;
                 }
               } catch (queryErr: any) {
                 // Si falla por CORS o red, reintentar con fetchWithCorsProxy
-                if (resolvedTarget) {
+                if (resolvedTarget && (resolvedTarget.startsWith('http://') || resolvedTarget.startsWith('https://'))) {
                   updateStatus('Reintentando descarga mediante proxy CORS...');
                   const resp = await fetchWithCorsProxy(resolvedTarget);
                   const text = await resp.text();
@@ -1612,6 +1639,45 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
 df = dm.sql("SELECT * FROM '${triad}' LIMIT 25")</code></pre>
             </div>
           </div>`;
+      }
+
+      function renderZipServerRequiredMessage(zipPath: string) {
+        if (!tableContainer) return;
+        if (mapContainer) mapContainer.style.display = 'none';
+        if (chartContainer) chartContainer.style.display = 'none';
+        if (paginationWrap) paginationWrap.style.display = 'none';
+        tableContainer.style.display = 'block';
+        const zipName = zipPath ? zipPath.split('/').pop()?.split('\\').pop() : 'archivo ZIP';
+        tableContainer.innerHTML = `
+          <div style="padding: 2.25rem 1.5rem; text-align: center; max-width: 620px; margin: 0 auto; color: var(--color-text);">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--color-surface-hover); border: 1px solid var(--color-border); margin-bottom: 0.85rem; color: var(--color-primary);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+            </div>
+            <p style="font-size: 1.05rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--color-text);">
+              Recurso en Contenedor ZIP (Backend Soberano Requerido)
+            </p>
+            <p style="font-size: 0.825rem; color: var(--color-text-muted); line-height: 1.5; margin-bottom: 1.25rem;">
+              Este recurso tabular está empaquetado dentro de <code>${escapeHtml(zipName || 'personas_municipios_csv.zip')}</code>. DuckDB ejecuta la extracción selectiva en memoria mediante el servidor sovereign local:
+            </p>
+            <div style="background: var(--color-surface-hover); border: 1px solid var(--color-border); border-radius: 6px; padding: 0.65rem 0.9rem; margin-bottom: 1.25rem; font-family: var(--font-mono); font-size: 0.8rem; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+              <code>datamesh serve</code>
+              <span style="font-size: 0.7rem; color: var(--color-text-muted);">Inicia MCP en :8000</span>
+            </div>
+            <div style="display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary btn-sm retry-zip-mcp-btn">
+                Reintentar con Servidor MCP (:8000)
+              </button>
+            </div>
+          </div>
+        `;
+
+        tableContainer.querySelector('.retry-zip-mcp-btn')?.addEventListener('click', () => {
+          fetchViaTypeScriptClient();
+        });
       }
 
       function escapeHtml(str: string): string {

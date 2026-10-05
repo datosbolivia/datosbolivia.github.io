@@ -172,7 +172,7 @@ function getCleanResourceName(res: any): string {
                   class="obsidian-file-item" 
                   data-target={`tab-resource-${i}`}
                   data-path={`${dataset.slug}/resources/${res.name}`}
-                  data-download={res.path || ''}
+                  data-download={res.container_path || res.path || ''}
                   title={res.name}
                 >
                   <svg class="file-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -286,8 +286,13 @@ function getCleanResourceName(res: any): string {
         {resources.map((res, i) => (
           <div class="obsidian-file-tab" id={`tab-resource-${i}`}>
             <div style="border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; margin-bottom: 1.5rem;">
-              <div style="font-size: 0.725rem; color: var(--color-primary); font-family: var(--font-mono); font-weight: 600; text-transform: uppercase; margin-bottom: 0.35rem;">
-                <span data-i18n="explorer.resource_num">Recurso</span> #{i + 1} • {res.format ? res.format.toUpperCase() : 'CSV'}
+              <div style="font-size: 0.725rem; color: var(--color-primary); font-family: var(--font-mono); font-weight: 600; text-transform: uppercase; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <span><span data-i18n="explorer.resource_num">Recurso</span> #{i + 1} • {res.format ? res.format.toUpperCase() : 'CSV'}</span>
+                {res.container_path && (
+                  <span style="background: var(--color-surface-hover); padding: 0.15rem 0.45rem; border-radius: 4px; border: 1px solid var(--color-border); font-size: 0.65rem; color: var(--color-text-muted); text-transform: none;">
+                    ZIP: {res.container_path.split('/').pop()?.split('\\').pop()}
+                  </span>
+                )}
               </div>
               <h1 style="font-size: 1.85rem; margin-bottom: 0.5rem;">
                 {res.name}
@@ -298,12 +303,14 @@ function getCleanResourceName(res: any): string {
                 </p>
               )}
 
-              {res.path && (
+              {(res.path || res.container_path) && (
                 <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-top: 0.75rem;">
-                  <a href={res.path} target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+                  <a href={res.container_path || res.path} target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
                     <span data-i18n="explorer.download_resource">Descargar Recurso</span> &rarr;
                   </a>
-                  <code style="font-size: 0.8rem; padding: 0.35rem 0.6rem; word-break: break-all;">{res.path}</code>
+                  <code style="font-size: 0.8rem; padding: 0.35rem 0.6rem; word-break: break-all;">
+                    {res.container_path ? `${res.container_path} (${res.path})` : res.path}
+                  </code>
                 </div>
               )}
             </div>

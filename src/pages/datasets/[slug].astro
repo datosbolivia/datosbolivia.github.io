@@ -560,14 +560,17 @@ function getCleanResourceName(res: any): string {
                 const resourceUri = req?.resource_uri;
                 if (resourceUri && activeCtx?.resources && Array.isArray(activeCtx.resources)) {
                   const clean = String(resourceUri).trim().toLowerCase();
+                  const targetResName = clean.includes(':') ? clean.split(':').pop()! : (clean.includes('/') ? clean.split('/').pop()! : clean);
                   const found = activeCtx.resources.find((r: any) => {
                     const rName = String(r.name || '').toLowerCase();
                     const rPath = String(r.path || '').toLowerCase();
                     return (
                       rName === clean ||
+                      rName === targetResName ||
                       rPath === clean ||
-                      rPath.endsWith('/' + clean) ||
-                      rPath.endsWith('\\' + clean)
+                      rPath === targetResName ||
+                      rPath.endsWith('/' + targetResName) ||
+                      rPath.endsWith('\\' + targetResName)
                     );
                   });
                   if (found && found.path) {
@@ -582,14 +585,17 @@ function getCleanResourceName(res: any): string {
                 const activeCtx = ctx || datasetContext;
                 if (uriOrTriad && activeCtx?.resources && Array.isArray(activeCtx.resources)) {
                   const clean = String(uriOrTriad).trim().toLowerCase();
+                  const targetResName = clean.includes(':') ? clean.split(':').pop()! : (clean.includes('/') ? clean.split('/').pop()! : clean);
                   const found = activeCtx.resources.find((r: any) => {
                     const rName = String(r.name || '').toLowerCase();
                     const rPath = String(r.path || '').toLowerCase();
                     return (
                       rName === clean ||
+                      rName === targetResName ||
                       rPath === clean ||
-                      rPath.endsWith('/' + clean) ||
-                      rPath.endsWith('\\' + clean)
+                      rPath === targetResName ||
+                      rPath.endsWith('/' + targetResName) ||
+                      rPath.endsWith('\\' + targetResName)
                     );
                   });
                   if (found && found.path) {

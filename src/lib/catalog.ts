@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 import yaml from 'js-yaml';
 import { 
   type DataPackage, 
@@ -442,22 +443,96 @@ export function getAllDatasets(): DatasetNode[] {
             fedReferenceDocs = scanNodeReferenceDocs(siblingBaseDir, derivedSlug);
           }
         } else {
-          // Fallback dinámico genérico para nodos puramente remotos sin copia local
-          fedResources = [
-            {
-              name: 'raw_manifest',
-              path: remoteUrl,
-              format: 'md',
-              policy: 'allow_all',
-              description: 'Manifiesto remoto OKF v0.2'
+          // Descubrimiento remoto en tiempo de compilación (ej. GitHub Actions / Despliegue en producción)
+          try {
+            // 1. Obtener index.md remoto
+            const fetchRemoteText = (url: string): string => {
+              try {
+                return execSync(`curl -sL --max-time 10 "${url}"`, { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] });
+              } catch {
+                return '';
+              }
+            };
+
+            const remoteIndexText = fetchRemoteText(remoteUrl);
+            if (remoteIndexText && remoteIndexText.trim().startsWith('---')) {
+              const parsed = parseFrontmatter(remoteIndexText);
+              parsedFrontmatter = parsed.frontmatter || {};
+              if (parsed.frontmatter.title) fedTitle = parsed.frontmatter.title;
+              if (Array.isArray(parsed.frontmatter.dimensions)) fedDimensions = parsed.frontmatter.dimensions;
+              if (Array.isArray(parsed.frontmatter.tags)) fedTags = parsed.frontmatter.tags;
+              if (parsed.body) {
+                fedBody = parsed.body;
+                fedDescription = parsed.frontmatter.description || extractFirstParagraph(parsed.body) || fedDescription;
+              }
             }
-          ];
-          fedDatapackage = {
-            name: derivedSlug,
-            title: fedTitle,
-            description: fedDescription,
-            resources: fedResources
-          };
+
+            // 2. Obtener datapackage.yaml o datapackage.json remoto
+            const rawBaseUrl = remoteUrl.replace(/\/index\.md$/, '').replace(/\/knowledge$/, '');
+            const remoteDpCandidates = [
+              `${rawBaseUrl}/knowledge/datapackage.yaml`,
+              `${rawBaseUrl}/knowledge/datapackage.yml`,
+              `${rawBaseUrl}/datapackage.yaml`,
+              `${rawBaseUrl}/datapackage.yml`,
+              `${rawBaseUrl}/datapackage.json`
+            ];
+
+            for (const candUrl of remoteDpCandidates) {
+              const dpText = fetchRemoteText(candUrl);
+              if (dpText && dpText.trim()) {
+                const parsedDp = readManifest(dpText, candUrl);
+                if (parsedDp && Array.isArray(parsedDp.resources) && parsedDp.resources.length > 0) {
+                  const isKnowledgeCand = candUrl.includes('/knowledge/');
+                  fedResources = parsedDp.resources.map(r => {
+                    let resPath = r.path || '';
+                    if (resPath && !resPath.startsWith('http://') && !resPath.startsWith('https://')) {
+                      const normPath = isKnowledgeCand
+                        ? path.posix.normalize(path.posix.join('knowledge', resPath))
+                        : path.posix.normalize(resPath);
+                      resPath = `${rawBaseUrl}/${normPath}`;
+                    }
+                    return {
+                      ...r,
+                      path: resPath,
+                      format: r.format || 'csv',
+                      policy: r.policy || 'allow_all'
+                    };
+                  });
+                  fedDatapackage = {
+                    name: parsedDp.name || derivedSlug,
+                    title: parsedDp.title || fedTitle,
+                    description: parsedDp.description || fedDescription,
+                    resources: fedResources,
+                    spatial: parsedDp.spatial,
+                    temporal: parsedDp.temporal,
+                    quality: parsedDp.quality
+                  };
+                  break;
+                }
+              }
+            }
+          } catch (remErr) {
+            console.warn(`Error al obtener manifiesto remoto para ${remoteUrl}:`, remErr);
+          }
+
+          if (fedResources.length === 0) {
+            // Fallback genérico si no hubo respuesta de red
+            fedResources = [
+              {
+                name: 'raw_manifest',
+                path: remoteUrl,
+                format: 'md',
+                policy: 'allow_all',
+                description: 'Manifiesto remoto OKF v0.2'
+              }
+            ];
+            fedDatapackage = {
+              name: derivedSlug,
+              title: fedTitle,
+              description: fedDescription,
+              resources: fedResources
+            };
+          }
         }
 
         // Si no se encontraron dimensiones en frontmatter, inferir del slug o categoría

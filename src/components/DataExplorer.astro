@@ -32,6 +32,10 @@ if (resource.schema?.fields) {
   }
 }
 const labelsJson = JSON.stringify(fieldsWithValueLabels);
+
+// Column names from schema definition
+const schemaColNames = (resource.schema?.fields || []).map((f) => f.name).filter(Boolean);
+const schemaColsJson = JSON.stringify(schemaColNames);
 ---
 
 <div 
@@ -45,6 +49,7 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
   data-format={format} 
   data-triad={triadName}
   data-labels={labelsJson}
+  data-schema-cols={schemaColsJson}
 >
   <!-- Subnavegación de Vistas del Recurso -->
   <div class="resource-subnav" role="tablist">
@@ -916,6 +921,84 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
     });
   }
 
+  /**
+   * Parsea contenido tabular en formatos CSV, JSONL o JSON Array
+   */
+  function parseTabularData(
+    rawText: string,
+    formatHint?: string,
+    schemaCols?: string[]
+  ): { columns: string[]; rows: string[][] } {
+    const text = rawText.trim();
+    const fmt = (formatHint || '').toLowerCase();
+
+    // 1. Detección de JSON Lines o Array JSON
+    const isExplicitJson = fmt === 'jsonl' || fmt === 'json';
+    const looksLikeJsonl = !fmt && text.startsWith('{') && text.includes('\n');
+    const looksLikeJsonArray = (!fmt || fmt === 'json') && text.startsWith('[') && text.endsWith(']');
+
+    if (isExplicitJson || looksLikeJsonl || looksLikeJsonArray) {
+      const objects: Record<string, any>[] = [];
+
+      if (looksLikeJsonArray) {
+        try {
+          const parsedArr = JSON.parse(text);
+          if (Array.isArray(parsedArr)) {
+            for (const item of parsedArr) {
+              if (item && typeof item === 'object') objects.push(item);
+            }
+          }
+        } catch {
+          // Si falla JSON.parse estándar, intentamos como líneas
+        }
+      }
+
+      if (objects.length === 0) {
+        // Parsear línea por línea como JSONL
+        const lines = text.split(/\r?\n/);
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (!trimmedLine) continue;
+          try {
+            const obj = JSON.parse(trimmedLine);
+            if (obj && typeof obj === 'object') objects.push(obj);
+          } catch {
+            // Ignorar líneas no parseables
+          }
+        }
+      }
+
+      if (objects.length > 0) {
+        const colSet = new Set<string>();
+        // Si el esquema provee orden canónico de columnas, priorizarlo
+        if (schemaCols && schemaCols.length > 0) {
+          for (const sc of schemaCols) colSet.add(sc);
+        }
+        // Descubrir claves presentes en los objetos
+        for (const obj of objects) {
+          for (const k of Object.keys(obj)) {
+            colSet.add(k);
+          }
+        }
+
+        const columns = Array.from(colSet);
+        const rows = objects.map((obj) =>
+          columns.map((c) => {
+            const val = obj[c];
+            if (val === null || val === undefined) return '';
+            if (typeof val === 'object') return JSON.stringify(val);
+            return String(val);
+          })
+        );
+
+        return { columns, rows };
+      }
+    }
+
+    // 2. CSV por defecto
+    return parseCsv(rawText);
+  }
+
   function setupExplorers() {
     const wrappers = document.querySelectorAll<HTMLElement>('[data-explorer-container]');
 
@@ -976,6 +1059,15 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
         columnValueLabels = JSON.parse(rawLabelsAttr);
       } catch {
         columnValueLabels = {};
+      }
+
+      // Nombres canónicos de columnas definidos en schema
+      let schemaCols: string[] = [];
+      try {
+        const rawSchemaCols = container.getAttribute('data-schema-cols') || '[]';
+        schemaCols = JSON.parse(rawSchemaCols);
+      } catch {
+        schemaCols = [];
       }
       let showSemanticLabels = true;
 
@@ -1412,10 +1504,29 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
               });
 
               if (mcpData && Array.isArray(mcpData.columns) && Array.isArray(mcpData.rows) && mcpData.columns.length > 0) {
-                parsed = {
-                  columns: mcpData.columns,
-                  rows: mcpData.rows.map((r) => r.map((c) => String(c ?? ''))),
-                };
+                // Si el servidor devolvió una sola columna cuyo nombre o contenido es un objeto JSON (JSONL sin parsear)
+                const firstCol = mcpData.columns[0] || '';
+                const isSingleJsonCol = mcpData.columns.length === 1 && (firstCol.trim().startsWith('{') || (mcpData.rows[0] && String(mcpData.rows[0][0] || '').trim().startsWith('{')));
+
+                if (isSingleJsonCol) {
+                  // Reconstruir texto como JSONL y procesar con parseTabularData
+                  const jsonlLines: string[] = [];
+                  if (firstCol.trim().startsWith('{')) jsonlLines.push(firstCol.trim());
+                  for (const r of mcpData.rows) {
+                    const rowVal = String(r[0] ?? '').trim();
+                    if (rowVal.startsWith('{')) jsonlLines.push(rowVal);
+                  }
+                  if (jsonlLines.length > 0) {
+                    parsed = parseTabularData(jsonlLines.join('\n'), 'jsonl', schemaCols);
+                  }
+                }
+
+                if (!parsed) {
+                  parsed = {
+                    columns: mcpData.columns,
+                    rows: mcpData.rows.map((r) => r.map((c) => String(c ?? ''))),
+                  };
+                }
               }
             } catch (mcpDownloadErr: any) {
               console.warn('[DataExplorer] Fallo de descarga vía MCP:', mcpDownloadErr);
@@ -1439,7 +1550,7 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
               updateStatus('Conectando mediante proxy CORS...');
               const resp = await fetchWithCorsProxy(resolvedTarget);
               const text = await resp.text();
-              parsed = parseCsv(text);
+              parsed = parseTabularData(text, format, schemaCols);
             } else {
               // Intentar fetch directo con URL normalizada sólo si es HTTP(S)
               try {
@@ -1447,7 +1558,7 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
                   const resp = await fetch(resolvedTarget);
                   if (resp.ok) {
                     const text = await resp.text();
-                    parsed = parseCsv(text);
+                    parsed = parseTabularData(text, format, schemaCols);
                   } else {
                     throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
                   }
@@ -1470,7 +1581,7 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
                   updateStatus('Reintentando descarga mediante proxy CORS...');
                   const resp = await fetchWithCorsProxy(resolvedTarget);
                   const text = await resp.text();
-                  parsed = parseCsv(text);
+                  parsed = parseTabularData(text, format, schemaCols);
                 } else {
                   throw queryErr;
                 }

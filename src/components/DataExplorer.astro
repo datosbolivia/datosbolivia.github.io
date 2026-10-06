@@ -21,6 +21,17 @@ const defaultClientSql = `SELECT * FROM "${triadName}" LIMIT 25;`;
 const pythonSnippet = `import datamesh as dm\n\n# Consulta unificada en 1 línea con DuckDB\nres = dm.sql("""\nSELECT *\nFROM '${triadName}'\nLIMIT 25\n""")\nprint(res)`;
 const cliSnippet = `datamesh sql "SELECT * FROM '${triadName}' LIMIT 25"`;
 const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n// Breve filtro\nconst res = await datamesh.query({\n  resource_uri: '${triadName}',\n  limit: 25\n});\nconsole.log(res);`;
+
+// Map of column names to valueLabels dictionary { "COL_NAME": { "1": "Label 1", ... } }
+const fieldsWithValueLabels: Record<string, Record<string, string>> = {};
+if (resource.schema?.fields) {
+  for (const f of resource.schema.fields) {
+    if (f.name && f.valueLabels && typeof f.valueLabels === 'object') {
+      fieldsWithValueLabels[f.name] = f.valueLabels;
+    }
+  }
+}
+const labelsJson = JSON.stringify(fieldsWithValueLabels);
 ---
 
 <div 
@@ -33,6 +44,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
   data-inner-path={innerPath}
   data-format={format} 
   data-triad={triadName}
+  data-labels={labelsJson}
 >
   <!-- Subnavegación de Vistas del Recurso -->
   <div class="resource-subnav" role="tablist">
@@ -123,6 +135,12 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
             <span>Gráfico</span>
           </button>
         </div>
+
+        <!-- Botón Toggle Etiquetas vs Valores en Bruto -->
+        <button type="button" class="btn btn-secondary btn-sm toggle-labels-btn" title="Alternar entre etiquetas semánticas y códigos/valores en bruto">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+          <span class="labels-btn-text">Etiquetas</span>
+        </button>
 
         <!-- Botón Toggle Consola SQL DuckDB -->
         <button type="button" class="btn btn-secondary btn-sm toggle-sql-btn" title="Mostrar u ocultar consola SQL DuckDB">
@@ -678,6 +696,7 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       const filterInput = container.querySelector<HTMLInputElement>('.explorer-filter-input');
       const clearFilterBtn = container.querySelector<HTMLButtonElement>('.explorer-clear-filter-btn');
       const filterColSelect = container.querySelector<HTMLSelectElement>('.explorer-filter-col');
+      const toggleLabelsBtn = container.querySelector<HTMLButtonElement>('.toggle-labels-btn');
       const toggleSqlBtn = container.querySelector<HTMLButtonElement>('.toggle-sql-btn');
       const clientSqlBar = container.querySelector<HTMLElement>('.client-sql-bar');
       const mcpModeCheckbox = container.querySelector<HTMLInputElement>('.mcp-mode-checkbox');
@@ -701,6 +720,16 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       const mapLabelSelect = container.querySelector<HTMLSelectElement>('.map-label-select');
       const mapApplyBtn = container.querySelector<HTMLButtonElement>('.map-apply-coords-btn');
 
+      // Diccionario de etiquetas por columna desde schema
+      let columnValueLabels: Record<string, Record<string, string>> = {};
+      try {
+        const rawLabelsAttr = container.getAttribute('data-labels') || '{}';
+        columnValueLabels = JSON.parse(rawLabelsAttr);
+      } catch {
+        columnValueLabels = {};
+      }
+      let showSemanticLabels = true;
+
       let parsedTable: { columns: string[]; rows: string[][] } | null = null;
       let activeQueryResult: { columns: string[]; rows: string[][]; total_count: number } | null = null;
       let currentPage = 1;
@@ -714,6 +743,18 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
       let selectedMapLat: string = '';
       let selectedMapLon: string = '';
       let selectedMapLabel: string = '';
+
+      // Alternador de Etiquetas vs Datos en Bruto
+      toggleLabelsBtn?.addEventListener('click', () => {
+        showSemanticLabels = !showSemanticLabels;
+        toggleLabelsBtn.classList.toggle('active', showSemanticLabels);
+        const textSpan = toggleLabelsBtn.querySelector('.labels-btn-text');
+        if (textSpan) {
+          textSpan.textContent = showSemanticLabels ? 'Etiquetas' : 'Bruto';
+        }
+        toggleLabelsBtn.setAttribute('title', showSemanticLabels ? 'Mostrando etiquetas semánticas (clic para ver datos en bruto)' : 'Mostrando códigos y datos en bruto (clic para ver etiquetas)');
+        renderCurrentView();
+      });
 
       // Alternador de modos de vista (Tabla, Mapa, Gráfico)
       viewModeBtns.forEach((btn) => {
@@ -888,8 +929,9 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
           return;
         }
 
-        // Si la ruta del recurso apunta a un patrón wildcard / particionado (ej. *.csv)
-        if (remoteUrl && remoteUrl.includes('*')) {
+        // Si la ruta del recurso apunta a un patrón wildcard / particionado (ej. *.csv) y no hay MCP conectado
+        const isMultiFileWildcard = Boolean(remoteUrl && remoteUrl.includes('*'));
+        if (isMultiFileWildcard && !isMcpEnabled()) {
           isLoading = false;
           renderMultiFileWildcardMessage();
           return;
@@ -1164,9 +1206,28 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
 
         rows.forEach((row) => {
           html += '<tr>';
-          columns.forEach((_, colIdx) => {
-            const val = row[colIdx] !== undefined ? row[colIdx] : '';
-            html += `<td title="${escapeHtml(val)}">${escapeHtml(val)}</td>`;
+          columns.forEach((col, colIdx) => {
+            const rawVal = row[colIdx] !== undefined ? String(row[colIdx]) : '';
+            const labelsMap = columnValueLabels[col];
+            let displayVal = rawVal;
+            let titleAttr = rawVal;
+
+            if (labelsMap && rawVal in labelsMap) {
+              const labelText = labelsMap[rawVal];
+              if (showSemanticLabels) {
+                // Modo Etiquetas: muestra etiqueta y en tooltip el valor original
+                displayVal = `<span class="cell-label">${escapeHtml(labelText)}</span> <span class="cell-raw-badge" style="font-size: 0.65rem; color: var(--color-text-muted); opacity: 0.7;">(${escapeHtml(rawVal)})</span>`;
+                titleAttr = `Valor original: ${rawVal} | Etiqueta: ${labelText}`;
+              } else {
+                // Modo Bruto: muestra código en bruto y en tooltip la etiqueta
+                displayVal = `<span class="cell-raw-code" style="font-family: var(--font-mono); font-weight: 600;">${escapeHtml(rawVal)}</span>`;
+                titleAttr = `Código: ${rawVal} (Significado: ${labelText})`;
+              }
+            } else {
+              displayVal = escapeHtml(rawVal);
+            }
+
+            html += `<td title="${escapeHtml(titleAttr)}">${displayVal}</td>`;
           });
           html += '</tr>';
         });
@@ -1626,19 +1687,48 @@ const tsSnippet = `import { datamesh } from '@datosbolivia/datamesh-client';\n\n
         if (paginationWrap) paginationWrap.style.display = 'none';
         tableContainer.style.display = 'block';
         tableContainer.innerHTML = `
-          <div style="padding: 2.25rem 1.5rem; text-align: center; color: var(--color-text-muted);">
+          <div style="padding: 2.25rem 1.5rem; text-align: center; color: var(--color-text-muted); max-width: 620px; margin: 0 auto;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--color-surface-hover); border: 1px solid var(--color-border); margin-bottom: 0.85rem; color: var(--color-primary);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+              </svg>
+            </div>
             <p style="margin-bottom: 0.5rem; font-weight: 600; font-size: 1rem; color: var(--color-text);">
-              Conjunto de Datos Particionado Multi-Archivo
+              Conjunto Particionado Multi-Archivo
             </p>
-            <p style="font-size: 0.825rem; margin-bottom: 1.15rem; line-height: 1.5; max-width: 600px; margin-left: auto; margin-right: auto;">
-              Este recurso representa una colección particionada por periodos temporales (<code>${escapeHtml(remoteUrl)}</code>). Los navegadores web no resuelven patrones comodín (glob <code>*</code>) directamente por HTTP. DuckDB y el CLI de DataMesh unen las particiones en tiempo real:
+            <p style="font-size: 0.825rem; margin-bottom: 1.15rem; line-height: 1.5;">
+              Este recurso abarca múltiples archivos particionados (<code>${escapeHtml(remoteUrl)}</code>). Conecta el servidor sovereign MCP local (<code>datamesh serve</code>) para unificarlos y explorarlos interactivamente:
             </p>
+            <div style="background: var(--color-surface-hover); border: 1px solid var(--color-border); border-radius: 6px; padding: 0.65rem 0.9rem; margin-bottom: 1.25rem; font-family: var(--font-mono); font-size: 0.8rem; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+              <code>datamesh serve</code>
+              <span style="font-size: 0.7rem; color: var(--color-text-muted);">Servidor Sovereign MCP (:8000)</span>
+            </div>
+            <div style="display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.25rem;">
+              <button type="button" class="btn btn-primary btn-sm retry-mcp-multifile-btn">
+                Explorar mediante Servidor MCP (:8000)
+              </button>
+            </div>
             <div style="margin: 0 auto; max-width: 580px; text-align: left; display: flex; flex-direction: column; gap: 0.65rem;">
               <pre class="code-pre" style="margin: 0; padding: 0.65rem 0.9rem;"><code class="language-bash">datamesh sql "SELECT * FROM '${triad}' LIMIT 25"</code></pre>
               <pre class="code-pre" style="margin: 0; padding: 0.65rem 0.9rem;"><code class="language-python">import datamesh as dm
 df = dm.sql("SELECT * FROM '${triad}' LIMIT 25")</code></pre>
             </div>
           </div>`;
+
+        tableContainer.querySelector('.retry-mcp-multifile-btn')?.addEventListener('click', async () => {
+          // Si MCP no estaba habilitado en la UI, activarlo
+          if (!isMcpEnabled()) {
+            localStorage.setItem('datamesh_mcp_enabled', 'true');
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('datamesh:settings-changed', {
+                detail: { mcpEnabled: true }
+              }));
+            }
+          }
+          fetchViaTypeScriptClient();
+        });
       }
 
       function renderZipServerRequiredMessage(zipPath: string) {

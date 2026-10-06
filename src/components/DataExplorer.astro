@@ -101,23 +101,17 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
   <div class="subtab-pane" data-subtab-pane="preview">
     <!-- Toolbar de Operaciones Client-Side -->
     <div class="explorer-toolbar">
-      <div class="explorer-search-box">
-        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input 
-          type="text" 
-          class="explorer-filter-input" 
-          placeholder="Filtrar registros en tiempo real..." 
-          data-i18n-placeholder="explorer.search_placeholder" 
-        />
-        <button type="button" class="explorer-clear-filter-btn" title="Limpiar filtro" style="display: none;">&times;</button>
+      <!-- Selector de Modo de Consulta: Filtro GUI vs SQL Query -->
+      <div class="filter-mode-switch" role="group" aria-label="Modo de Filtrado y Consulta">
+        <button type="button" class="mode-switch-btn active" data-filter-mode="gui" title="Constructor de filtros visual (Query Builder)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>Filtro</span>
+        </button>
+        <button type="button" class="mode-switch-btn" data-filter-mode="sql" title="Editor SQL analítico directo (DuckDB / MCP)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+          <span>SQL Query</span>
+        </button>
       </div>
-
-      <select class="explorer-filter-col" title="Filtrar por columna específica">
-        <option value="">Todas las columnas</option>
-      </select>
 
       <div class="explorer-toolbar-actions">
         <!-- Selector de modo de vista: Tabla, Mapa, Gráfico -->
@@ -140,12 +134,6 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
         <button type="button" class="btn btn-secondary btn-sm toggle-labels-btn" title="Alternar entre etiquetas semánticas y códigos/valores en bruto">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
           <span class="labels-btn-text">Etiquetas</span>
-        </button>
-
-        <!-- Botón Toggle Consola SQL DuckDB -->
-        <button type="button" class="btn btn-secondary btn-sm toggle-sql-btn" title="Mostrar u ocultar consola SQL DuckDB">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-          <span>SQL</span>
         </button>
 
         <!-- Botón Configuración Global SDK (Modal) -->
@@ -172,17 +160,81 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
       </div>
     </div>
 
-    <!-- Consola Rápida SQL Client-Side / Backend MCP -->
+    <!-- Panel 1: Filtro GUI (Visual Query Builder Avanzado: WHERE, GROUP BY, Métricas) -->
+    <div class="query-builder-panel" style="display: flex;">
+      <!-- Fila 1: Filtro WHERE -->
+      <div class="builder-row">
+        <span class="builder-clause-badge">WHERE</span>
+        <select class="builder-select builder-col" title="Columna a filtrar">
+          <option value="">(Cualquier columna)</option>
+        </select>
+        <select class="builder-select builder-op" title="Operador de comparación">
+          <option value="contains" selected>contiene</option>
+          <option value="equals">=</option>
+          <option value="not_equals">&ne;</option>
+          <option value="starts_with">comienza con</option>
+          <option value="greater_than">&gt;</option>
+          <option value="less_than">&lt;</option>
+          <option value="is_null">es nulo / vacío</option>
+          <option value="is_not_null">no es nulo</option>
+        </select>
+        <input 
+          type="text" 
+          class="builder-input builder-val" 
+          placeholder="Valor o texto..." 
+          style="min-width: 140px; flex: 1;"
+        />
+        <button type="button" class="btn btn-primary btn-sm builder-apply-btn" title="Aplicar filtro y agrupaciones">
+          Filtrar
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm builder-reset-btn" title="Limpiar todos los filtros">
+          Limpiar
+        </button>
+      </div>
+
+      <!-- Fila 2: Agrupación (GROUP BY), Métrica de Agregación y Orden -->
+      <div class="builder-row" style="border-top: 1px dashed var(--color-border); padding-top: 0.5rem;">
+        <span class="builder-clause-badge">GROUP BY</span>
+        <select class="builder-select builder-group-col" title="Columna para agrupar (GROUP BY)">
+          <option value="">(Sin agrupar / Detalle fila por fila)</option>
+        </select>
+
+        <span class="builder-clause-badge">MÉTRICA</span>
+        <select class="builder-select builder-agg-func" title="Función de agregación">
+          <option value="COUNT" selected>COUNT(*) - Conteo</option>
+          <option value="SUM">SUM - Suma</option>
+          <option value="AVG">AVG - Promedio</option>
+          <option value="MAX">MAX - Máximo</option>
+          <option value="MIN">MIN - Mínimo</option>
+        </select>
+        <select class="builder-select builder-agg-col" title="Columna cuantitativa a agregar" style="display: none;">
+          <option value="">(Seleccionar columna métrica)</option>
+        </select>
+
+        <span class="builder-clause-badge">ORDEN</span>
+        <select class="builder-select builder-order-dir" title="Dirección de orden">
+          <option value="DESC" selected>&darr; Mayor a menor (DESC)</option>
+          <option value="ASC">&uarr; Menor a mayor (ASC)</option>
+        </select>
+
+        <button type="button" class="btn btn-secondary btn-sm builder-to-chart-btn" title="Ejecutar consulta y visualizar directamente en gráfico" style="margin-left: auto;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span>Graficar consulta</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Panel 2: SQL Query Libre (Consola DuckDB / MCP) -->
     <div class="client-sql-bar" style="display: none;">
       <div style="display: flex; gap: 0.5rem; width: 100%;">
         <input 
           type="text" 
           class="client-sql-input" 
           value={defaultClientSql} 
-          placeholder="Ej: SELECT * FROM resource WHERE columna = 'valor' LIMIT 20"
+          placeholder="Ej: SELECT * FROM resource WHERE columna = 'valor' LIMIT 25"
         />
         <button type="button" class="btn btn-primary btn-sm client-sql-run-btn">
-          Ejecutar
+          Ejecutar SQL
         </button>
       </div>
     </div>
@@ -431,6 +483,193 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
     background-color: var(--color-surface-hover);
     border-color: var(--color-primary);
     color: var(--color-primary);
+  }
+
+  /* Segmented Mode Switcher (Filtro GUI vs SQL) */
+  .filter-mode-switch {
+    display: inline-flex;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+
+  .mode-switch-btn {
+    all: unset;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    background: transparent;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .mode-switch-btn:not(:first-child) {
+    border-left: 1px solid var(--color-border);
+  }
+
+  .mode-switch-btn:hover {
+    color: var(--color-text);
+    background-color: var(--color-surface-hover);
+  }
+
+  .mode-switch-btn.active {
+    background-color: var(--color-primary);
+    color: #ffffff;
+  }
+
+  /* Query Builder Panel */
+  .query-builder-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    background-color: var(--color-surface-hover);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+  }
+
+  .builder-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .builder-clause-badge {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--color-primary);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 0.2rem 0.45rem;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.03em;
+  }
+
+  .chart-type-toolbar {
+    display: inline-flex;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background-color: var(--color-surface);
+  }
+
+  .chart-type-btn {
+    all: unset;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.725rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    background: transparent;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .chart-type-btn:not(:first-child) {
+    border-left: 1px solid var(--color-border);
+  }
+
+  .chart-type-btn:hover {
+    color: var(--color-text);
+    background-color: var(--color-surface-hover);
+  }
+
+  .chart-type-btn.active {
+    background-color: var(--color-primary);
+    color: #ffffff;
+  }
+
+  .chart-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.6rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .chart-kpi-card {
+    padding: 0.55rem 0.75rem;
+    background-color: var(--color-surface-hover);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .chart-kpi-title {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+  }
+
+  .chart-kpi-value {
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--color-primary);
+  }
+
+  .chart-kpi-subtitle {
+    font-size: 0.675rem;
+    color: var(--color-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .builder-select,
+  .builder-input {
+    padding: 0.38rem 0.65rem;
+    font-size: 0.775rem;
+    font-family: var(--font-mono);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  .builder-select:focus,
+  .builder-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-subtle);
+  }
+
+  .builder-generated-sql {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.35rem 0.65rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  .builder-generated-sql code {
+    color: var(--color-primary);
+    background: transparent;
+    padding: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 600px;
   }
 
   .client-sql-bar {
@@ -693,11 +932,21 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
 
       const tabBtns = container.querySelectorAll<HTMLButtonElement>('.subnav-tab-btn');
       const tabPanes = container.querySelectorAll<HTMLElement>('.subtab-pane');
-      const filterInput = container.querySelector<HTMLInputElement>('.explorer-filter-input');
-      const clearFilterBtn = container.querySelector<HTMLButtonElement>('.explorer-clear-filter-btn');
-      const filterColSelect = container.querySelector<HTMLSelectElement>('.explorer-filter-col');
+      const modeSwitchBtns = container.querySelectorAll<HTMLButtonElement>('.mode-switch-btn');
+      const queryBuilderPanel = container.querySelector<HTMLElement>('.query-builder-panel');
+      const builderColSelect = container.querySelector<HTMLSelectElement>('.builder-col');
+      const builderOpSelect = container.querySelector<HTMLSelectElement>('.builder-op');
+      const builderValInput = container.querySelector<HTMLInputElement>('.builder-val');
+      const builderGroupColSelect = container.querySelector<HTMLSelectElement>('.builder-group-col');
+      const builderAggFuncSelect = container.querySelector<HTMLSelectElement>('.builder-agg-func');
+      const builderAggColSelect = container.querySelector<HTMLSelectElement>('.builder-agg-col');
+      const builderOrderDirSelect = container.querySelector<HTMLSelectElement>('.builder-order-dir');
+      const builderApplyBtn = container.querySelector<HTMLButtonElement>('.builder-apply-btn');
+      const builderResetBtn = container.querySelector<HTMLButtonElement>('.builder-reset-btn');
+      const builderToChartBtn = container.querySelector<HTMLButtonElement>('.builder-to-chart-btn');
+      const builderSqlPreview = container.querySelector<HTMLElement>('.builder-sql-preview');
+      const builderToSqlBtn = container.querySelector<HTMLButtonElement>('.builder-to-sql-btn');
       const toggleLabelsBtn = container.querySelector<HTMLButtonElement>('.toggle-labels-btn');
-      const toggleSqlBtn = container.querySelector<HTMLButtonElement>('.toggle-sql-btn');
       const clientSqlBar = container.querySelector<HTMLElement>('.client-sql-bar');
       const mcpModeCheckbox = container.querySelector<HTMLInputElement>('.mcp-mode-checkbox');
       const sqlBackendStatus = container.querySelector<HTMLElement>('.sql-backend-status');
@@ -764,16 +1013,210 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
         });
       });
 
-      // Botón Toggle Consola SQL
-      toggleSqlBtn?.addEventListener('click', () => {
-        const isHidden = !clientSqlBar || clientSqlBar.style.display === 'none';
-        if (clientSqlBar) {
-          clientSqlBar.style.display = isHidden ? 'flex' : 'none';
+      // Selector de modo de consulta: Filtro GUI vs SQL Query
+      modeSwitchBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const mode = btn.getAttribute('data-filter-mode');
+          modeSwitchBtns.forEach((b) => b.classList.toggle('active', b === btn));
+
+          if (mode === 'gui') {
+            if (queryBuilderPanel) queryBuilderPanel.style.display = 'flex';
+            if (clientSqlBar) clientSqlBar.style.display = 'none';
+          } else if (mode === 'sql') {
+            if (queryBuilderPanel) queryBuilderPanel.style.display = 'none';
+            if (clientSqlBar) clientSqlBar.style.display = 'flex';
+            if (sqlInput) {
+              const currentSql = generateBuilderSql();
+              if (!sqlInput.value.trim() || sqlInput.value.includes('SELECT * FROM')) {
+                sqlInput.value = currentSql;
+              }
+              sqlInput.focus();
+            }
+          }
+        });
+      });
+
+      // Transferir consulta del visual query builder a editor SQL
+      builderToSqlBtn?.addEventListener('click', () => {
+        const generatedSql = generateBuilderSql();
+        if (sqlInput) {
+          sqlInput.value = generatedSql;
         }
-        toggleSqlBtn.classList.toggle('active', isHidden);
-        if (isHidden) {
-          sqlInput?.focus();
+        const sqlTabBtn = container.querySelector<HTMLButtonElement>('.mode-switch-btn[data-filter-mode="sql"]');
+        if (sqlTabBtn) {
+          sqlTabBtn.click();
+        } else {
+          if (queryBuilderPanel) queryBuilderPanel.style.display = 'none';
+          if (clientSqlBar) clientSqlBar.style.display = 'flex';
         }
+        sqlInput?.focus();
+      });
+
+      // Generador de SQL analítico a partir de parámetros del GUI Builder
+      function generateBuilderSql(): string {
+        const tableRef = triad ? `"${triad}"` : 'resource';
+        const col = (builderColSelect?.value || '').trim();
+        const op = (builderOpSelect?.value || 'contains').trim();
+        const rawVal = (builderValInput?.value || '').trim();
+        const escapedVal = rawVal.replace(/'/g, "''");
+        const isNum = !isNaN(Number(rawVal)) && rawVal !== '';
+
+        const groupCol = (builderGroupColSelect?.value || '').trim();
+        const aggFunc = (builderAggFuncSelect?.value || 'COUNT').trim();
+        const aggCol = (builderAggColSelect?.value || '').trim();
+        const orderDir = (builderOrderDirSelect?.value || 'DESC').trim();
+
+        let whereClause = '';
+
+        if (op === 'is_null') {
+          if (col) {
+            whereClause = `WHERE ("${col}" IS NULL OR "${col}" = '')`;
+          }
+        } else if (op === 'is_not_null') {
+          if (col) {
+            whereClause = `WHERE ("${col}" IS NOT NULL AND "${col}" != '')`;
+          }
+        } else if (rawVal) {
+          if (col) {
+            switch (op) {
+              case 'contains':
+                whereClause = `WHERE "${col}" LIKE '%${escapedVal}%'`;
+                break;
+              case 'equals':
+                whereClause = isNum ? `WHERE "${col}" = ${rawVal}` : `WHERE "${col}" = '${escapedVal}'`;
+                break;
+              case 'not_equals':
+                whereClause = isNum ? `WHERE "${col}" != ${rawVal}` : `WHERE "${col}" != '${escapedVal}'`;
+                break;
+              case 'starts_with':
+                whereClause = `WHERE "${col}" LIKE '${escapedVal}%'`;
+                break;
+              case 'greater_than':
+                whereClause = isNum ? `WHERE "${col}" > ${rawVal}` : `WHERE "${col}" > '${escapedVal}'`;
+                break;
+              case 'less_than':
+                whereClause = isNum ? `WHERE "${col}" < ${rawVal}` : `WHERE "${col}" < '${escapedVal}'`;
+                break;
+              default:
+                whereClause = `WHERE "${col}" LIKE '%${escapedVal}%'`;
+            }
+          } else {
+            if (parsedTable && parsedTable.columns.length > 0) {
+              const conds = parsedTable.columns.slice(0, 5).map((c) => `"${c}" LIKE '%${escapedVal}%'`);
+              whereClause = `WHERE (${conds.join(' OR ')})`;
+            } else {
+              whereClause = `WHERE resource LIKE '%${escapedVal}%'`;
+            }
+          }
+        }
+
+        const limitClause = `LIMIT ${pageSize}`;
+
+        if (groupCol) {
+          let metricExpr = 'COUNT(*)';
+          let metricAlias = 'total_registros';
+          if (aggFunc !== 'COUNT' && aggCol) {
+            const cleanAggCol = aggCol.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+            metricAlias = `${aggFunc.toLowerCase()}_${cleanAggCol}`;
+            if (aggFunc === 'AVG') {
+              metricExpr = `ROUND(AVG("${aggCol}"), 2)`;
+            } else {
+              metricExpr = `${aggFunc}("${aggCol}")`;
+            }
+          }
+          const selectClause = `SELECT "${groupCol}", ${metricExpr} AS "${metricAlias}"`;
+          const groupByClause = `GROUP BY "${groupCol}"`;
+          const orderByClause = `ORDER BY "${metricAlias}" ${orderDir}`;
+
+          return whereClause
+            ? `${selectClause} FROM ${tableRef} ${whereClause} ${groupByClause} ${orderByClause} ${limitClause};`
+            : `${selectClause} FROM ${tableRef} ${groupByClause} ${orderByClause} ${limitClause};`;
+        }
+
+        return whereClause
+          ? `SELECT * FROM ${tableRef} ${whereClause} ${limitClause};`
+          : `SELECT * FROM ${tableRef} ${limitClause};`;
+      }
+
+      function updateBuilderPreview() {
+        const sql = generateBuilderSql();
+        if (builderSqlPreview) {
+          builderSqlPreview.textContent = sql;
+        }
+      }
+
+      // Eventos del Constructor de Filtros Visual
+      builderOpSelect?.addEventListener('change', () => {
+        const op = builderOpSelect.value;
+        if (builderValInput) {
+          if (op === 'is_null' || op === 'is_not_null') {
+            builderValInput.disabled = true;
+            builderValInput.placeholder = '(No requiere valor)';
+          } else {
+            builderValInput.disabled = false;
+            builderValInput.placeholder = 'Valor o texto...';
+          }
+        }
+        updateBuilderPreview();
+      });
+
+      builderColSelect?.addEventListener('change', updateBuilderPreview);
+      builderValInput?.addEventListener('input', updateBuilderPreview);
+
+      builderGroupColSelect?.addEventListener('change', updateBuilderPreview);
+      builderAggFuncSelect?.addEventListener('change', () => {
+        const isCount = builderAggFuncSelect.value === 'COUNT';
+        if (builderAggColSelect) {
+          builderAggColSelect.style.display = isCount ? 'none' : 'inline-block';
+        }
+        updateBuilderPreview();
+      });
+      builderAggColSelect?.addEventListener('change', updateBuilderPreview);
+      builderOrderDirSelect?.addEventListener('change', updateBuilderPreview);
+
+      builderValInput?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          currentPage = 1;
+          executeClientQuery();
+        }
+      });
+
+      builderApplyBtn?.addEventListener('click', async () => {
+        if (!parsedTable && !isLoading) {
+          await fetchViaTypeScriptClient();
+        }
+        currentPage = 1;
+        executeClientQuery();
+      });
+
+      builderToChartBtn?.addEventListener('click', async () => {
+        if (!parsedTable && !isLoading) {
+          await fetchViaTypeScriptClient();
+        }
+        currentPage = 1;
+        executeClientQuery();
+        switchViewMode('chart');
+      });
+
+      builderResetBtn?.addEventListener('click', () => {
+        if (builderColSelect) builderColSelect.value = '';
+        if (builderOpSelect) builderOpSelect.value = 'contains';
+        if (builderValInput) {
+          builderValInput.value = '';
+          builderValInput.disabled = false;
+          builderValInput.placeholder = 'Valor o texto...';
+        }
+        if (builderGroupColSelect) builderGroupColSelect.value = '';
+        if (builderAggFuncSelect) builderAggFuncSelect.value = 'COUNT';
+        if (builderAggColSelect) {
+          builderAggColSelect.value = '';
+          builderAggColSelect.style.display = 'none';
+        }
+        if (builderOrderDirSelect) builderOrderDirSelect.value = 'DESC';
+        updateBuilderPreview();
+        currentPage = 1;
+        executeClientQuery();
       });
 
       // Controles de Configuración de Coordenadas del Mapa
@@ -1038,11 +1481,20 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
           parsedTable = parsed;
           isLoading = false;
 
-          // Poblar selector de columnas para filtro
-          if (filterColSelect && filterColSelect.options.length <= 1) {
-            filterColSelect.innerHTML = '<option value="">Todas las columnas</option>' +
+          // Poblar selector de columnas para el constructor de filtros
+          if (builderColSelect && builderColSelect.options.length <= 1) {
+            builderColSelect.innerHTML = '<option value="">(Cualquier columna)</option>' +
               parsed.columns.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
           }
+          if (builderGroupColSelect && builderGroupColSelect.options.length <= 1) {
+            builderGroupColSelect.innerHTML = '<option value="">(Sin agrupar / Detalle fila por fila)</option>' +
+              parsed.columns.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+          }
+          if (builderAggColSelect && builderAggColSelect.options.length <= 1) {
+            builderAggColSelect.innerHTML = '<option value="">(Seleccionar columna métrica)</option>' +
+              parsed.columns.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+          }
+          updateBuilderPreview();
 
           executeClientQuery();
         } catch (err: any) {
@@ -1051,32 +1503,173 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
         }
       }
 
-      // Query table with in-memory TypeScript Client + Column Filter
+      // Query table with in-memory TypeScript Client + Visual Query Builder Filter & Grouping
       function executeClientQuery() {
         if (!parsedTable) return;
 
-        const searchKeyword = (filterInput?.value || '').trim();
-        const selectedCol = (filterColSelect?.value || '').trim();
+        const selectedCol = (builderColSelect?.value || '').trim();
+        const op = (builderOpSelect?.value || 'contains').trim();
+        const searchKeyword = (builderValInput?.value || '').trim();
+        const lowerKw = searchKeyword.toLowerCase();
+
+        const groupCol = (builderGroupColSelect?.value || '').trim();
+        const aggFunc = (builderAggFuncSelect?.value || 'COUNT').trim();
+        const aggCol = (builderAggColSelect?.value || '').trim();
+        const orderDir = (builderOrderDirSelect?.value || 'DESC').trim();
+
         const offset = (currentPage - 1) * pageSize;
 
-        if (clearFilterBtn) {
-          clearFilterBtn.style.display = searchKeyword ? 'inline-block' : 'none';
-        }
-
         let filteredRows = parsedTable.rows;
-        if (searchKeyword) {
-          const lowerKw = searchKeyword.toLowerCase();
+
+        // 1. Filtrado WHERE
+        if (op === 'is_null') {
           if (selectedCol) {
             const colIdx = parsedTable.columns.indexOf(selectedCol);
             if (colIdx !== -1) {
-              filteredRows = filteredRows.filter((r) => (r[colIdx] || '').toLowerCase().includes(lowerKw));
+              filteredRows = filteredRows.filter((r) => {
+                const v = r[colIdx];
+                return v === undefined || v === null || String(v).trim() === '';
+              });
             }
           } else {
-            filteredRows = filteredRows.filter((r) => r.some((cell) => (cell || '').toLowerCase().includes(lowerKw)));
+            filteredRows = filteredRows.filter((r) =>
+              r.some((cell) => cell === undefined || cell === null || String(cell).trim() === '')
+            );
+          }
+        } else if (op === 'is_not_null') {
+          if (selectedCol) {
+            const colIdx = parsedTable.columns.indexOf(selectedCol);
+            if (colIdx !== -1) {
+              filteredRows = filteredRows.filter((r) => {
+                const v = r[colIdx];
+                return v !== undefined && v !== null && String(v).trim() !== '';
+              });
+            }
+          } else {
+            filteredRows = filteredRows.filter((r) =>
+              r.every((cell) => cell !== undefined && cell !== null && String(cell).trim() !== '')
+            );
+          }
+        } else if (searchKeyword) {
+          if (selectedCol) {
+            const colIdx = parsedTable.columns.indexOf(selectedCol);
+            if (colIdx !== -1) {
+              filteredRows = filteredRows.filter((r) => {
+                const cell = (r[colIdx] || '').trim();
+                const lowerCell = cell.toLowerCase();
+                switch (op) {
+                  case 'contains':
+                    return lowerCell.includes(lowerKw);
+                  case 'equals':
+                    return lowerCell === lowerKw;
+                  case 'not_equals':
+                    return lowerCell !== lowerKw;
+                  case 'starts_with':
+                    return lowerCell.startsWith(lowerKw);
+                  case 'greater_than': {
+                    const numCell = parseFloat(cell);
+                    const numKw = parseFloat(searchKeyword);
+                    return !isNaN(numCell) && !isNaN(numKw) ? numCell > numKw : cell > searchKeyword;
+                  }
+                  case 'less_than': {
+                    const numCell = parseFloat(cell);
+                    const numKw = parseFloat(searchKeyword);
+                    return !isNaN(numCell) && !isNaN(numKw) ? numCell < numKw : cell < searchKeyword;
+                  }
+                  default:
+                    return lowerCell.includes(lowerKw);
+                }
+              });
+            }
+          } else {
+            // Cualquier columna
+            filteredRows = filteredRows.filter((r) =>
+              r.some((cell) => (cell || '').toLowerCase().includes(lowerKw))
+            );
           }
         }
 
-        // Sorting
+        // 2. Si hay GROUP BY activo:
+        if (groupCol && parsedTable.columns.includes(groupCol)) {
+          const gIdx = parsedTable.columns.indexOf(groupCol);
+          const mIdx = aggCol && parsedTable.columns.includes(aggCol) ? parsedTable.columns.indexOf(aggCol) : -1;
+          const groupMap: Record<string, { count: number; sum: number; min: number; max: number }> = {};
+
+          filteredRows.forEach((r) => {
+            const rawG = (r[gIdx] || '').trim();
+            const gVal = rawG || '(Sin valor)';
+            if (!groupMap[gVal]) {
+              groupMap[gVal] = { count: 0, sum: 0, min: Infinity, max: -Infinity };
+            }
+            groupMap[gVal].count++;
+            if (mIdx !== -1) {
+              const val = parseFloat(r[mIdx]);
+              if (!isNaN(val)) {
+                groupMap[gVal].sum += val;
+                if (val < groupMap[gVal].min) groupMap[gVal].min = val;
+                if (val > groupMap[gVal].max) groupMap[gVal].max = val;
+              }
+            }
+          });
+
+          let metricName = 'total_registros';
+          if (aggFunc !== 'COUNT' && aggCol) {
+            metricName = `${aggFunc.toLowerCase()}_${aggCol.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`;
+          }
+
+          const groupedEntries = Object.entries(groupMap).map(([k, stats]) => {
+            let metricVal = 0;
+            switch (aggFunc) {
+              case 'COUNT':
+                metricVal = stats.count;
+                break;
+              case 'SUM':
+                metricVal = Math.round(stats.sum * 100) / 100;
+                break;
+              case 'AVG':
+                metricVal = stats.count > 0 ? Math.round((stats.sum / stats.count) * 100) / 100 : 0;
+                break;
+              case 'MIN':
+                metricVal = stats.min === Infinity ? 0 : stats.min;
+                break;
+              case 'MAX':
+                metricVal = stats.max === -Infinity ? 0 : stats.max;
+                break;
+              default:
+                metricVal = stats.count;
+            }
+            return [k, String(metricVal)];
+          });
+
+          // Ordenar entradas agrupadas
+          groupedEntries.sort((a, b) => {
+            const numA = parseFloat(a[1]);
+            const numB = parseFloat(b[1]);
+            if (!isNaN(numA) && !isNaN(numB)) {
+              return orderDir === 'asc' ? numA - numB : numB - numA;
+            }
+            return orderDir === 'asc' ? a[0].localeCompare(b[0]) : b[0].localeCompare(a[0]);
+          });
+
+          activeQueryResult = {
+            columns: [groupCol, metricName],
+            rows: groupedEntries.slice(offset, offset + pageSize),
+            total_count: groupedEntries.length,
+          };
+
+          if (recordInfo) {
+            recordInfo.textContent = `Agrupado por ${groupCol}: ${groupedEntries.length} grupos (${aggFunc})`;
+          }
+
+          // Auto-vincular categoría y métrica para el gráfico
+          selectedChartCat = groupCol;
+          selectedChartMetric = metricName;
+
+          renderCurrentView();
+          return;
+        }
+
+        // 3. Sin agrupación: ordenación estándar y paginación
         if (sortCol) {
           const sIdx = parsedTable.columns.indexOf(sortCol);
           if (sIdx !== -1) {
@@ -1098,6 +1691,14 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
           rows: filteredRows.slice(offset, offset + pageSize),
           total_count: filteredRows.length,
         };
+
+        if (recordInfo) {
+          if (searchKeyword || selectedCol) {
+            recordInfo.textContent = `Filtro aplicado: ${filteredRows.length} de ${parsedTable.rows.length} registros`;
+          } else {
+            recordInfo.textContent = `Mostrando ${Math.min(offset + 1, filteredRows.length)} - ${Math.min(offset + pageSize, filteredRows.length)} de ${filteredRows.length} registros`;
+          }
+        }
 
         renderCurrentView();
       }
@@ -1482,46 +2083,52 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
       }
 
       function renderChart() {
-        if (!chartContainer || !parsedTable) return;
-        const { columns, rows } = parsedTable;
-
-        if (rows.length === 0) {
+        if (!chartContainer) return;
+        const currentData = activeQueryResult || (parsedTable ? { columns: parsedTable.columns, rows: parsedTable.rows, total_count: parsedTable.rows.length } : null);
+        if (!currentData || !currentData.columns || currentData.columns.length === 0) {
           chartContainer.innerHTML = `
             <div style="padding: 2.5rem; text-align: center; color: var(--color-text-muted); font-size: 0.85rem;">
-              No hay datos para graficar.
+              No hay datos para graficar. Carga un recurso o ejecuta una consulta primero.
             </div>`;
           return;
         }
 
-        // Identificar columnas cuantitativas (excluyendo IDs y coordenadas)
+        const { columns, rows, total_count } = currentData;
+        if (rows.length === 0) {
+          chartContainer.innerHTML = `
+            <div style="padding: 2.5rem; text-align: center; color: var(--color-text-muted); font-size: 0.85rem;">
+              La consulta actual no devolvió registros para graficar.
+            </div>`;
+          return;
+        }
+
+        // Identificar columnas cuantitativas
         const isNumericCol = (cIdx: number) => {
           let numCount = 0;
           for (let r = 0; r < Math.min(rows.length, 15); r++) {
             const v = parseFloat(rows[r][cIdx]);
             if (!isNaN(v)) numCount++;
           }
-          return numCount >= 5;
+          return numCount >= Math.min(rows.length, 2);
         };
 
         const isIdOrCoordCol = (colName: string) => {
-          return /^(id|_id|id_|codigo|code|lat|latitude|latitud|lon|longitude|longitud|x|y)$/i.test(colName.trim());
+          return /^(id|_id|id_|codigo|code|lat|latitude|latitud|lon|longitude|longitud)$/i.test(colName.trim());
         };
 
         const numericCols = columns.filter((col, idx) => isNumericCol(idx) && !isIdOrCoordCol(col));
 
-        // Selección predeterminada inteligente de categoría
+        // Auto-selección inteligente de dimensión (categoría) y métrica
         if (!selectedChartCat || !columns.includes(selectedChartCat)) {
-          // Prioridad: departamento > tipo/categoria > entidad/estacion > primera columna de texto
-          const bestCat = columns.find(c => /(departamento|depto|ciudad|municipio|id_departamento)/i.test(c))
-            || columns.find(c => /(tipo|categoria|grupo|desgrupo|entidad|banco|station|estacion|nombre|name)/i.test(c))
-            || columns.find(c => !isNumericCol(columns.indexOf(c)))
-            || columns[0];
-          selectedChartCat = bestCat;
+          selectedChartCat = columns[0];
         }
 
-        // Selección predeterminada de métrica
-        if (!selectedChartMetric) {
-          selectedChartMetric = numericCols.length > 0 ? numericCols[0] : '__count__';
+        if (!selectedChartMetric || (!columns.includes(selectedChartMetric) && selectedChartMetric !== '__count__')) {
+          if (columns.length >= 2 && (numericCols.includes(columns[1]) || !isNaN(parseFloat(rows[0]?.[1])))) {
+            selectedChartMetric = columns[1];
+          } else {
+            selectedChartMetric = numericCols.length > 0 ? numericCols[0] : '__count__';
+          }
         }
 
         const catCol = selectedChartCat;
@@ -1529,16 +2136,16 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
         const catIdx = columns.indexOf(catCol);
         const metricIdx = metricCol === '__count__' ? -1 : columns.indexOf(metricCol);
 
-        // Agregación de datos
-        const isIdDept = /^id_departamento$/i.test(catCol);
+        // Agregación de datos a partir de rows
         const groups: Record<string, { sum: number; count: number }> = {};
+        const isIdDept = /^id_departamento$/i.test(catCol);
 
         rows.forEach((r) => {
           let key = (r[catIdx] || '').trim();
           if (isIdDept && BOLIVIA_DEPT_NAMES[key]) {
             key = BOLIVIA_DEPT_NAMES[key];
           } else if (!key) {
-            key = 'Sin dato';
+            key = '(Sin dato)';
           }
 
           if (!groups[key]) {
@@ -1555,89 +2162,364 @@ const labelsJson = JSON.stringify(fieldsWithValueLabels);
         });
 
         const isCountMetric = metricCol === '__count__';
-        const chartData = Object.entries(groups)
-          .map(([label, g]) => ({
-            label,
-            val: isCountMetric ? g.count : (g.count > 0 ? Math.round((g.sum / g.count) * 10) / 10 : 0),
-          }))
-          .sort((a, b) => b.val - a.val)
-          .slice(0, 10);
+        const isAlreadyAggregated = rows.length <= 100 && metricIdx !== -1;
 
-        const maxVal = Math.max(...chartData.map((d) => d.val), 1);
-        const w = 580;
-        const labelW = 150;
-        const padT = 32, padB = 30;
-        const trackW = w - labelW - 95;
-        const rowH = 26;
-        const contentH = chartData.length * rowH;
-        const totalH = padT + contentH + padB;
+        let processedData = Object.entries(groups).map(([label, g]) => {
+          let val = 0;
+          if (isCountMetric) {
+            val = g.count;
+          } else if (isAlreadyAggregated && g.count === 1) {
+            val = g.sum;
+          } else {
+            val = g.count > 0 ? Math.round((g.sum / g.count) * 100) / 100 : 0;
+          }
+          return { label, val };
+        });
 
-        const metricLabel = isCountMetric ? 'Frecuencia (Registros)' : `${escapeHtml(metricCol)} (Promedio)`;
+        // Ordenamiento
+        processedData.sort((a, b) => b.val - a.val);
 
-        const barsSvg = chartData.map((d, i) => {
-          const y = padT + i * rowH;
-          const bw = Math.max(2, (d.val / maxVal) * trackW);
-          const lbl = d.label.length > 20 ? d.label.slice(0, 19) + '…' : d.label;
-          return `
-            <text x="${labelW - 10}" y="${y + 14}" text-anchor="end" font-size="9.5" font-family="var(--font-mono)" fill="var(--color-text)">${escapeHtml(lbl)}</text>
-            <rect x="${labelW}" y="${y + 3}" width="${trackW}" height="15" rx="3" fill="var(--color-surface-hover)" stroke="var(--color-border)" stroke-width="0.5"/>
-            <rect x="${labelW}" y="${y + 3}" width="${bw.toFixed(1)}" height="15" rx="3" fill="var(--color-primary)"/>
-            <text x="${(labelW + bw + 6).toFixed(1)}" y="${y + 14}" font-size="9" font-family="var(--font-mono)" fill="var(--color-text)" font-weight="600">${d.val.toLocaleString()}</text>
-          `;
-        }).join('');
+        const totalItemsCount = processedData.length;
+        const sliceLimit = chartTopN === 'all' ? totalItemsCount : chartTopN;
+        const chartData = processedData.slice(0, sliceLimit);
 
-        const gridSvg = [0, 0.5, 1].map((t) => {
-          const gx = (labelW + t * trackW).toFixed(1);
-          const v = Math.round(t * maxVal);
-          return `
-            <line x1="${gx}" y1="${padT}" x2="${gx}" y2="${padT + contentH}" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="3,3"/>
-            <text x="${gx}" y="${padT - 8}" font-size="8" font-family="var(--font-mono)" fill="var(--color-text-muted)" text-anchor="middle">${v.toLocaleString()}</text>
-          `;
-        }).join('');
+        // Métricas estadísticas para KPI Cards
+        const totalSum = processedData.reduce((acc, d) => acc + d.val, 0);
+        const maxVal = chartData.length > 0 ? Math.max(...chartData.map((d) => d.val)) : 0;
+        const minVal = chartData.length > 0 ? Math.min(...chartData.map((d) => d.val)) : 0;
+        const avgVal = chartData.length > 0 ? Math.round((totalSum / chartData.length) * 10) / 10 : 0;
+        const topItem = chartData[0];
+        const bottomItem = chartData[chartData.length - 1];
 
-        // Selectores de categoría y métrica interactivos
-        const catOptions = columns.map(c => `<option value="${escapeHtml(c)}"${c === selectedChartCat ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('');
-        const metricOptions = [
-          `<option value="__count__"${selectedChartMetric === '__count__' ? ' selected' : ''}>Recuento de Registros (Frecuencia)</option>`,
-          ...numericCols.map(c => `<option value="${escapeHtml(c)}"${c === selectedChartMetric ? ' selected' : ''}>Promedio de ${escapeHtml(c)}</option>`)
-        ].join('');
+        const metricLabel = isCountMetric ? 'Conteo de registros' : `${escapeHtml(metricCol)}`;
 
-        chartContainer.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.6rem; padding-bottom: 0.65rem; border-bottom: 1px solid var(--color-border);">
-            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-              <label style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-text-muted);">
-                Categoría:
-                <select class="chart-selector-cat" style="font-size: 0.75rem; padding: 0.2rem 0.45rem; font-family: var(--font-mono); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text);">
-                  ${catOptions}
-                </select>
-              </label>
-              <label style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-text-muted);">
-                Métrica:
-                <select class="chart-selector-metric" style="font-size: 0.75rem; padding: 0.2rem 0.45rem; font-family: var(--font-mono); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text);">
-                  ${metricOptions}
-                </select>
-              </label>
-            </div>
-            <span style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--color-primary); font-weight: 600;">
-              Top 10 &bull; ${escapeHtml(metricLabel)}
-            </span>
-          </div>
-          <div style="max-width: 620px; margin: 0 auto; overflow: hidden;">
-            <svg viewBox="0 0 ${w} ${totalH}" class="chart-bar-svg" style="width: 100%; display: block;">
+        // Generar SVG según el tipo de gráfico
+        let svgContent = '';
+        const w = 620;
+        const DONUT_COLORS = ['#0284c7', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#f97316', '#6366f1', '#14b8a6', '#64748b', '#84cc16', '#e11d48'];
+
+        if (currentChartType === 'bar-h') {
+          // 1. BARRAS HORIZONTALES
+          const labelW = 160;
+          const padT = 24, padB = 24;
+          const trackW = w - labelW - 100;
+          const rowH = 26;
+          const contentH = chartData.length * rowH;
+          const totalH = padT + contentH + padB;
+          const safeMax = Math.max(maxVal, 0.0001);
+
+          const gridSvg = [0, 0.5, 1].map((t) => {
+            const gx = (labelW + t * trackW).toFixed(1);
+            const v = Math.round(t * safeMax);
+            return `
+              <line x1="${gx}" y1="${padT}" x2="${gx}" y2="${padT + contentH}" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="3,3"/>
+              <text x="${gx}" y="${padT - 7}" font-size="8" font-family="var(--font-mono)" fill="var(--color-text-muted)" text-anchor="middle">${v.toLocaleString()}</text>
+            `;
+          }).join('');
+
+          const barsSvg = chartData.map((d, i) => {
+            const y = padT + i * rowH;
+            const bw = Math.max(2, (d.val / safeMax) * trackW);
+            const lbl = d.label.length > 20 ? d.label.slice(0, 19) + '…' : d.label;
+            return `
+              <text x="${labelW - 10}" y="${y + 14}" text-anchor="end" font-size="9" font-family="var(--font-mono)" fill="var(--color-text)">${escapeHtml(lbl)}</text>
+              <rect x="${labelW}" y="${y + 3}" width="${trackW}" height="15" rx="3" fill="var(--color-surface-hover)" stroke="var(--color-border)" stroke-width="0.5"/>
+              <rect x="${labelW}" y="${y + 3}" width="${bw.toFixed(1)}" height="15" rx="3" fill="var(--color-primary)">
+                <title>${escapeHtml(d.label)}: ${d.val.toLocaleString()}</title>
+              </rect>
+              <text x="${(labelW + bw + 6).toFixed(1)}" y="${y + 14}" font-size="9" font-family="var(--font-mono)" fill="var(--color-text)" font-weight="600">${d.val.toLocaleString()}</text>
+            `;
+          }).join('');
+
+          svgContent = `
+            <svg viewBox="0 0 ${w} ${totalH}" class="chart-svg-element" style="width: 100%; display: block;" xmlns="http://www.w3.org/2000/svg">
               ${gridSvg}
               <line x1="${labelW}" y1="${padT}" x2="${labelW}" y2="${padT + contentH}" stroke="var(--color-text-muted)" stroke-width="1.5"/>
               ${barsSvg}
             </svg>
+          `;
+        } else if (currentChartType === 'bar-v') {
+          // 2. COLUMNAS VERTICALES
+          const padL = 45, padR = 25, padT = 30, padB = 65;
+          const totalH = 270;
+          const chartH = totalH - padT - padB;
+          const availW = w - padL - padR;
+          const colCount = chartData.length;
+          const colStep = availW / Math.max(colCount, 1);
+          const barW = Math.max(10, Math.min(36, colStep - 6));
+          const safeMax = Math.max(maxVal, 0.0001);
+
+          const gridSvg = [0, 0.5, 1].map((t) => {
+            const gy = (padT + (1 - t) * chartH).toFixed(1);
+            const v = Math.round(t * safeMax);
+            return `
+              <line x1="${padL}" y1="${gy}" x2="${padL + availW}" y2="${gy}" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="3,3"/>
+              <text x="${padL - 8}" y="${parseFloat(gy) + 3}" font-size="8" font-family="var(--font-mono)" fill="var(--color-text-muted)" text-anchor="end">${v.toLocaleString()}</text>
+            `;
+          }).join('');
+
+          const colsSvg = chartData.map((d, i) => {
+            const cx = padL + i * colStep + (colStep - barW) / 2;
+            const bh = Math.max(2, (d.val / safeMax) * chartH);
+            const by = padT + chartH - bh;
+            const lbl = d.label.length > 12 ? d.label.slice(0, 11) + '…' : d.label;
+            const textX = cx + barW / 2;
+            const textY = padT + chartH + 14;
+            return `
+              <rect x="${cx.toFixed(1)}" y="${by.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="var(--color-primary)">
+                <title>${escapeHtml(d.label)}: ${d.val.toLocaleString()}</title>
+              </rect>
+              <text x="${textX.toFixed(1)}" y="${(by - 5).toFixed(1)}" font-size="8" font-family="var(--font-mono)" fill="var(--color-text)" font-weight="600" text-anchor="middle">${d.val.toLocaleString()}</text>
+              <text x="${textX.toFixed(1)}" y="${textY}" font-size="8" font-family="var(--font-mono)" fill="var(--color-text-muted)" text-anchor="end" transform="rotate(-35, ${textX.toFixed(1)}, ${textY})">${escapeHtml(lbl)}</text>
+            `;
+          }).join('');
+
+          svgContent = `
+            <svg viewBox="0 0 ${w} ${totalH}" class="chart-svg-element" style="width: 100%; display: block;" xmlns="http://www.w3.org/2000/svg">
+              ${gridSvg}
+              <line x1="${padL}" y1="${padT + chartH}" x2="${padL + availW}" y2="${padT + chartH}" stroke="var(--color-text-muted)" stroke-width="1.5"/>
+              ${colsSvg}
+            </svg>
+          `;
+        } else if (currentChartType === 'line') {
+          // 3. LÍNEAS / TENDENCIA
+          const padL = 45, padR = 25, padT = 30, padB = 65;
+          const totalH = 260;
+          const chartH = totalH - padT - padB;
+          const availW = w - padL - padR;
+          const count = chartData.length;
+          const safeMax = Math.max(maxVal, 0.0001);
+
+          const step = count > 1 ? availW / (count - 1) : availW;
+          const pts = chartData.map((d, i) => {
+            const x = padL + (count > 1 ? i * step : availW / 2);
+            const y = padT + (1 - d.val / safeMax) * chartH;
+            return { x, y, label: d.label, val: d.val };
+          });
+
+          const polyPoints = pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+          const baselineY = padT + chartH;
+          const areaPoints = `${pts[0].x.toFixed(1)},${baselineY} ${polyPoints} ${pts[pts.length - 1].x.toFixed(1)},${baselineY}`;
+
+          const gridSvg = [0, 0.5, 1].map((t) => {
+            const gy = (padT + (1 - t) * chartH).toFixed(1);
+            const v = Math.round(t * safeMax);
+            return `
+              <line x1="${padL}" y1="${gy}" x2="${padL + availW}" y2="${gy}" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="3,3"/>
+              <text x="${padL - 8}" y="${parseFloat(gy) + 3}" font-size="8" font-family="var(--font-mono)" fill="var(--color-text-muted)" text-anchor="end">${v.toLocaleString()}</text>
+            `;
+          }).join('');
+
+          const nodesSvg = pts.map((p) => {
+            const lbl = p.label.length > 12 ? p.label.slice(0, 11) + '…' : p.label;
+            const textY = baselineY + 14;
+            return `
+              <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="#ffffff" stroke="var(--color-primary)" stroke-width="2">
+                <title>${escapeHtml(p.label)}: ${p.val.toLocaleString()}</title>
+              </circle>
+              <text x="${p.x.toFixed(1)}" y="${(p.y - 8).toFixed(1)}" font-size="8" font-family="var(--font-mono)" fill="var(--color-text)" font-weight="600" text-anchor="middle">${p.val.toLocaleString()}</text>
+              <text x="${p.x.toFixed(1)}" y="${textY}" font-size="8" font-family="var(--font-mono)" fill="var(--color-text-muted)" text-anchor="end" transform="rotate(-35, ${textX || p.x.toFixed(1)}, ${textY})">${escapeHtml(lbl)}</text>
+            `;
+          }).join('');
+
+          svgContent = `
+            <svg viewBox="0 0 ${w} ${totalH}" class="chart-svg-element" style="width: 100%; display: block;" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="chartLineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="var(--color-primary)" stop-opacity="0.35"/>
+                  <stop offset="100%" stop-color="var(--color-primary)" stop-opacity="0.0"/>
+                </linearGradient>
+              </defs>
+              ${gridSvg}
+              <polygon points="${areaPoints}" fill="url(#chartLineGrad)"/>
+              <polyline points="${polyPoints}" fill="none" stroke="var(--color-primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="${padL}" y1="${baselineY}" x2="${padL + availW}" y2="${baselineY}" stroke="var(--color-text-muted)" stroke-width="1.5"/>
+              ${nodesSvg}
+            </svg>
+          `;
+        } else if (currentChartType === 'donut') {
+          // 4. DONUT / PASTEL
+          const totalH = 260;
+          const cx = 135, cy = 130;
+          const R = 90, r = 50;
+          const safeSum = Math.max(totalSum, 0.0001);
+
+          let currentAngle = -Math.PI / 2;
+          const slicesSvg: string[] = [];
+          const legendSvg: string[] = [];
+
+          chartData.forEach((d, i) => {
+            const sliceAngle = (d.val / safeSum) * (2 * Math.PI);
+            const startA = currentAngle;
+            const endA = currentAngle + sliceAngle;
+            currentAngle = endA;
+
+            const x1 = cx + R * Math.cos(startA);
+            const y1 = cy + R * Math.sin(startA);
+            const x2 = cx + R * Math.cos(endA);
+            const y2 = cy + R * Math.sin(endA);
+
+            const x3 = cx + r * Math.cos(endA);
+            const y3 = cy + r * Math.sin(endA);
+            const x4 = cx + r * Math.cos(startA);
+            const y4 = cy + r * Math.sin(startA);
+
+            const largeArc = sliceAngle > Math.PI ? 1 : 0;
+            const color = DONUT_COLORS[i % DONUT_COLORS.length];
+            const pct = ((d.val / safeSum) * 100).toFixed(1);
+
+            slicesSvg.push(`
+              <path d="M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${R} ${R} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} L ${x3.toFixed(2)} ${y3.toFixed(2)} A ${r} ${r} 0 ${largeArc} 0 ${x4.toFixed(2)} ${y4.toFixed(2)} Z" fill="${color}" stroke="var(--color-surface)" stroke-width="1.5">
+                <title>${escapeHtml(d.label)}: ${d.val.toLocaleString()} (${pct}%)</title>
+              </path>
+            `);
+
+            // Leyenda a la derecha
+            const legY = 25 + i * 22;
+            if (legY < totalH - 15) {
+              const lbl = d.label.length > 18 ? d.label.slice(0, 17) + '…' : d.label;
+              legendSvg.push(`
+                <rect x="285" y="${legY - 9}" width="10" height="10" rx="2" fill="${color}"/>
+                <text x="303" y="${legY}" font-size="8.5" font-family="var(--font-mono)" fill="var(--color-text)">${escapeHtml(lbl)}</text>
+                <text x="${w - 20}" y="${legY}" font-size="8.5" font-family="var(--font-mono)" font-weight="600" fill="var(--color-primary)" text-anchor="end">${d.val.toLocaleString()} (${pct}%)</text>
+              `);
+            }
+          });
+
+          svgContent = `
+            <svg viewBox="0 0 ${w} ${totalH}" class="chart-svg-element" style="width: 100%; display: block;" xmlns="http://www.w3.org/2000/svg">
+              ${slicesSvg.join('')}
+              <circle cx="${cx}" cy="${cy}" r="${r - 1}" fill="var(--color-surface)"/>
+              <text x="${cx}" y="${cy - 4}" font-size="10" font-family="var(--font-mono)" font-weight="700" fill="var(--color-primary)" text-anchor="middle">TOTAL</text>
+              <text x="${cx}" y="${cy + 12}" font-size="9" font-family="var(--font-mono)" fill="var(--color-text)" font-weight="600" text-anchor="middle">${totalSum.toLocaleString()}</text>
+              ${legendSvg.join('')}
+            </svg>
+          `;
+        }
+
+        // Renderizado del panel de controles y contenedor
+        const catOptions = columns.map(c => `<option value="${escapeHtml(c)}"${c === selectedChartCat ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('');
+        const metricOptions = [
+          `<option value="__count__"${selectedChartMetric === '__count__' ? ' selected' : ''}>Conteo de registros (Frecuencia)</option>`,
+          ...numericCols.map(c => `<option value="${escapeHtml(c)}"${c === selectedChartMetric ? ' selected' : ''}>${escapeHtml(c)}</option>`)
+        ].join('');
+
+        const topNOptions = [5, 10, 15, 25].map(n => `<option value="${n}"${chartTopN === n ? ' selected' : ''}>Top ${n}</option>`).join('') +
+          `<option value="all"${chartTopN === 'all' ? ' selected' : ''}>Todos (${totalItemsCount})</option>`;
+
+        chartContainer.innerHTML = `
+          <!-- Toolbar Superior de Gráfico -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.6rem; padding-bottom: 0.65rem; border-bottom: 1px solid var(--color-border);">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <!-- Selector de tipo de gráfico -->
+              <div class="chart-type-toolbar" role="group" aria-label="Tipo de Gráfico">
+                <button type="button" class="chart-type-btn ${currentChartType === 'bar-h' ? 'active' : ''}" data-chart-type="bar-h" title="Barras Horizontales">
+                  <span>📊 Barras H</span>
+                </button>
+                <button type="button" class="chart-type-btn ${currentChartType === 'bar-v' ? 'active' : ''}" data-chart-type="bar-v" title="Columnas Verticales">
+                  <span>📶 Columnas V</span>
+                </button>
+                <button type="button" class="chart-type-btn ${currentChartType === 'line' ? 'active' : ''}" data-chart-type="line" title="Línea / Tendencia">
+                  <span>📈 Línea</span>
+                </button>
+                <button type="button" class="chart-type-btn ${currentChartType === 'donut' ? 'active' : ''}" data-chart-type="donut" title="Gráfico de Dona">
+                  <span>🍩 Dona</span>
+                </button>
+              </div>
+
+              <!-- Selectores de Dimensión y Métrica -->
+              <label style="font-size: 0.725rem; font-family: var(--font-mono); color: var(--color-text-muted); display: inline-flex; align-items: center; gap: 0.25rem;">
+                Eje X:
+                <select class="chart-selector-cat" style="font-size: 0.725rem; padding: 0.2rem 0.45rem; font-family: var(--font-mono); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text);">
+                  ${catOptions}
+                </select>
+              </label>
+
+              <label style="font-size: 0.725rem; font-family: var(--font-mono); color: var(--color-text-muted); display: inline-flex; align-items: center; gap: 0.25rem;">
+                Métrica:
+                <select class="chart-selector-metric" style="font-size: 0.725rem; padding: 0.2rem 0.45rem; font-family: var(--font-mono); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text);">
+                  ${metricOptions}
+                </select>
+              </label>
+
+              <select class="chart-selector-topn" style="font-size: 0.725rem; padding: 0.2rem 0.45rem; font-family: var(--font-mono); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text);">
+                ${topNOptions}
+              </select>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <button type="button" class="btn btn-secondary btn-sm chart-export-svg-btn" style="font-size: 0.725rem; padding: 0.2rem 0.55rem;" title="Descargar imagen SVG vectorial del gráfico">
+                ⬇ Exportar SVG
+              </button>
+            </div>
+          </div>
+
+          <!-- Resumen Estadístico Rápido (KPI Cards) -->
+          <div class="chart-kpi-grid">
+            <div class="chart-kpi-card">
+              <span class="chart-kpi-title">Categorías / Grupos</span>
+              <span class="chart-kpi-value">${chartData.length.toLocaleString()}</span>
+              <span class="chart-kpi-subtitle">de ${totalItemsCount} total</span>
+            </div>
+            <div class="chart-kpi-card">
+              <span class="chart-kpi-title">Valor Máximo</span>
+              <span class="chart-kpi-value">${maxVal.toLocaleString()}</span>
+              <span class="chart-kpi-subtitle">${topItem ? escapeHtml(topItem.label) : '-'}</span>
+            </div>
+            <div class="chart-kpi-card">
+              <span class="chart-kpi-title">Valor Mínimo</span>
+              <span class="chart-kpi-value">${minVal.toLocaleString()}</span>
+              <span class="chart-kpi-subtitle">${bottomItem ? escapeHtml(bottomItem.label) : '-'}</span>
+            </div>
+            <div class="chart-kpi-card">
+              <span class="chart-kpi-title">Promedio de Ítems</span>
+              <span class="chart-kpi-value">${avgVal.toLocaleString()}</span>
+              <span class="chart-kpi-subtitle">${escapeHtml(metricLabel)}</span>
+            </div>
+          </div>
+
+          <!-- Lienzo Gráfico SVG Vectorial -->
+          <div style="max-width: 640px; margin: 0 auto; overflow: hidden; background: var(--color-surface); border-radius: var(--radius-sm); padding: 0.5rem;">
+            ${svgContent}
           </div>
         `;
+
+        // Event listeners para los controles del gráfico
+        chartContainer.querySelectorAll<HTMLButtonElement>('.chart-type-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            currentChartType = (btn.getAttribute('data-chart-type') || 'bar-h') as any;
+            renderChart();
+          });
+        });
 
         chartContainer.querySelector('.chart-selector-cat')?.addEventListener('change', (e: any) => {
           selectedChartCat = e.target.value;
           renderChart();
         });
+
         chartContainer.querySelector('.chart-selector-metric')?.addEventListener('change', (e: any) => {
           selectedChartMetric = e.target.value;
           renderChart();
+        });
+
+        chartContainer.querySelector('.chart-selector-topn')?.addEventListener('change', (e: any) => {
+          const val = e.target.value;
+          chartTopN = val === 'all' ? 'all' : parseInt(val, 10);
+          renderChart();
+        });
+
+        chartContainer.querySelector('.chart-export-svg-btn')?.addEventListener('click', () => {
+          const svgEl = chartContainer.querySelector('.chart-svg-element');
+          if (svgEl) {
+            const svgData = new XMLSerializer().serializeToString(svgEl);
+            const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `grafico_${escapeHtml(catCol)}_${Date.now()}.svg`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }
         });
       }
 
@@ -1778,13 +2660,9 @@ df = dm.sql("SELECT * FROM '${triad}' LIMIT 25")</code></pre>
           .replace(/"/g, '&quot;');
       }
 
-      filterInput?.addEventListener('input', () => {
-        currentPage = 1;
-        executeClientQuery();
-      });
-
       pageSizeSelect?.addEventListener('change', () => {
         pageSize = parseInt(pageSizeSelect.value, 10);
+        updateBuilderPreview();
         currentPage = 1;
         executeClientQuery();
       });
@@ -1799,7 +2677,8 @@ df = dm.sql("SELECT * FROM '${triad}' LIMIT 25")</code></pre>
 
       nextBtn?.addEventListener('click', () => {
         if (!parsedTable) return;
-        const totalPages = Math.ceil(parsedTable.rows.length / pageSize);
+        const totalCount = activeQueryResult ? activeQueryResult.total_count : parsedTable.rows.length;
+        const totalPages = Math.ceil(totalCount / pageSize);
         if (currentPage < totalPages) {
           currentPage++;
           executeClientQuery();

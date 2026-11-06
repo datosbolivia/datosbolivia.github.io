@@ -1,5 +1,13 @@
 # Bitácora de Ingeniería y Arquitectura del Portal
 
+## 2026-11-06
+- Implementación de `resolveResourceMetadata` y `cleanResourceIdentifier` en `src/lib/catalog.ts` para resolución canónica de la tríada SQL tripartita (`bolivia:dataset:recurso`), DNS Soberano (`dataset.recurso@bolivia`), URI OKF (`okf://bolivia/dataset/recurso`) y enlaces físicos de descarga directa.
+- Inclusión del elemento `#pane-download-link` en la barra de navegación del panel Obsidian (`src/pages/datasets/[slug].astro`) sincronizado con la selección de recursos en el árbol lateral.
+- Despliegue de banners de Tríada SQL, DNS Soberano y URI OKF con acciones de copiado al portapapeles en `src/pages/datasets/[slug].astro` y `src/components/DataExplorer.astro`.
+- Adición de botones de descarga física directa en la barra de herramientas de datos y en las tarjetas de contingencia (Parquet, contenedores ZIP y errores CORS) en `src/components/DataExplorer.astro`.
+- Exposición del identificador canónico de dataset `bolivia:${dataset.slug}` en `src/components/DatasetCard.astro`.
+- Soporte de transferencia binaria y cabeceras permisivas CORS en `src/pages/raw/[...slug].ts` para archivos CSV, Parquet, ZIP y TSV.
+
 ## 2026-11-05
 - Incorporación del protocolo de descubrimiento soberano RFC 8615 con manifiestos estáticos normalizados en `public/.well-known/datamesh.json` y `public/.well-known/okf.json` para resolución directa vía `dm.discover_endpoint()` del SDK DataMesh v0.2.2.
 - Adición de regla `.nojekyll` en el directorio de distribución pública para garantizar el servicio estático de rutas ocultas (`/.well-known/` y `/_astro/`) en despliegues sobre GitHub Pages.

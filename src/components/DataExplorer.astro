@@ -1,5 +1,5 @@
 ---
-import { type DataResource, toCanonicalTriad } from '../lib/catalog';
+import { type DataResource, resolveResourceMetadata } from '../lib/catalog';
 import SchemaTable from './SchemaTable.astro';
 
 interface Props {
@@ -10,11 +10,12 @@ interface Props {
 
 const { datasetSlug, resource, resourceIndex } = Astro.props;
 
-const triadName = toCanonicalTriad({ dataset: datasetSlug, resource: resource.name });
-const remoteUrl = resource.container_path || resource.path || '';
-const containerPath = resource.container_path || '';
+const meta = resolveResourceMetadata(datasetSlug, resource);
+const triadName = meta.triad;
+const remoteUrl = meta.downloadUrl;
+const containerPath = meta.containerUrl || '';
 const innerPath = resource.path || '';
-const format = (resource.format || 'csv').toLowerCase();
+const format = meta.format;
 const explorerId = `explorer-${datasetSlug}-${resourceIndex}`;
 
 const defaultClientSql = `SELECT * FROM "${triadName}" LIMIT 25;`;
@@ -162,6 +163,24 @@ const schemaColsJson = JSON.stringify(schemaColNames);
           </svg>
           <span data-i18n="explorer.export_csv">Exportar</span>
         </button>
+
+        {meta.downloadUrl && (
+          <a
+            href={meta.downloadUrl}
+            download={meta.downloadFilename}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn-secondary btn-sm direct-download-btn"
+            title="Descarga física directa del archivo fuente"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span data-i18n="explorer.download">Descargar</span>
+          </a>
+        )}
       </div>
     </div>
 
@@ -316,9 +335,34 @@ const schemaColsJson = JSON.stringify(schemaColNames);
 
   <!-- Vista 3: Consola de Consultas SQL & SDK -->
   <div class="subtab-pane" data-subtab-pane="sql">
-    <div class="triad-banner">
-      <span class="triad-label" data-i18n="explorer.triad_label">Tríada Canónica:</span>
-      <code class="triad-code">{triadName}</code>
+    <div class="triad-banner" style="background: var(--color-surface-hover); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 0.75rem 1rem; margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.45rem; font-family: var(--font-mono); font-size: 0.8rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+        <span style="font-size: 0.75rem; font-weight: 600; color: var(--color-text-muted);" data-i18n="explorer.triad_label">TRÍADA SQL:</span>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <code class="triad-code" style="font-weight: 600; font-size: 0.85rem; color: var(--color-text);">{triadName}</code>
+          <button type="button" class="btn btn-secondary btn-sm copy-snippet-btn" data-copy={triadName} title="Copiar Tríada SQL Canónica" style="padding: 0.15rem 0.45rem; font-size: 0.7rem;">
+            Copiar
+          </button>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; border-top: 1px dashed var(--color-border); padding-top: 0.35rem;">
+        <span style="font-size: 0.75rem; color: var(--color-text-muted);">DNS SOBERANO:</span>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <code style="font-size: 0.8rem; color: var(--color-text-muted);">{meta.dnsTriad}</code>
+          <button type="button" class="btn btn-secondary btn-sm copy-snippet-btn" data-copy={meta.dnsTriad} title="Copiar Identificador DNS Soberano" style="padding: 0.15rem 0.45rem; font-size: 0.7rem;">
+            Copiar
+          </button>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; border-top: 1px dashed var(--color-border); padding-top: 0.35rem;">
+        <span style="font-size: 0.75rem; color: var(--color-text-muted);">URI OKF:</span>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <code style="font-size: 0.8rem; color: var(--color-text-muted);">{meta.okfUri}</code>
+          <button type="button" class="btn btn-secondary btn-sm copy-snippet-btn" data-copy={meta.okfUri} title="Copiar URI OKF Soberana" style="padding: 0.15rem 0.45rem; font-size: 0.7rem;">
+            Copiar
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="sql-examples-grid">
@@ -2648,6 +2692,12 @@ const schemaColsJson = JSON.stringify(schemaColNames);
             <p style="font-size: 0.8rem; margin-bottom: 1rem; line-height: 1.5;">
               Causa: ${escapeHtml(msg)}. El servidor remoto restringe solicitudes directas de navegador (CORS) o requiere autorización de sesión.
             </p>
+            ${remoteUrl ? `
+            <div style="margin-bottom: 1.25rem;">
+              <a href="${escapeHtml(remoteUrl)}" target="_blank" rel="noopener noreferrer" download class="btn btn-primary btn-sm">
+                Descargar Archivo Físico &darr;
+              </a>
+            </div>` : ''}
             <p style="font-size: 0.825rem; margin-bottom: 0.75rem;">
               Puedes consultarlo sin restricciones de navegador utilizando el SDK y CLI de DataMesh:
             </p>
@@ -2669,6 +2719,12 @@ const schemaColsJson = JSON.stringify(schemaColNames);
             <p style="font-size: 0.8rem; margin-bottom: 1rem; line-height: 1.5;">
               Los archivos Parquet son procesados en streaming con motor columnar local DuckDB a través del SDK / CLI de DataMesh.
             </p>
+            ${remoteUrl ? `
+            <div style="margin-bottom: 1.25rem;">
+              <a href="${escapeHtml(remoteUrl)}" target="_blank" rel="noopener noreferrer" download class="btn btn-primary btn-sm">
+                Descargar Archivo ${escapeHtml(formatName)} &darr;
+              </a>
+            </div>` : ''}
             <pre class="code-pre" style="margin: 0 auto; max-width: 550px; text-align: left; padding: 0.6rem 0.9rem;"><code class="language-bash">datamesh sql "SELECT * FROM '${triad}' LIMIT 10"</code></pre>
           </div>`;
       }
@@ -2754,6 +2810,10 @@ df = dm.sql("SELECT * FROM '${triad}' LIMIT 25")</code></pre>
               <button type="button" class="btn btn-primary btn-sm retry-zip-mcp-btn">
                 Reintentar con Servidor MCP (:8000)
               </button>
+              ${zipPath ? `
+              <a href="${escapeHtml(zipPath)}" target="_blank" rel="noopener noreferrer" download class="btn btn-secondary btn-sm">
+                Descargar Contenedor ZIP &darr;
+              </a>` : ''}
             </div>
           </div>
         `;

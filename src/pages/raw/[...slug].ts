@@ -54,15 +54,21 @@ export const GET: APIRoute = async ({ props }) => {
     return new Response('Not Found', { status: 404 });
   }
 
-  const content = fs.readFileSync(fullPath, 'utf-8');
+  const fileBuffer = fs.readFileSync(fullPath);
   let contentType = 'text/plain; charset=utf-8';
   if (fullPath.endsWith('.md')) contentType = 'text/markdown; charset=utf-8';
   else if (fullPath.endsWith('.json')) contentType = 'application/json; charset=utf-8';
   else if (fullPath.endsWith('.yaml') || fullPath.endsWith('.yml')) contentType = 'text/yaml; charset=utf-8';
+  else if (fullPath.endsWith('.csv')) contentType = 'text/csv; charset=utf-8';
+  else if (fullPath.endsWith('.tsv')) contentType = 'text/tab-separated-values; charset=utf-8';
+  else if (fullPath.endsWith('.parquet')) contentType = 'application/vnd.apache.parquet';
+  else if (fullPath.endsWith('.zip')) contentType = 'application/zip';
 
-  return new Response(content, {
+  return new Response(new Uint8Array(fileBuffer), {
     headers: {
       'Content-Type': contentType,
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
       'Cache-Control': 'public, max-age=3600'
     }
   });

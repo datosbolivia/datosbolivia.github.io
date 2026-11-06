@@ -18,7 +18,8 @@ resources:
   path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/preresultados_csv.zip
   mediatype: zip
   resources:
-  - name: Base de Datos del Conteo del Censo de Población y Vivienda 2024
+  - name: preresultados
+    title: Base de Datos del Conteo del Censo de Población y Vivienda 2024
     type: table
     path: preresultados.csv
     format: csv
@@ -761,7 +762,8 @@ resources:
   path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/personas_municipios_csv.zip
   mediatype: zip
   resources:
-  - name: Base de Datos de Personas del Censo de Población y Vivienda 2024
+  - name: personas
+    title: Base de Datos de Personas del Censo de Población y Vivienda 2024
     type: table
     path: municipio/persona-municipio-*.csv
     format: csv
@@ -12505,7 +12507,8 @@ resources:
   path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/vivienda_municipios_csv.zip
   mediatype: zip
   resources:
-  - name: Base de Datos de Vivienda del Censo de Población y Vivienda 2024
+  - name: vivienda
+    title: Base de Datos de Vivienda del Censo de Población y Vivienda 2024
     type: table
     path: municipio/vivienda-municipio-*.csv
     format: csv
@@ -14099,7 +14102,8 @@ resources:
   path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/emigracion_csv.zip
   mediatype: zip
   resources:
-  - name: Base de Datos de Emigración del Censo de Población y Vivienda 2024
+  - name: emigracion
+    title: Base de Datos de Emigración del Censo de Población y Vivienda 2024
     type: table
     path: emigracion.csv
     format: csv
@@ -15606,7 +15610,8 @@ resources:
   path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/mortalidad_csv.zip
   mediatype: zip
   resources:
-  - name: Base de Datos de Mortalidad del Censo de Población y Vivienda 2024
+  - name: mortalidad
+    title: Base de Datos de Mortalidad del Censo de Población y Vivienda 2024
     type: table
     path: mortalidad.csv
     format: csv

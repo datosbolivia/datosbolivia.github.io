@@ -1,8 +1,9 @@
 resources:
-  - name: Universidades y Carreras
+  - name: universidades_carreras
+    title: Universidades y Carreras
     type: table
     path: https://docs.google.com/spreadsheets/d/e/2PACX-1vSSUQH2KMj4lCWQNX_WLsuuYuYLeoCnmxvpB2WJgc_JGpzFeol3GeO5MrGeiNcVKLRXOO4x6ZOGEYQg/pub?gid=894349519&single=true&output=csv
-    scheme: file
+    scheme: https
     format: csv
     mediatype: text/csv
     encoding: utf-8
@@ -35,10 +36,11 @@ resources:
         - name: table_num
           type: integer
           description: "Número de tabla dentro de la página del documento original"
-  - name: Institutos y Carreras
+  - name: institutos_carreras
+    title: Institutos y Carreras
     type: table
     path: https://docs.google.com/spreadsheets/d/e/2PACX-1vSSUQH2KMj4lCWQNX_WLsuuYuYLeoCnmxvpB2WJgc_JGpzFeol3GeO5MrGeiNcVKLRXOO4x6ZOGEYQg/pub?gid=103409649&single=true&output=csv
-    scheme: file
+    scheme: https
     format: csv
     mediatype: text/csv
     encoding: utf-8

@@ -1,8 +1,8 @@
 resources:
   - name: stations
     type: table
-    path: https://github.com/sociedatos/bo-combustible/blob/main/stations.csv
-    scheme: file
+    path: https://raw.githubusercontent.com/sociedatos/bo-combustible/main/stations.csv
+    scheme: https
     format: csv
     mediatype: text/csv
     encoding: utf-8
@@ -32,8 +32,8 @@ resources:
 
   - name: supply
     type: table
-    path: https://github.com/sociedatos/bo-combustible/blob/main/data/*.csv
-    scheme: file
+    path: https://raw.githubusercontent.com/sociedatos/bo-combustible/main/data/*.csv
+    scheme: https
     format: csv
     mediatype: text/csv
     encoding: utf-8

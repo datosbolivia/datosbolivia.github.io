@@ -13,6 +13,117 @@ import {
 export type { DataPackage, DataResource, ResourceField };
 export { toCanonicalTriad, parseCanonicalUri, normalizeManifestResources } from '@datosbolivia/datamesh-client';
 
+export interface ResolvedResourceMetadata {
+  catalog: string;
+  dataset: string;
+  resourceName: string;
+  cleanIdentifier: string;
+  displayName: string;
+  triad: string;
+  sqlTable: string;
+  dnsTriad: string;
+  okfUri: string;
+  downloadUrl: string;
+  downloadFilename: string;
+  containerUrl?: string;
+  isContainer: boolean;
+  format: string;
+}
+
+/**
+ * Normaliza nombres o identificadores de recursos a identificadores canónicos válidos (snake_case).
+ */
+export function cleanResourceIdentifier(name: string): string {
+  if (!name) return 'recurso';
+  let cleaned = name.trim();
+  if (cleaned.startsWith('Fuente de Linaje (')) {
+    cleaned = cleaned.replace(/^Fuente de Linaje \((.*?)\)$/, '$1');
+  }
+  // Remover extensiones comunes si están presentes al final
+  cleaned = cleaned.replace(/\.(csv|parquet|tsv|json|zip)$/i, '');
+  // Normalizar acentos, espacios y caracteres especiales a snake_case
+  cleaned = cleaned
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[\s\-]+/g, '_')
+    .replace(/[^a-z0-9_]/g, '');
+  return cleaned || 'recurso';
+}
+
+/**
+ * Resuelve metadatos completos y canónicos para un recurso de datos:
+ * - Tríada SQL canónica (bolivia:dataset:recurso)
+ * - DNS Soberano (dataset.recurso@bolivia)
+ * - URI OKF (okf://bolivia/dataset/recurso)
+ * - Enlaces físicos de descarga directa y de contenedores ZIP
+ */
+export function resolveResourceMetadata(
+  datasetSlug: string,
+  res: DataResource,
+  catalogSlug: string = 'bolivia'
+): ResolvedResourceMetadata {
+  const cleanId = cleanResourceIdentifier(res.name);
+  const displayName = (res as any).title || res.name || cleanId;
+  const triad = `${catalogSlug}:${datasetSlug}:${cleanId}`;
+  const sqlTable = triad;
+  const dnsTriad = `${datasetSlug}.${cleanId}@${catalogSlug}`;
+  const okfUri = `okf://${catalogSlug}/${datasetSlug}/${cleanId}`;
+
+  let rawPath = (res.path || '').trim();
+  if (rawPath.includes('github.com') && rawPath.includes('/blob/')) {
+    rawPath = rawPath.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+  }
+
+  let rawContainer = (res.container_path || '').trim();
+  if (rawContainer.includes('github.com') && rawContainer.includes('/blob/')) {
+    rawContainer = rawContainer.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+  }
+
+  const isContainer = Boolean(rawContainer);
+  const containerUrl = isContainer
+    ? (rawContainer.startsWith('http://') || rawContainer.startsWith('https://')
+        ? rawContainer
+        : `/raw/nodes/${datasetSlug}/${rawContainer.replace(/^\.?\//, '')}`)
+    : undefined;
+
+  let downloadUrl = '';
+  if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
+    downloadUrl = rawPath;
+  } else if (isContainer) {
+    downloadUrl = containerUrl || rawPath;
+  } else if (rawPath) {
+    downloadUrl = `/raw/nodes/${datasetSlug}/${rawPath.replace(/^\.?\//, '')}`;
+  }
+
+  const format = (res.format || (res.path ? res.path.split('.').pop() : 'csv') || 'csv').toLowerCase();
+
+  let downloadFilename = '';
+  if (downloadUrl) {
+    const segments = downloadUrl.split('?')[0].split('/');
+    downloadFilename = segments[segments.length - 1] || `${cleanId}.${format}`;
+  } else {
+    downloadFilename = `${cleanId}.${format}`;
+  }
+
+  return {
+    catalog: catalogSlug,
+    dataset: datasetSlug,
+    resourceName: res.name,
+    cleanIdentifier: cleanId,
+    displayName,
+    triad,
+    sqlTable,
+    dnsTriad,
+    okfUri,
+    downloadUrl,
+    downloadFilename,
+    containerUrl,
+    isContainer,
+    format
+  };
+}
+
 /**
  * Helper unificado para leer y parsear manifiestos de contratos sintácticos
  * delegando la deserialización y normalización al SDK.

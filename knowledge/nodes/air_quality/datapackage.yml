@@ -14,10 +14,11 @@ quality:
   completeness: 0.98
 
 resources:
-  - name: Compilación de datos de calidad del aire de Bolivia
+  - name: calidad_aire
+    title: Compilación de datos de calidad del aire de Bolivia
     type: table
     path: https://www.kaggle.com/datasets/sociest/calidad-aire-monica/air_quality_consolidated.csv
-    scheme: file
+    scheme: https
     format: csv
     mediatype: text/csv
     encoding: utf-8

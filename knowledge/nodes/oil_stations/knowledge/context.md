@@ -1,5 +1,5 @@
 ---
-type: DuckDB Table
+type: guide
 title: "Estaciones de Gasolina"
 description: "Registros de estaciones de gasolina en el Perú."
 resource: data/oil_stations/stations.csv

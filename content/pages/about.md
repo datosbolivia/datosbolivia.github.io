@@ -32,7 +32,8 @@ A diferencia de los portales tradicionales que concentran copias estáticas en a
 
 ## Estándares Abiertos Utilizados
 
-- **Open Knowledge Format (OKF v0.2):** Especificación que norma la estructura de carpetas, metadatos YAML frontmatter y trazabilidad de procedencia.
+- **Open Knowledge Format (OKF / ODKF v0.2):** Especificación que norma la estructura de carpetas, metadatos YAML frontmatter y trazabilidad de procedencia.
 - **Frictionless DataPackage:** Especificación sintáctica para definir tablas, columnas, tipos de datos y restricciones.
-- **Interoperabilidad Semántica W3C SKOS:** Enlaces canónicos a conceptos estandarizados y vocabularios abiertos de Wikidata.
-- **Protocolo llms.txt:** Exposición estructurada de documentos en texto plano para indexación por agentes autónomos.
+- **Interoperabilidad Semántica W3C SKOS / OWL:** Enlaces canónicos a conceptos estandarizados y vocabularios abiertos de Wikidata.
+- **Servicios Remotos OpenAPI 3.x y Herramientas Locales OWL-CLI:** Modelado unificado de APIs y ejecutables CLI bajo contratos sintácticos indexados.
+- **Protocolo llms.txt y Descubrimiento Well-Known (RFC 8615):** Exposición estructurada en texto plano y manifiestos `/.well-known/datamesh.json` para resolución automática por clientes y agentes autónomos.

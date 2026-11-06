@@ -1,5 +1,5 @@
 ---
-type: DuckDB Table
+type: guide
 title: "Entidades Financieras"
 description: "Registros de puntos de atención y entidades financieras (sucursales, cajeros automáticos, etc.) en Bolivia."
 resource: data/financial_entities/financial_entities_places.csv

@@ -14,7 +14,8 @@ quality:
   status: official
   completeness: 1.0
 resources:
-- path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/preresultados_csv.zip
+- name: preresultados_zip
+  path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/preresultados_csv.zip
   mediatype: zip
   resources:
   - name: Base de Datos del Conteo del Censo de Población y Vivienda 2024
@@ -756,7 +757,8 @@ resources:
         title: Población
         constraints:
           minimum: 0
-- path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/personas_municipios_csv.zip
+- name: personas_municipios_zip
+  path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/personas_municipios_csv.zip
   mediatype: zip
   resources:
   - name: Base de Datos de Personas del Censo de Población y Vivienda 2024
@@ -12499,7 +12501,8 @@ resources:
           '21': 'U: Actividades de organizaciones y órganos extraterritoriales'
           '97': Descripciones incompletas
           '99': Sin especificar
-- path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/vivienda_municipios_csv.zip
+- name: vivienda_municipios_zip
+  path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/vivienda_municipios_csv.zip
   mediatype: zip
   resources:
   - name: Base de Datos de Vivienda del Censo de Población y Vivienda 2024
@@ -14092,7 +14095,8 @@ resources:
           '1': Sí
           '2': 'No'
           '9': Sin especificar
-- path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/emigracion_csv.zip
+- name: emigracion_zip
+  path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/emigracion_csv.zip
   mediatype: zip
   resources:
   - name: Base de Datos de Emigración del Censo de Población y Vivienda 2024
@@ -15598,7 +15602,8 @@ resources:
           '997': No corresponde a país
           '998': No sabe
           '999': Sin Especificar
-- path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/mortalidad_csv.zip
+- name: mortalidad_zip
+  path: https://github.com/datosbolivia/censos/releases/download/CPV2024_personas_v1.0.0/mortalidad_csv.zip
   mediatype: zip
   resources:
   - name: Base de Datos de Mortalidad del Censo de Población y Vivienda 2024

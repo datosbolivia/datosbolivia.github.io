@@ -1,5 +1,5 @@
 ---
-type: DuckDB Table
+type: guide
 title: "Catálogo de Universidades, Sedes y Carreras"
 description: "Catálogo completo de universidades e institutos, con el detalle de sus respectivas sedes, carreras ofertadas y plazas disponibles."
 resource: data/universities-institutes/universities.csv

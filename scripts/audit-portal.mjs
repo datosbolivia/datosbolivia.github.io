@@ -213,6 +213,15 @@ const llmsTxt = fs.existsSync(path.join(rootDir, 'src/pages/llms.txt.ts'));
 const llmsFullTxt = fs.existsSync(path.join(rootDir, 'src/pages/llms-full.txt.ts'));
 check('Exposición LLM: llms.txt & llms-full.txt', llmsTxt && llmsFullTxt, 'Endpoints estáticos listos para indexación por agentes LLM');
 
+// 8. Protocolo de Descubrimiento Soberano: /.well-known/datamesh.json & /.well-known/okf.json
+const wellKnownDatamesh = fs.existsSync(path.join(rootDir, 'public/.well-known/datamesh.json'));
+const wellKnownOkf = fs.existsSync(path.join(rootDir, 'public/.well-known/okf.json'));
+check(
+  'Descubrimiento Soberano: .well-known/datamesh.json & okf.json',
+  wellKnownDatamesh && wellKnownOkf,
+  'Manifiestos normativos WellKnownDiscovery v0.2.2 expuestos para resolución automática'
+);
+
 // Resumen de Resultados
 console.log(`${colors.bold}Resultados de la Auditoría:${colors.reset}\n`);
 for (const r of results) {

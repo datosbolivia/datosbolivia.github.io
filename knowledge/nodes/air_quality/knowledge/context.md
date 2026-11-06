@@ -1,5 +1,5 @@
 ---
-type: DuckDB Table
+type: guide
 title: "Calidad del Aire — Mediciones ICA"
 description: "Mediciones del Índice de Calidad del Aire (ICA) en estaciones de monitoreo de La Paz, con coordenadas geográficas."
 resource: data/air_quality/air_quality.csv

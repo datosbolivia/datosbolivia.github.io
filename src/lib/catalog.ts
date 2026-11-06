@@ -7,13 +7,11 @@ import {
   type DataResource, 
   type ResourceField,
   parseDataPackageManifest,
-  normalizeManifestResources,
-  toCanonicalTriad,
-  parseCanonicalUri
+  normalizeManifestResources
 } from '@datosbolivia/datamesh-client';
 
 export type { DataPackage, DataResource, ResourceField };
-export { toCanonicalTriad, parseCanonicalUri, normalizeManifestResources };
+export { toCanonicalTriad, parseCanonicalUri, normalizeManifestResources } from '@datosbolivia/datamesh-client';
 
 /**
  * Helper unificado para leer y parsear manifiestos de contratos sintácticos

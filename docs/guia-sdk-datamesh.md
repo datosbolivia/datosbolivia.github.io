@@ -58,10 +58,14 @@ chmod +x /usr/local/bin/datamesh
 
 El SDK de Python permite consultar datasets federados en una sola línea utilizando sintaxis ANSI SQL sobre DuckDB.
 
-### Descubrimiento de Nodos del Catálogo
+### Descubrimiento de Nodos del Catálogo y Protocolo Well-Known
 
 ```python
 import datamesh as dm
+
+# Descubrir endpoint soberano mediante RFC 8615 /.well-known/datamesh.json
+discovery = dm.discover_endpoint("https://datos-bolivia.github.io")
+print("Esquema:", discovery.schema_version, "| Catálogo:", discovery.catalog.title)
 
 # Descubrir datasets disponibles en la federación soberana
 catalogo = dm.discover()
@@ -257,9 +261,13 @@ Añade la siguiente entrada en tu archivo `claude_desktop_config.json`:
 
 ### Capacidades Expuestas a los Agentes
 
-- `datamesh_discover`: Descubre nodos, categorías y esquemas disponibles en la federación.
-- `datamesh_inspect`: Obtiene metadatos, contratos y tipos de columnas de una tríada.
-- `datamesh_sql`: Ejecuta consultas SQL seguras en DuckDB sobre recursos remotos.
+- `datamesh_discover_catalogs`: Descubre catálogos federados y endpoints soberanos.
+- `datamesh_search_catalog`: Búsqueda multi-token e insensible a diacríticos sobre títulos, recursos y descripciones.
+- `datamesh_get_dataproduct`: Aplanado y síntesis automática de contratos (`datapackage`, `openapi` y `owl-cli`) en tablas Markdown.
+- `datamesh_sql_query`: Ejecuta consultas SQL seguras en DuckDB sobre recursos remotos y tríadas unificadas.
+- `datamesh_read_concept_body`: Recupera la documentación semántica y notas SKOS de conceptos normativos.
+- `datamesh_get_knowledge_graph`: Grafo de conocimiento v2 interconectando datasets, servicios remotos y herramientas CLI.
+- `datamesh_resolve_context`: Construye mapas de contexto semántico a partir de consultas en lenguaje natural para agentes.
 
 ---
 

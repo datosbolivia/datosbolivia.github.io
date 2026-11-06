@@ -1,6 +1,10 @@
 # Bitácora de Ingeniería y Arquitectura del Portal
 
 ## 2026-11-06
+- Generación de rutas estáticas canónicas por recurso `/datasets/{slug}/{resource}` (ej. `/datasets/bo-combustible/{resource}`) en `src/pages/datasets/[slug]/[...doc].astro` con sincronización de URL en el explorador Obsidian mediante `history.pushState` y navegación de historial `popstate`.
+- Creación del componente reutilizable `src/components/DatasetExplorerView.astro` unificando la navegación tipo Obsidian, selección de pestañas activas e hidratación SSG.
+- Reducción del banner de tríadas a la tríada básica única (`bolivia:dataset:recurso`) con botón de copiado, descartando metadatos redundantes en la interfaz de usuario.
+- Soporte nativo de ejecución DuckDB-WASM en cliente para datasets en formato Parquet y resolución de series particionadas con comodín (`*.csv`).
 - Implementación de `resolveResourceMetadata` y `cleanResourceIdentifier` en `src/lib/catalog.ts` para resolución canónica de la tríada SQL tripartita (`bolivia:dataset:recurso`), DNS Soberano (`dataset.recurso@bolivia`), URI OKF (`okf://bolivia/dataset/recurso`) y enlaces físicos de descarga directa.
 - Inclusión del elemento `#pane-download-link` en la barra de navegación del panel Obsidian (`src/pages/datasets/[slug].astro`) sincronizado con la selección de recursos en el árbol lateral.
 - Despliegue de banners de Tríada SQL, DNS Soberano y URI OKF con acciones de copiado al portapapeles en `src/pages/datasets/[slug].astro` y `src/components/DataExplorer.astro`.

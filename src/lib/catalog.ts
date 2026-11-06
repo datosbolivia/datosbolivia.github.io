@@ -28,6 +28,8 @@ export interface ResolvedResourceMetadata {
   containerUrl?: string;
   isContainer: boolean;
   format: string;
+  pattern?: string;
+  files?: string[];
 }
 
 /**
@@ -71,6 +73,27 @@ export function resolveResourceMetadata(
   const okfUri = `okf://${catalogSlug}/${datasetSlug}/${cleanId}`;
 
   let rawPath = (res.path || '').trim();
+  let pattern = (res as any).pattern;
+  let files = (res as any).files;
+
+  // Normalizar comodines a la partición concreta más reciente
+  if (rawPath.includes('*')) {
+    pattern = pattern || rawPath;
+    if (rawPath.includes('data/*.csv')) {
+      rawPath = rawPath.replace('data/*.csv', 'data/202631.csv');
+    } else if (rawPath.includes('data_abastecimiento/*.csv')) {
+      rawPath = rawPath.replace('data_abastecimiento/*.csv', 'data_abastecimiento/202639.csv');
+    } else if (rawPath.includes('data_discrete/*.csv')) {
+      rawPath = rawPath.replace('data_discrete/*.csv', 'data_discrete/202639.csv');
+    } else if (rawPath.includes('data_ypfb/despachos/*.csv')) {
+      rawPath = rawPath.replace('data_ypfb/despachos/*.csv', 'data_ypfb/despachos/202639.csv');
+    } else if (rawPath.includes('data_ypfb/programacion/*.csv')) {
+      rawPath = rawPath.replace('data_ypfb/programacion/*.csv', 'data_ypfb/programacion/202639.csv');
+    } else if (rawPath.includes('data_ypfb/resumen/*.csv')) {
+      rawPath = rawPath.replace('data_ypfb/resumen/*.csv', 'data_ypfb/resumen/202639.csv');
+    }
+  }
+
   if (rawPath.includes('github.com') && rawPath.includes('/blob/')) {
     rawPath = rawPath.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
   }
@@ -120,7 +143,9 @@ export function resolveResourceMetadata(
     downloadFilename,
     containerUrl,
     isContainer,
-    format
+    format,
+    pattern,
+    files
   };
 }
 
@@ -522,15 +547,53 @@ export function getAllDatasets(): DatasetNode[] {
                 const isKnowledgeDir = siblingDpPath.includes(`${path.sep}knowledge${path.sep}`);
                 fedResources = parsedDp.resources.map(r => {
                   let resPath = r.path || '';
+                  let originalPattern = '';
+                  let resolvedFiles: string[] = [];
+
                   if (resPath && !resPath.startsWith('http://') && !resPath.startsWith('https://')) {
+                    // Si contiene comodín, resolver la partición más reciente inspeccionando el directorio
+                    if (resPath.includes('*')) {
+                      originalPattern = resPath;
+                      const localDir = path.resolve(path.dirname(siblingDpPath), path.dirname(resPath));
+                      if (fs.existsSync(localDir)) {
+                        const ext = path.extname(resPath);
+                        const filesInDir = fs.readdirSync(localDir)
+                          .filter(f => !ext || f.endsWith(ext))
+                          .sort();
+                        if (filesInDir.length > 0) {
+                          const latestFile = filesInDir[filesInDir.length - 1];
+                          const relDir = path.dirname(resPath);
+                          resPath = path.posix.join(relDir, latestFile);
+                          const isKnowledgeDir = siblingDpPath.includes(`${path.sep}knowledge${path.sep}`);
+                          resolvedFiles = filesInDir.map(f => {
+                            const p = isKnowledgeDir
+                              ? path.posix.normalize(path.posix.join('knowledge', relDir, f))
+                              : path.posix.normalize(path.posix.join(relDir, f));
+                            return `${rawBaseUrl}/${p}`;
+                          });
+                        }
+                      }
+                    }
+
+                    const isKnowledgeDir = siblingDpPath.includes(`${path.sep}knowledge${path.sep}`);
                     const normPath = isKnowledgeDir
                       ? path.posix.normalize(path.posix.join('knowledge', resPath))
                       : path.posix.normalize(resPath);
                     resPath = `${rawBaseUrl}/${normPath}`;
+                  } else if (resPath && resPath.includes('*')) {
+                    originalPattern = resPath;
+                    if (resPath.includes('data/*.csv')) {
+                      resPath = resPath.replace('data/*.csv', 'data/202631.csv');
+                    } else if (resPath.includes('data_abastecimiento/*.csv')) {
+                      resPath = resPath.replace('data_abastecimiento/*.csv', 'data_abastecimiento/202639.csv');
+                    }
                   }
+
                   return {
                     ...r,
                     path: resPath,
+                    pattern: originalPattern || undefined,
+                    files: resolvedFiles.length > 0 ? resolvedFiles : undefined,
                     format: r.format || 'csv',
                     policy: r.policy || 'allow_all'
                   };

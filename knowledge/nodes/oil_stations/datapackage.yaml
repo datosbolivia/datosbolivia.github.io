@@ -31,8 +31,10 @@ resources:
           description: "ID del departamento"
 
   - name: supply
+    title: Registro Histórico de Combustible (Particionado)
     type: table
-    path: https://raw.githubusercontent.com/sociedatos/bo-combustible/main/data/*.csv
+    path: https://raw.githubusercontent.com/sociedatos/bo-combustible/main/data/202631.csv
+    pattern: https://raw.githubusercontent.com/sociedatos/bo-combustible/main/data/*.csv
     scheme: https
     format: csv
     mediatype: text/csv

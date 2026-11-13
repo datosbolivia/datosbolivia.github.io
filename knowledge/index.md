@@ -4,7 +4,6 @@ title: DataMesh Bolivia - Registro Central
 description: Índice federado de instituciones y nodos disponibles en la red.
 timestamp: 2026-06-30T00:00:00Z
 ---
-
 # Red Federal DataMesh
 
 Este es el catálogo de entrada principal (Discovery Phase 1). Los siguientes nodos están indexados oficialmente en el ecosistema:
@@ -12,6 +11,7 @@ Este es el catálogo de entrada principal (Discovery Phase 1). Los siguientes no
 ## Instituciones y Nodos Federados
 
 ### Institucionales y Gubernamentales
+
 - [Estadísticas AGETIC](/nodes/agetic-data/index.md)
 - [Directorio de Empresas - SEPREC](/nodes/business_seprec/index.md)
 - [Directorio de Trámites del Estado - gob.bo](/nodes/tramites-bo/index.md)
@@ -22,12 +22,15 @@ Este es el catálogo de entrada principal (Discovery Phase 1). Los siguientes no
 - [Preosupuesto del Gobierno de Bolivia](/nodes/preosupuesto-abierto/datapackage.yaml)
 
 ### Demografía, Censos y Sociedad
+
 - [Censo de Población y Vivienda - INE](/nodes/censos-bolivia/index.md)
 - [Mortalidad y Hechos Vitales - SERECÍ / SNIS](/nodes/bo-mortalidad/index.md)
 - [Atlas Electoral y Elecciones Generales](/nodes/elecciones-bolivia/index.md)
 
 ### Economía, Moneda y Finanzas
+
 - [Reservas y Reportes Semanales - BCB](/nodes/bcb-semanal/index.md)
+- [Estadisticas de Comercio Internacional](https://raw.githubusercontent.com/pr0nstar/bo-comex/refs/heads/main/index.md)
 - [Índice de Precios al Consumidor e Inflación - INE](/nodes/indicadores-inflacion/index.md)
 - [Cartera de Créditos del Sistema Financiero](/nodes/cartera-creditos/index.md)
 - [Mercado Cambiario P2P BOB/USDT](/nodes/p2p-bob-exchange/index.md)
@@ -35,6 +38,7 @@ Este es el catálogo de entrada principal (Discovery Phase 1). Los siguientes no
 - [Catálogo e Inventario Estadístico - INE](/nodes/catalogo-ine/index.md)
 
 ### Clima, Medio Ambiente y Geociencias
+
 - [Red de Estaciones Meteorológicas - SENAMHI](/nodes/meteorologia-bolivia/index.md)
 - [Estaciones Hidrometeorológicas - SENAMHI](/nodes/hidrostations/index.md)
 - [Alertas Meteorológicas - SENAMHI](/nodes/alerts/index.md)
@@ -43,6 +47,7 @@ Este es el catálogo de entrada principal (Discovery Phase 1). Los siguientes no
 - [Sismología de Bolivia - Observatorio San Calixto](https://raw.githubusercontent.com/andres-chirinos/sismos/refs/heads/main/knowledge/index.md)
 
 ### Infraestructura, Transporte y Energía
+
 - [Despacho de Carga y Operación Eléctrica - CNDC](/nodes/despacho-carga/index.md)
 - [Estaciones de Servicio e Inventario de Combustibles](/nodes/oil_stations/index.md)
 - [Monitoreo y Abastecimiento de Combustible en Bolivia (ANH / YPFB)](https://raw.githubusercontent.com/sociedatos/bo-combustible/refs/heads/main/knowledge/index.md)

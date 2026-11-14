@@ -25,6 +25,7 @@ Este es el catálogo de entrada principal (Discovery Phase 1). Los siguientes no
 
 - [Censo de Población y Vivienda - INE](/nodes/censos-bolivia/index.md)
 - [Mortalidad y Hechos Vitales - SERECÍ / SNIS](/nodes/bo-mortalidad/index.md)
+- [Sistema Nacional de Informacion de Salud](https://raw.githubusercontent.com/andres-chirinos/snis/refs/heads/main/index.md)
 - [Atlas Electoral y Elecciones Generales](/nodes/elecciones-bolivia/index.md)
 
 ### Economía, Moneda y Finanzas
@@ -57,3 +58,4 @@ Este es el catálogo de entrada principal (Discovery Phase 1). Los siguientes no
 ### Transversales
 
 - [Fronteras y Límites Municipales (Basemap)](/nodes/frontlines/index.md)
+- [Geodatos Capas Multiples](https://raw.githubusercontent.com/andres-chirinos/geodatos/refs/heads/master/knowledge/index.md)

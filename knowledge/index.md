@@ -36,6 +36,7 @@ Este es el catálogo de entrada principal (Discovery Phase 1). Los siguientes no
 - [Cartera de Créditos del Sistema Financiero](/nodes/cartera-creditos/index.md)
 - [Mercado Cambiario P2P BOB/USDT](/nodes/p2p-bob-exchange/index.md)
 - [Tipos de Cambio en Bolivia (Mercado Paralelo, Bancos y BCB)](/nodes/dolares/index.md)
+- [Datos del Banco Central de Bolivia](https://raw.githubusercontent.com/andres-chirinos/bcb-data/refs/heads/main/knowledge/index.md)
 - [Catálogo e Inventario Estadístico - INE](/nodes/catalogo-ine/index.md)
 
 ### Clima, Medio Ambiente y Geociencias

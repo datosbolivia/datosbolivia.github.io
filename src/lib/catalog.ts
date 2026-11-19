@@ -1,17 +1,72 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
 import yaml from 'js-yaml';
-import { 
-  type DataPackage, 
-  type DataResource, 
-  type ResourceField,
+import {
+  type DataPackage as SdkDataPackage,
+  type DataResource as SdkDataResource,
+  type ResourceField as SdkResourceField,
+  type Contract,
+  type PolicySpec,
+  type ResourceNature,
+  type AuthenticityStatus,
+  OKF_IMPLICIT_CONTEXT,
+  normalizeW3CFrontmatter,
   parseDataPackageManifest,
-  normalizeManifestResources
+  normalizeManifestResources,
+  splitConceptDocument
 } from '@datosbolivia/datamesh-client';
 
-export type { DataPackage, DataResource, ResourceField };
-export { toCanonicalTriad, parseCanonicalUri, normalizeManifestResources } from '@datosbolivia/datamesh-client';
+export interface ResourceField extends SdkResourceField {
+  valueLabels?: Record<string, string>;
+  unit?: string;
+  rdf_type?: string;
+  aggregation_behavior?: string;
+}
+
+export interface DataResource extends Omit<SdkDataResource, 'schema' | 'policy' | 'resources'> {
+  schema?: {
+    fields?: ResourceField[];
+  };
+  policy?: string | PolicySpec | Record<string, any>;
+  bytes?: number;
+  hash?: string;
+  resources?: DataResource[];
+}
+
+export interface DataPackage extends Omit<SdkDataPackage, 'resources'> {
+  resources: DataResource[];
+  policy?: string | PolicySpec | Record<string, any>;
+  policies?: PolicySpec[];
+  nature?: ResourceNature | string;
+  _extras?: Record<string, Record<string, any>>;
+  custom?: Record<string, any>;
+}
+
+export interface DatasetContract extends Contract {
+  type: string;
+  path?: string;
+  ref?: string;
+  binary?: string;
+  subcommand?: string;
+  action?: string;
+  inputs?: Array<Record<string, any>>;
+  outputs?: Record<string, any>;
+  inline?: Record<string, any>;
+  [key: string]: any;
+}
+
+export type { Contract, PolicySpec, ResourceNature, AuthenticityStatus };
+export {
+  OKF_IMPLICIT_CONTEXT,
+  normalizeW3CFrontmatter,
+  toCanonicalTriad,
+  parseCanonicalUri,
+  normalizeManifestResources,
+  translateManifest,
+  translateManifestSync
+} from '@datosbolivia/datamesh-client';
 
 export interface ResolvedResourceMetadata {
   catalog: string;
@@ -154,10 +209,35 @@ export function resolveResourceMetadata(
  * delegando la deserialización y normalización al SDK.
  */
 export function readManifest(content: string, filePath?: string): DataPackage | null {
-  return parseDataPackageManifest(content, {
+  const parsed = parseDataPackageManifest(content, {
     filePath,
     yamlParser: (text) => yaml.load(text)
   });
+  if (!parsed) return null;
+  let rawExtra: Record<string, any> | null = null;
+  try {
+    const trimmed = content.trim();
+    if (trimmed.startsWith('{') || filePath?.endsWith('.json')) {
+      rawExtra = JSON.parse(trimmed);
+    } else {
+      const loaded = yaml.load(trimmed);
+      if (loaded && typeof loaded === 'object') {
+        rawExtra = loaded as Record<string, any>;
+      }
+    }
+  } catch {
+    // Ignore secondary metadata parse errors; parseDataPackageManifest already succeeded
+  }
+  const normExtra = rawExtra ? normalizeW3CFrontmatter(rawExtra) : {};
+  return {
+    ...parsed,
+    resources: parsed.resources as DataResource[],
+    ...(normExtra.policy !== undefined ? { policy: normExtra.policy } : {}),
+    ...(Array.isArray(normExtra.policies) ? { policies: normExtra.policies } : {}),
+    ...(normExtra.nature ? { nature: normExtra.nature } : {}),
+    ...(normExtra._extras && typeof normExtra._extras === 'object' ? { _extras: normExtra._extras } : {}),
+    ...(normExtra.custom && typeof normExtra.custom === 'object' ? { custom: normExtra.custom } : {})
+  };
 }
 
 export interface SkosConcept {
@@ -187,15 +267,35 @@ export interface DatasetNode {
   title: string;
   description: string;
   type: string;
+  nature?: ResourceNature | string;
+  license?: string;
+  resource?: string;
   category: string;
   status: 'active' | 'federated';
+  lifecycleStatus?: string;
+  stale_after?: string;
   dimensions: string[];
-  contracts: Array<{ type: string; path: string }>;
+  skos?: string[];
+  exact_match?: string[];
+  close_match?: string[];
+  broader?: string[];
+  contracts: DatasetContract[];
+  policy?: string | PolicySpec | Record<string, any>;
+  policies?: PolicySpec[];
+  sources?: any[];
+  generated?: Record<string, any>;
+  verified?: Array<Record<string, any>> | Record<string, any>;
+  signatures?: Array<Record<string, any>>;
+  authenticity_status?: AuthenticityStatus | string;
+  _extras?: Record<string, Record<string, any>>;
+  custom_fields?: Record<string, any>;
   spatial?: any;
   temporal?: any;
   quality?: any;
   lineage?: {
     source?: Array<{ url: string; title?: string }>;
+    sources?: any[];
+    transformations?: Array<Record<string, any>>;
     version?: string;
     updated_at?: string;
   };
@@ -229,8 +329,271 @@ export interface DocItem {
   category: 'especificacion' | 'decision' | 'guia' | 'blog';
 }
 
+const KNOWN_FRONTMATTER_KEYS = new Set([
+  'type', 'title', 'description', 'resource', 'license', 'tags', 'dimensions',
+  'skos', 'exact_match', 'close_match', 'broader', 'nature', 'status',
+  'supersedes', 'superseded_by', 'stale_after', 'sources', 'relations',
+  'generated', 'verified', 'freshness', 'contracts', 'policy', 'policies',
+  'semantic_fields', 'spatial', 'temporal', 'quality', 'lineage', 'emitter',
+  'attester', 'signatures', 'authenticity_status', '_extras', 'custom_fields',
+  'resources', 'timestamp', 'category', 'author', 'date'
+]);
+
+function extractCustomFields(fm: Record<string, any>): Record<string, any> | undefined {
+  const custom: Record<string, any> =
+    fm.custom_fields && typeof fm.custom_fields === 'object' ? { ...fm.custom_fields } : {};
+  for (const [k, v] of Object.entries(fm)) {
+    if (!KNOWN_FRONTMATTER_KEYS.has(k) && v !== undefined) {
+      custom[k] = v;
+    }
+  }
+  return Object.keys(custom).length > 0 ? custom : undefined;
+}
+
+function mergeExtrasMaps(
+  ...maps: Array<Record<string, Record<string, any>> | undefined>
+): Record<string, Record<string, any>> | undefined {
+  const merged: Record<string, Record<string, any>> = {};
+  for (const m of maps) {
+    if (!m || typeof m !== 'object') continue;
+    for (const [ns, kv] of Object.entries(m)) {
+      if (kv && typeof kv === 'object' && !Array.isArray(kv) && Object.keys(kv).length > 0) {
+        merged[ns] = { ...(merged[ns] || {}), ...kv };
+      }
+    }
+  }
+  return Object.keys(merged).length > 0 ? merged : undefined;
+}
+
+function parseContractsList(rawContracts: any, fallbackDefault: boolean = true): DatasetContract[] {
+  const contracts: DatasetContract[] = [];
+  if (Array.isArray(rawContracts)) {
+    for (const c of rawContracts) {
+      if (typeof c === 'string') {
+        contracts.push({ type: 'datapackage', path: c });
+      } else if (typeof c === 'object' && c !== null) {
+        contracts.push({
+          ...c,
+          type: String(c.type || 'datapackage'),
+          ...(c.path !== undefined ? { path: c.path } : {}),
+          ...(c.ref !== undefined ? { ref: c.ref } : {}),
+          ...(c.binary !== undefined ? { binary: c.binary } : {})
+        });
+      }
+    }
+  } else if (fallbackDefault) {
+    contracts.push({ type: 'datapackage', path: './datapackage.yaml' });
+  }
+  return contracts;
+}
+
+const BASE58_BTC_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const ED25519_SPKI_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
+
+function decodeBase58BTC(input: string): Buffer | null {
+  if (!input) return null;
+  let num = 0n;
+  for (let i = 0; i < input.length; i++) {
+    const idx = BASE58_BTC_ALPHABET.indexOf(input[i]);
+    if (idx === -1) return null;
+    num = num * 58n + BigInt(idx);
+  }
+  let leadingZeros = 0;
+  while (leadingZeros < input.length && input[leadingZeros] === '1') {
+    leadingZeros++;
+  }
+  const bytes: number[] = [];
+  while (num > 0n) {
+    bytes.push(Number(num % 256n));
+    num /= 256n;
+  }
+  bytes.reverse();
+  return Buffer.concat([Buffer.alloc(leadingZeros), Buffer.from(bytes)]);
+}
+
+function parseOpenSSHEd25519PubKey(rawLine: string): Buffer | null {
+  const fields = rawLine.trim().split(/\s+/);
+  const blobB64 = fields[0] === 'ssh-ed25519' ? fields[1] : fields[0];
+  if (!blobB64) return null;
+  try {
+    const buf = Buffer.from(blobB64, 'base64');
+    if (buf.length < 4) return null;
+    const typeLen = buf.readUInt32BE(0);
+    if (buf.length < 4 + typeLen + 4) return null;
+    const keyType = buf.subarray(4, 4 + typeLen).toString('utf8');
+    if (keyType !== 'ssh-ed25519') return null;
+    const keyLen = buf.readUInt32BE(4 + typeLen);
+    const keyStart = 4 + typeLen + 4;
+    if (keyLen !== 32 || buf.length < keyStart + 32) return null;
+    return buf.subarray(keyStart, keyStart + 32);
+  } catch {
+    return null;
+  }
+}
+
+function resolveEd25519PublicKey(sig: Record<string, any>): Buffer | null {
+  const candidates = [String(sig?.public_key || '').trim(), String(sig?.key_id || '').trim()].filter(Boolean);
+  for (const cand of candidates) {
+    if (cand.startsWith('did:key:z')) {
+      const clean = cand.split('#')[0].slice('did:key:z'.length);
+      const decoded = decodeBase58BTC(clean);
+      if (decoded && decoded.length === 34 && decoded[0] === 0xed && decoded[1] === 0x01) {
+        return decoded.subarray(2);
+      }
+      return null;
+    }
+    if (cand.startsWith('ssh-ed25519 ')) {
+      return parseOpenSSHEd25519PubKey(cand);
+    }
+    if (/^[0-9a-fA-F]{64}$/.test(cand)) {
+      return Buffer.from(cand, 'hex');
+    }
+    try {
+      const raw = Buffer.from(cand, 'base64');
+      if (raw.length === 32) return raw;
+      const sshParsed = parseOpenSSHEd25519PubKey(`ssh-ed25519 ${cand}`);
+      if (sshParsed) return sshParsed;
+    } catch {
+      // Ignore invalid base64 candidate
+    }
+  }
+  return null;
+}
+
+function decodeEd25519Signature(rawSig: string): Buffer | null {
+  const clean = (rawSig || '').trim();
+  if (!clean) return null;
+  if (/^[0-9a-fA-F]{128}$/.test(clean)) {
+    return Buffer.from(clean, 'hex');
+  }
+  for (const enc of ['base64', 'base64url'] as const) {
+    try {
+      const b = Buffer.from(clean, enc);
+      if (b.length === 64) return b;
+      if (b.length === 4 + 11 + 4 + 64 && b.subarray(4, 15).toString('utf8') === 'ssh-ed25519') {
+        const sigLen = b.readUInt32BE(15);
+        if (sigLen === 64) return b.subarray(19);
+      }
+    } catch {
+      // Continue trying encodings
+    }
+  }
+  return null;
+}
+
+function canonicalizeJCS(value: any): string {
+  if (value === null || value === undefined) return 'null';
+  if (value instanceof Date) return JSON.stringify(value.toISOString().replace(/\.000Z$/, 'Z'));
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) throw new Error('JCS forbids NaN or Infinity');
+    return Object.is(value, -0) ? '0' : String(value);
+  }
+  if (typeof value === 'string') return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => canonicalizeJCS(item)).join(',')}]`;
+  }
+  if (typeof value === 'object') {
+    const keys = Object.keys(value).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    const parts = keys.map((k) => `${JSON.stringify(k)}:${canonicalizeJCS(value[k])}`);
+    return `{${parts.join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
 /**
- * Parser de YAML Frontmatter seguro
+ * Evaluates runtime cryptographic authenticity status per OKF v0.3 §7 / §14.2
+ * (`unsigned | self-signed | trusted-signer | invalid`) over SHA-256(JCS(frontmatter without 'signatures') + '\n' + raw body).
+ * Never trusts persisted `authenticity_status` claims in frontmatter.
+ */
+export function evaluateAuthenticityStatus(
+  rawContent: string,
+  signatures?: any[],
+  trustedKeys?: string[]
+): AuthenticityStatus {
+  if (!Array.isArray(signatures) || signatures.length === 0) {
+    return 'unsigned';
+  }
+  const split = splitConceptDocument(rawContent);
+  if (!split.hasFrontmatter) {
+    return 'invalid';
+  }
+  try {
+    const parsedFm = yaml.load(split.frontmatter);
+    const fmMap: Record<string, any> =
+      parsedFm && typeof parsedFm === 'object' && !Array.isArray(parsedFm)
+        ? { ...(parsedFm as Record<string, any>) }
+        : {};
+    delete fmMap.signatures;
+
+    const jcsStr = canonicalizeJCS(fmMap);
+    const payload = Buffer.concat([
+      Buffer.from(jcsStr, 'utf8'),
+      Buffer.from('\n', 'utf8'),
+      Buffer.from(split.body, 'utf8')
+    ]);
+    const digest = crypto.createHash('sha256').update(payload).digest();
+
+    const envTrusted = (process.env.OKF_TRUSTED_KEYS || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const trustedHex = new Set<string>();
+    for (const tk of [...(trustedKeys || []), ...envTrusted]) {
+      const resolved = resolveEd25519PublicKey({ public_key: tk });
+      if (resolved) trustedHex.add(resolved.toString('hex').toLowerCase());
+    }
+
+    let matchedTrusted = false;
+    for (const sig of signatures) {
+      if (!sig || typeof sig !== 'object') return 'invalid';
+      const alg = String(sig.algorithm || '').trim().toLowerCase();
+      if (alg && alg !== 'ed25519' && alg !== 'ssh-ed25519' && alg !== 'eddsa-jcs-2022') {
+        return 'invalid';
+      }
+      const pubBytes = resolveEd25519PublicKey(sig);
+      const sigBytes = decodeEd25519Signature(String(sig.signature || ''));
+      if (!pubBytes || !sigBytes) return 'invalid';
+
+      const keyObj = crypto.createPublicKey({
+        key: Buffer.concat([ED25519_SPKI_PREFIX, pubBytes]),
+        format: 'der',
+        type: 'spki'
+      });
+      if (!crypto.verify(null, digest, keyObj, sigBytes)) {
+        return 'invalid';
+      }
+      if (trustedHex.has(pubBytes.toString('hex').toLowerCase())) {
+        matchedTrusted = true;
+      }
+    }
+
+    return matchedTrusted ? 'trusted-signer' : 'self-signed';
+  } catch {
+    return 'invalid';
+  }
+}
+
+function mapConceptDoc(d: NodeReferenceDoc): SkosConcept {
+  const skosRaw = d.frontmatter.skos;
+  const skosObj = skosRaw && typeof skosRaw === 'object' && !Array.isArray(skosRaw) ? skosRaw : {};
+  const skosArr = Array.isArray(skosRaw) ? skosRaw : [];
+  const exactMatchVal = skosObj.exactMatch ?? d.frontmatter.exact_match;
+  const broaderVal = skosObj.broader ?? d.frontmatter.broader;
+  return {
+    id: d.cleanPath.replace('concepts/', ''),
+    title: d.title,
+    prefLabel: skosObj.prefLabel || d.frontmatter.pref_label || d.frontmatter['skos:prefLabel'],
+    altLabel: skosObj.altLabel || d.frontmatter.alt_labels || d.frontmatter['skos:altLabel'],
+    exactMatch: Array.isArray(exactMatchVal) ? exactMatchVal[0] : (exactMatchVal || skosArr[0]),
+    broader: Array.isArray(broaderVal) ? broaderVal[0] : broaderVal,
+    content: d.bodyMarkdown,
+    rawMarkdown: d.rawMarkdown
+  };
+}
+
+/**
+ * Parser de YAML Frontmatter seguro con normalización W3C YAML-LD (OKF/ODKF v0.3)
  */
 export function parseFrontmatter(markdownText: string): { frontmatter: Record<string, any>; body: string } {
   const trimmed = markdownText.trimStart();
@@ -250,7 +613,7 @@ export function parseFrontmatter(markdownText: string): { frontmatter: Record<st
   try {
     const parsed = yaml.load(rawYaml);
     if (parsed && typeof parsed === 'object') {
-      frontmatter = parsed as Record<string, any>;
+      frontmatter = normalizeW3CFrontmatter(parsed as Record<string, any>);
     }
   } catch (e) {
     console.warn('Error al parsear frontmatter con js-yaml:', e);
@@ -271,9 +634,15 @@ function scanNodeReferenceDocs(nodePath: string, datasetSlug: string): NodeRefer
 
     for (const entry of entries) {
       const fullPath = path.join(currentDir, entry.name);
-      if (entry.isDirectory()) {
+      let stat: fs.Stats;
+      try {
+        stat = fs.statSync(fullPath);
+      } catch {
+        continue;
+      }
+      if (stat.isDirectory()) {
         walk(fullPath);
-      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      } else if (stat.isFile() && entry.name.endsWith('.md')) {
         const rel = path.relative(nodePath, fullPath);
         // Excluir el propio index.md raíz del nodo
         if (rel === 'index.md') continue;
@@ -335,9 +704,13 @@ export function getAllDatasets(): DatasetNode[] {
   const datasets: DatasetNode[] = [];
 
   for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
     const slug = entry.name;
     const nodePath = path.join(nodesDir, slug);
+    try {
+      if (!fs.statSync(nodePath).isDirectory()) continue;
+    } catch {
+      continue;
+    }
     const indexPath = path.join(nodePath, 'index.md');
 
     if (!fs.existsSync(indexPath)) continue;
@@ -345,27 +718,20 @@ export function getAllDatasets(): DatasetNode[] {
     const rawMarkdown = fs.readFileSync(indexPath, 'utf-8');
     const { frontmatter, body } = parseFrontmatter(rawMarkdown);
 
-    // 1. Parsear contratos declarados en frontmatter (referencia de concepto a estándar)
-    const contracts: Array<{ type: string; path: string }> = [];
-    if (Array.isArray(frontmatter.contracts)) {
-      for (const c of frontmatter.contracts) {
-        if (typeof c === 'string') {
-          contracts.push({ type: 'datapackage', path: c });
-        } else if (typeof c === 'object' && c !== null) {
-          contracts.push({ type: c.type || 'datapackage', path: c.path || '' });
-        }
-      }
-    } else {
-      contracts.push({ type: 'datapackage', path: './datapackage.yaml' });
-    }
+    // 1. Parsear contratos declarados en frontmatter (datapackage, okf-cli, owl-cli, openapi, cwl, dcat)
+    const contracts = parseContractsList(frontmatter.contracts, true);
 
     // 2. Descubrir recursos a partir de contratos/estándares referenciados en frontmatter
     let datapackage: DataPackage | undefined;
     const candidatesToCheck: string[] = [];
 
-    // Priorizar los contratos declarados que apuntan a estándares de datos (datapackage, frictionless, etc.)
+    // Priorizar los contratos declarados que apuntan a estándares locales de datos (datapackage, frictionless, etc.)
     for (const contract of contracts) {
-      if (contract.path) {
+      if (
+        contract.path &&
+        !/^https?:\/\//i.test(contract.path) &&
+        (!contract.type || ['datapackage', 'frictionless', 'json_schema'].includes(contract.type.toLowerCase()))
+      ) {
         candidatesToCheck.push(path.resolve(nodePath, contract.path));
       }
     }
@@ -395,11 +761,11 @@ export function getAllDatasets(): DatasetNode[] {
     // 3. Consolidar TODOS los recursos (desempaquetando zips y contenedores internos)
     const allResources: DataResource[] = [];
     if (datapackage?.resources && Array.isArray(datapackage.resources)) {
-      datapackage.resources = normalizeManifestResources(datapackage.resources);
+      datapackage.resources = normalizeManifestResources(datapackage.resources) as DataResource[];
       allResources.push(...datapackage.resources);
     }
     if (Array.isArray(frontmatter.resources)) {
-      const normFm = normalizeManifestResources(frontmatter.resources);
+      const normFm = normalizeManifestResources(frontmatter.resources) as DataResource[];
       for (const res of normFm) {
         if (!allResources.some(r => r.name === res.name)) {
           allResources.push(res);
@@ -407,22 +773,13 @@ export function getAllDatasets(): DatasetNode[] {
       }
     }
 
-    // 3. Leer todos los documentos Markdown de referencia
+    // 4. Leer todos los documentos Markdown de referencia
     const referenceDocs = scanNodeReferenceDocs(nodePath, slug);
 
-    // Conceptos SKOS extraídos
+    // Conceptos SKOS extraídos (soporta objeto skos heredado y v0.3 top-level)
     const concepts: SkosConcept[] = referenceDocs
       .filter(d => d.relativePath.startsWith('concepts/'))
-      .map(d => ({
-        id: d.cleanPath.replace('concepts/', ''),
-        title: d.title,
-        prefLabel: d.frontmatter.skos?.prefLabel,
-        altLabel: d.frontmatter.skos?.altLabel,
-        exactMatch: d.frontmatter.skos?.exactMatch,
-        broader: d.frontmatter.skos?.broader,
-        content: d.bodyMarkdown,
-        rawMarkdown: d.rawMarkdown
-      }));
+      .map(mapConceptDoc);
 
     // Extraer gráficos declarativos si existen
     let chartConfig: any = null;
@@ -436,15 +793,7 @@ export function getAllDatasets(): DatasetNode[] {
     }
 
     const category = categoryMap.get(slug) || 'General';
-
-    // Parsear dimensiones
-    let dimensions: string[] = [];
-    if (Array.isArray(frontmatter.dimensions)) {
-      dimensions = frontmatter.dimensions;
-    }
-
-
-
+    const dimensions: string[] = Array.isArray(frontmatter.dimensions) ? frontmatter.dimensions : [];
     const title = frontmatter.title || slug.replace(/-/g, ' ').toUpperCase();
     const description = frontmatter.description || extractFirstParagraph(body);
 
@@ -452,14 +801,33 @@ export function getAllDatasets(): DatasetNode[] {
       slug,
       title,
       description,
-      type: frontmatter.type || 'dataset',
+      type: String(frontmatter.type || 'dataset'),
+      nature: frontmatter.nature || datapackage?.nature,
+      license: frontmatter.license,
+      resource: frontmatter.resource,
       category,
       status: 'active',
+      lifecycleStatus: frontmatter.status,
+      stale_after: frontmatter.stale_after,
       dimensions,
+      skos: Array.isArray(frontmatter.skos) ? frontmatter.skos : undefined,
+      exact_match: Array.isArray(frontmatter.exact_match) ? frontmatter.exact_match : undefined,
+      close_match: Array.isArray(frontmatter.close_match) ? frontmatter.close_match : undefined,
+      broader: Array.isArray(frontmatter.broader) ? frontmatter.broader : undefined,
       contracts,
+      policy: frontmatter.policy !== undefined ? frontmatter.policy : datapackage?.policy,
+      policies: Array.isArray(frontmatter.policies) ? frontmatter.policies : datapackage?.policies,
+      sources: Array.isArray(frontmatter.sources) ? frontmatter.sources : undefined,
+      generated: frontmatter.generated,
+      verified: frontmatter.verified,
+      signatures: Array.isArray(frontmatter.signatures) ? frontmatter.signatures : undefined,
+      authenticity_status: evaluateAuthenticityStatus(rawMarkdown, frontmatter.signatures),
+      _extras: mergeExtrasMaps(frontmatter._extras, datapackage?._extras, datapackage?.custom?._extras),
+      custom_fields: extractCustomFields(frontmatter),
       spatial: frontmatter.spatial || datapackage?.spatial,
       temporal: frontmatter.temporal || datapackage?.temporal,
       quality: frontmatter.quality || datapackage?.quality,
+      lineage: frontmatter.lineage,
       tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
       timestamp: frontmatter.timestamp,
       datapackage,
@@ -508,10 +876,11 @@ export function getAllDatasets(): DatasetNode[] {
         let fedDescription = `Nodo federado soberano. Datos distribuidos desde ${remoteUrl}.`;
         let fedBody = `# ${linkTitle}\n\n${fedDescription}\n\n### Enlace Normativo Externo\n- [Repositorio / Manifiesto Oficial OKF](${remoteUrl})\n\n### Recursos Distribuidos\nEste nodo se encuentra federado externamente bajo la red soberana DataMesh.`;
         let fedDimensions: string[] = [];
-        let fedContracts: Array<{ type: string; path: string }> = [{ type: 'datapackage', path: remoteUrl }];
+        let fedContracts: DatasetContract[] = [{ type: 'datapackage', ref: remoteUrl, path: remoteUrl }];
         let fedTags: string[] = ['federado'];
         let fedReferenceDocs: NodeReferenceDoc[] = [];
         let parsedFrontmatter: Record<string, any> = {};
+        let fedRawIndexMarkdown = '';
 
         // 1. Intentar descubrir desde repositorio hermano local (ej. ../bo-combustible/knowledge o ../sismos)
         const siblingBaseDir = path.resolve(rootDir, '..', derivedSlug);
@@ -526,6 +895,7 @@ export function getAllDatasets(): DatasetNode[] {
         if (fs.existsSync(siblingEffectiveDir)) {
           if (fs.existsSync(siblingIndexPath)) {
             const rawIndex = fs.readFileSync(siblingIndexPath, 'utf-8');
+            fedRawIndexMarkdown = rawIndex;
             const parsed = parseFrontmatter(rawIndex);
             parsedFrontmatter = parsed.frontmatter || {};
             if (parsed.frontmatter.title) fedTitle = parsed.frontmatter.title;
@@ -605,7 +975,12 @@ export function getAllDatasets(): DatasetNode[] {
                   resources: fedResources,
                   spatial: parsedDp.spatial,
                   temporal: parsedDp.temporal,
-                  quality: parsedDp.quality
+                  quality: parsedDp.quality,
+                  ...(parsedDp.policy !== undefined ? { policy: parsedDp.policy } : {}),
+                  ...(parsedDp.policies ? { policies: parsedDp.policies } : {}),
+                  ...(parsedDp.nature ? { nature: parsedDp.nature } : {}),
+                  ...(parsedDp._extras ? { _extras: parsedDp._extras } : {}),
+                  ...(parsedDp.custom ? { custom: parsedDp.custom } : {})
                 };
               }
             } catch (e) {
@@ -631,6 +1006,7 @@ export function getAllDatasets(): DatasetNode[] {
 
             const remoteIndexText = fetchRemoteText(remoteUrl);
             if (remoteIndexText && remoteIndexText.trim().startsWith('---')) {
+              fedRawIndexMarkdown = remoteIndexText;
               const parsed = parseFrontmatter(remoteIndexText);
               parsedFrontmatter = parsed.frontmatter || {};
               if (parsed.frontmatter.title) fedTitle = parsed.frontmatter.title;
@@ -689,7 +1065,12 @@ export function getAllDatasets(): DatasetNode[] {
                     resources: fedResources,
                     spatial: parsedDp.spatial,
                     temporal: parsedDp.temporal,
-                    quality: parsedDp.quality
+                    quality: parsedDp.quality,
+                    ...(parsedDp.policy !== undefined ? { policy: parsedDp.policy } : {}),
+                    ...(parsedDp.policies ? { policies: parsedDp.policies } : {}),
+                    ...(parsedDp.nature ? { nature: parsedDp.nature } : {}),
+                    ...(parsedDp._extras ? { _extras: parsedDp._extras } : {}),
+                    ...(parsedDp.custom ? { custom: parsedDp.custom } : {})
                   };
                   break;
                 }
@@ -707,7 +1088,7 @@ export function getAllDatasets(): DatasetNode[] {
                 path: remoteUrl,
                 format: 'md',
                 policy: 'allow_all',
-                description: 'Manifiesto remoto OKF v0.2'
+                description: 'Manifiesto remoto OKF/ODKF v0.3'
               }
             ];
             fedDatapackage = {
@@ -723,36 +1104,52 @@ export function getAllDatasets(): DatasetNode[] {
         if (fedDimensions.length === 0) {
           fedDimensions = [derivedSlug.replace(/[^a-zA-Z0-9]+/g, '_')];
         }
+        if (Array.isArray(parsedFrontmatter.contracts) && parsedFrontmatter.contracts.length > 0) {
+          fedContracts = parseContractsList(parsedFrontmatter.contracts, false);
+        }
 
         datasets.push({
           slug: derivedSlug,
           title: fedTitle,
           description: fedDescription,
-          type: 'dataset',
+          type: String(parsedFrontmatter.type || 'dataset'),
+          nature: parsedFrontmatter.nature || fedDatapackage?.nature,
+          license: parsedFrontmatter.license,
+          resource: parsedFrontmatter.resource || remoteUrl,
           category: currentCategory,
           status: 'federated',
+          lifecycleStatus: parsedFrontmatter.status,
+          stale_after: parsedFrontmatter.stale_after,
           dimensions: fedDimensions,
+          skos: Array.isArray(parsedFrontmatter.skos) ? parsedFrontmatter.skos : undefined,
+          exact_match: Array.isArray(parsedFrontmatter.exact_match) ? parsedFrontmatter.exact_match : undefined,
+          close_match: Array.isArray(parsedFrontmatter.close_match) ? parsedFrontmatter.close_match : undefined,
+          broader: Array.isArray(parsedFrontmatter.broader) ? parsedFrontmatter.broader : undefined,
           contracts: fedContracts,
+          policy: parsedFrontmatter.policy !== undefined ? parsedFrontmatter.policy : fedDatapackage?.policy,
+          policies: Array.isArray(parsedFrontmatter.policies) ? parsedFrontmatter.policies : fedDatapackage?.policies,
+          sources: Array.isArray(parsedFrontmatter.sources) ? parsedFrontmatter.sources : undefined,
+          generated: parsedFrontmatter.generated,
+          verified: parsedFrontmatter.verified,
+          signatures: Array.isArray(parsedFrontmatter.signatures) ? parsedFrontmatter.signatures : undefined,
+          authenticity_status: evaluateAuthenticityStatus(
+            fedRawIndexMarkdown || `---\ntype: ${parsedFrontmatter.type || 'dataset'}\ntitle: "${fedTitle}"\nstatus: federated\n---\n\n${fedBody}`,
+            parsedFrontmatter.signatures
+          ),
+          _extras: mergeExtrasMaps(parsedFrontmatter._extras, fedDatapackage?._extras, fedDatapackage?.custom?._extras),
+          custom_fields: extractCustomFields(parsedFrontmatter),
           spatial: parsedFrontmatter.spatial || fedDatapackage?.spatial,
           temporal: parsedFrontmatter.temporal || fedDatapackage?.temporal,
           quality: parsedFrontmatter.quality || fedDatapackage?.quality,
+          lineage: parsedFrontmatter.lineage,
           tags: fedTags,
           datapackage: fedDatapackage,
           allResources: fedResources,
           concepts: fedReferenceDocs
             .filter(d => d.relativePath.startsWith('concepts/'))
-            .map(d => ({
-              id: d.cleanPath.replace('concepts/', ''),
-              title: d.title,
-              prefLabel: d.frontmatter.skos?.prefLabel,
-              altLabel: d.frontmatter.skos?.altLabel,
-              exactMatch: d.frontmatter.skos?.exactMatch,
-              broader: d.frontmatter.skos?.broader,
-              content: d.bodyMarkdown,
-              rawMarkdown: d.rawMarkdown
-            })),
+            .map(mapConceptDoc),
           referenceDocs: fedReferenceDocs,
-          rawMarkdown: `---\ntype: dataset\ntitle: "${fedTitle}"\nstatus: federated\n---\n\n${fedBody}`,
+          rawMarkdown: `---\ntype: ${parsedFrontmatter.type || 'dataset'}\ntitle: "${fedTitle}"\nstatus: federated\n---\n\n${fedBody}`,
           bodyMarkdown: fedBody,
           remoteUrl
         });
@@ -812,8 +1209,14 @@ export function getAllDocs(): DocItem[] {
 
   const rootEntries = fs.readdirSync(docsDir, { withFileTypes: true });
   for (const entry of rootEntries) {
-    if (entry.isFile() && entry.name.endsWith('.md')) {
-      const filePath = path.join(docsDir, entry.name);
+    const filePath = path.join(docsDir, entry.name);
+    let isMdFile = false;
+    try {
+      isMdFile = fs.statSync(filePath).isFile() && entry.name.endsWith('.md');
+    } catch {
+      isMdFile = false;
+    }
+    if (isMdFile) {
       const raw = fs.readFileSync(filePath, 'utf-8');
       const { frontmatter, body } = parseFrontmatter(raw);
       const slug = entry.name.replace('.md', '');
@@ -910,4 +1313,123 @@ function extractFirstParagraph(markdown: string): string {
     }
   }
   return '';
+}
+
+function normalizeDcatType(rawType?: string): string {
+  const trimmed = (rawType || '').trim();
+  const lower = trimmed.toLowerCase();
+  if (!trimmed || lower === 'dataset' || lower === 'dcat:dataset') return 'dcat:Dataset';
+  if (lower === 'service' || lower === 'dcat:dataservice') return 'dcat:DataService';
+  if (lower === 'catalog' || lower === 'dcat:catalog') return 'dcat:Catalog';
+  if (lower === 'dcat:catalogrecord') return 'dcat:CatalogRecord';
+  if (trimmed.includes(':')) return trimmed;
+  return 'dcat:Dataset';
+}
+
+/**
+ * Generates a W3C DCAT v3 JSON-LD representation of a DatasetNode,
+ * preserving ODRL policies, contracts, nature, authenticity_status, and _extras.
+ */
+export function toDcatJsonLd(
+  dataset: DatasetNode,
+  siteUrl: string = 'https://datos-bolivia.github.io'
+): Record<string, any> {
+  const cleanSiteUrl = siteUrl.replace(/\/+$/, '');
+  const dcatType = normalizeDcatType(dataset.type);
+  const keywords = dataset.tags?.length
+    ? dataset.tags
+    : (dataset.dimensions?.length ? dataset.dimensions : undefined);
+  const conceptAnchors = dataset.concepts
+    ?.map((c) => c.exactMatch)
+    .filter((u): u is string => Boolean(u && /^https?:\/\//i.test(u)));
+  const theme = dataset.skos?.length
+    ? dataset.skos
+    : (conceptAnchors?.length ? conceptAnchors : (dataset.dimensions?.length ? dataset.dimensions : undefined));
+  const derivedFrom = dataset.sources?.length
+    ? dataset.sources
+    : (dataset.lineage?.sources?.length ? dataset.lineage.sources : dataset.lineage?.source);
+
+  const out: Record<string, any> = {
+    '@context': 'https://www.w3.org/ns/dcat.jsonld',
+    '@type': dcatType,
+    '@id': dataset.resource || `${cleanSiteUrl}/datasets/${dataset.slug}`,
+    'dct:title': dataset.title,
+    'dct:description': dataset.description || undefined,
+    'dct:license': dataset.license || undefined,
+    'dct:modified': dataset.lineage?.updated_at || dataset.timestamp || undefined,
+    'owl:versionInfo': dataset.lineage?.version || undefined,
+    'dcat:keyword': keywords,
+    'dcat:theme': theme,
+    'skos:exactMatch': dataset.exact_match?.length ? dataset.exact_match : undefined,
+    'skos:closeMatch': dataset.close_match?.length ? dataset.close_match : undefined,
+    'skos:broader': dataset.broader?.length ? dataset.broader : undefined,
+    'dcat:conformsTo': dataset.contracts?.length ? dataset.contracts : undefined,
+    'prov:wasDerivedFrom': derivedFrom,
+    'prov:qualifiedGeneration': dataset.generated,
+    'prov:wasAttributedTo': dataset.verified,
+    'odrl:hasPolicy': dataset.policy,
+    'okf:policies': dataset.policies?.length ? dataset.policies : undefined,
+    'okf:nature': dataset.nature,
+    'okf:authenticityStatus': dataset.authenticity_status,
+    'okf:status': dataset.lifecycleStatus || dataset.status,
+    'okf:staleAfter': dataset.stale_after,
+    'okf:dimensions': dataset.dimensions?.length ? dataset.dimensions : undefined,
+    'dct:spatial': dataset.spatial,
+    'dct:temporal': dataset.temporal,
+    'dqv:hasQualityMeasurement': dataset.quality,
+    'prov:wasGeneratedByActivity': dataset.lineage?.transformations?.length
+      ? dataset.lineage.transformations
+      : undefined,
+    'okf:signatures': dataset.signatures?.length ? dataset.signatures : undefined,
+    'okf:customFields': dataset.custom_fields
+  };
+
+  if (dataset.allResources?.length) {
+    out['dcat:distribution'] = dataset.allResources.map((r) => {
+      const meta = resolveResourceMetadata(dataset.slug, r);
+      const accessUrl = meta.downloadUrl
+        ? (meta.downloadUrl.startsWith('/') ? `${cleanSiteUrl}${meta.downloadUrl}` : meta.downloadUrl)
+        : undefined;
+      const dist: Record<string, any> = {
+        '@type': 'dcat:Distribution',
+        'dcterms:title': r.name
+      };
+      if (r.description) dist['dcterms:description'] = r.description;
+      if (meta.format) dist['dct:format'] = meta.format;
+      if (r.mediatype) dist['dcat:mediaType'] = r.mediatype;
+      if (accessUrl) dist['dcat:accessURL'] = accessUrl;
+      if (r.bytes !== undefined) dist['dcat:byteSize'] = r.bytes;
+      if (r.hash) dist['spdx:checksum'] = r.hash;
+      if (r.policy !== undefined) dist['odrl:hasPolicy'] = r.policy;
+      return dist;
+    });
+  }
+
+  if (dataset._extras?.dcat) {
+    for (const [k, v] of Object.entries(dataset._extras.dcat)) {
+      if (out[k] === undefined) {
+        out[k] = v;
+      }
+    }
+  }
+
+  const remainingExtras: Record<string, Record<string, any>> = {};
+  if (dataset._extras) {
+    for (const [ns, kv] of Object.entries(dataset._extras)) {
+      if (ns !== 'dcat' && kv && Object.keys(kv).length > 0) {
+        remainingExtras[ns] = kv;
+      }
+    }
+  }
+  if (Object.keys(remainingExtras).length > 0) {
+    out._extras = remainingExtras;
+  }
+
+  for (const k of Object.keys(out)) {
+    if (out[k] === undefined) {
+      delete out[k];
+    }
+  }
+
+  return out;
 }

@@ -9,7 +9,7 @@ status: Activo
 
 # Guía de Instalación y Uso del SDK DataMesh
 
-El **SDK DataMesh** es una biblioteca soberana y descentralizada diseñada para interactuar con catálogos abiertos bajo el estándar **OKF / ODKF v0.2**. Proporciona una arquitectura hexagonal (Ports & Adapters) con núcleo analítico en **Go** y **DuckDB**, con enlaces nativos para **Python**, **TypeScript / Node.js**, una **CLI de línea de comandos** y un servidor **Model Context Protocol (MCP)** para agentes de inteligencia artificial.
+El **SDK DataMesh** es una biblioteca soberana y descentralizada diseñada para interactuar con catálogos abiertos bajo el estándar **OKF / ODKF v0.3**. Proporciona una arquitectura hexagonal (Ports & Adapters) con núcleo analítico en **Go** y **DuckDB**, con enlaces nativos para **Python**, **TypeScript / Node.js**, una **CLI de línea de comandos** (`okf` / `datamesh`) y un servidor **Model Context Protocol (MCP)** para agentes de inteligencia artificial.
 
 Repositorio central: [https://github.com/datosbolivia/datamesh](https://github.com/datosbolivia/datamesh)
 
@@ -63,7 +63,7 @@ El SDK de Python permite consultar datasets federados en una sola línea utiliza
 ```python
 import datamesh as dm
 
-# Descubrir endpoint soberano mediante RFC 8615 /.well-known/datamesh.json
+# Descubrir endpoint soberano mediante RFC 8615 /.well-known/okf.json (fallback datamesh.json)
 discovery = dm.discover_endpoint("https://datos-bolivia.github.io")
 print("Esquema:", discovery.schema_version, "| Catálogo:", discovery.catalog.title)
 

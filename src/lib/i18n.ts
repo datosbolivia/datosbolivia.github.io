@@ -37,7 +37,7 @@ export const translations = {
 
     // Pilares de Sociedad Civil
     'pillars.transparency_title': 'Transparencia Directa',
-    'pillars.transparency_desc': 'Datos de fuentes públicas legítimas, auditados bajo especificación OKF v0.2.',
+    'pillars.transparency_desc': 'Datos de fuentes públicas legítimas, auditados bajo especificación OKF/ODKF v0.3.',
     'pillars.validation_title': 'Validación Rigurosa',
     'pillars.validation_desc': 'Contratos sintácticos a nivel de columna para analistas, periodistas y ciudadanos.',
     'pillars.interop_title': 'Interoperabilidad e IA',
@@ -107,6 +107,11 @@ export const translations = {
     'explorer.copy_python': 'Copiar Python SDK',
     'explorer.copied': '¡Copiado!',
     'explorer.cors_notice': 'Muestra verificada disponible en modo offline/portal.',
+    'explorer.protocol_label': 'Protocolo:',
+    'explorer.nature_label': 'Modalidad:',
+    'explorer.authenticity_label': 'Autenticidad:',
+    'explorer.dcat_jsonld': 'DCAT JSON-LD',
+    'explorer.policy_label': 'Política:',
 
     // Tabla de Esquemas
     'schema.field': 'Campo (Columna)',
@@ -200,7 +205,7 @@ export const translations = {
 
     // Civil Society Pillars
     'pillars.transparency_title': 'Direct Transparency',
-    'pillars.transparency_desc': 'Data from legitimate public sources, audited against OKF v0.2 specification.',
+    'pillars.transparency_desc': 'Data from legitimate public sources, audited against OKF/ODKF v0.3 specification.',
     'pillars.validation_title': 'Rigorous Validation',
     'pillars.validation_desc': 'Column-level syntactic contracts for analysts, investigative journalists, and citizens.',
     'pillars.interop_title': 'Interoperability & AI',
@@ -270,6 +275,11 @@ export const translations = {
     'explorer.copy_python': 'Copy Python SDK',
     'explorer.copied': 'Copied!',
     'explorer.cors_notice': 'Verified sample available in offline/portal mode.',
+    'explorer.protocol_label': 'Protocol:',
+    'explorer.nature_label': 'Modality:',
+    'explorer.authenticity_label': 'Authenticity:',
+    'explorer.dcat_jsonld': 'DCAT JSON-LD',
+    'explorer.policy_label': 'Policy:',
 
     // Schema Table
     'schema.field': 'Field (Column)',

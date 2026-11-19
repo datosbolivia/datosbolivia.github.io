@@ -3,13 +3,14 @@
 /**
  * Script de Auditoría Integral DataMesh Bolivia
  * Valida:
- *  1. Cumplimiento normativo OKF / ODKF v0.2
+ *  1. Cumplimiento normativo OKF / ODKF v0.3
  *  2. Política estricta "No Tags / No Badges" en templates
  *  3. Neutralidad institucional (sin nombres propios ni referencias sesgadas)
  *  4. Topología exacta de 5 rutas canónicas
  *  5. Contratos de diseño para explorador Obsidian (zero scroll, button resets)
  *  6. Paridad y cobertura i18n (ES / EN)
- *  7. Exposición de contexto para LLMs (llms.txt, llms-full.txt)
+ *  7. Exposición de contexto para LLMs (llms.txt, llms-full.txt) y W3C DCAT JSON-LD
+ *  8. Descubrimiento soberano RFC 8615 (/.well-known/okf.json & datamesh.json v0.3.0)
  */
 
 import fs from 'node:fs';
@@ -50,12 +51,12 @@ console.log(`${colors.bold}${colors.cyan}=======================================
 console.log(`${colors.bold}${colors.cyan}  Auditoría Integral del Portal DataMesh Bolivia                    ${colors.reset}`);
 console.log(`${colors.bold}${colors.cyan}====================================================================${colors.reset}\n`);
 
-// 1. Verificación de Linter OKF/ODKF
+// 1. Verificación de Linter OKF/ODKF v0.3
 try {
   const linterOutput = execSync('node scripts/lint-okf.mjs', { cwd: rootDir, encoding: 'utf-8' });
-  check('Linter OKF & ODKF v0.2', !linterOutput.includes('Falló la validación'), 'Todos los bundles, contratos y schemas son conformes');
+  check('Linter OKF & ODKF v0.3', !linterOutput.includes('Falló la validación'), 'Todos los bundles, contratos y schemas son conformes a OKF/ODKF v0.3');
 } catch (e) {
-  check('Linter OKF & ODKF v0.2', false, `Falla en linter normativo: ${e.message}`);
+  check('Linter OKF & ODKF v0.3', false, `Falla en linter normativo: ${e.message}`);
 }
 
 // 2. Verificación de 5 Rutas Canónicas
@@ -79,8 +80,14 @@ function findAstroFiles(dir) {
   if (!fs.existsSync(dir)) return;
   for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, item.name);
-    if (item.isDirectory()) findAstroFiles(p);
-    else if (item.name.endsWith('.astro')) astroFiles.push(p);
+    let stat;
+    try {
+      stat = fs.statSync(p);
+    } catch {
+      continue;
+    }
+    if (stat.isDirectory()) findAstroFiles(p);
+    else if (stat.isFile() && item.name.endsWith('.astro')) astroFiles.push(p);
   }
 }
 findAstroFiles(path.join(rootDir, 'src'));
@@ -89,7 +96,6 @@ let badgeViolations = [];
 for (const file of astroFiles) {
   const relPath = path.relative(rootDir, file);
   const content = fs.readFileSync(file, 'utf-8');
-  // Buscar clases o patrones que intenten renderizar tags tipo cápsula
   if (content.includes('class="badge"') || content.includes("class='badge'") || content.includes('class="tag"') || content.includes("class='tag'")) {
     badgeViolations.push(relPath);
   }
@@ -100,8 +106,8 @@ for (const file of astroFiles) {
 check(
   'Política Estricta No-Tags / No-Badges',
   badgeViolations.length === 0,
-  badgeViolations.length === 0 
-    ? 'Ningún template renderiza etiquetas, badges o cápsulas decorativas' 
+  badgeViolations.length === 0
+    ? 'Ningún template renderiza etiquetas, badges o cápsulas decorativas'
     : `Encontradas violaciones en: ${badgeViolations.join(', ')}`
 );
 
@@ -151,19 +157,15 @@ if (fs.existsSync(datasetSlugFile) && fs.existsSync(themeCssFile)) {
   const datasetContent = fs.readFileSync(datasetSlugFile, 'utf-8');
   const cssContent = fs.readFileSync(themeCssFile, 'utf-8');
 
-  // Comprobar clase layout obsidian
   const hasObsidianLayout = datasetContent.includes('obsidian-layout') && cssContent.includes('.obsidian-layout');
   check('Explorador Obsidian: Contenedor .obsidian-layout', hasObsidianLayout, 'Estructura de explorador condensado declarada');
 
-  // Comprobar reseteo de estilos nativos de botones
   const hasButtonReset = cssContent.includes('all: unset;') && cssContent.includes('obsidian-file-item');
   check('Explorador Obsidian: Reseteo de Botones Nativos', hasButtonReset, 'Regla "all: unset;" previene estilo gris/3D nativo del SO');
 
-  // Comprobar que no duplique el título del dataset sobre el markdown
   const hasDuplicateHeader = datasetContent.includes('<div class="dataset-header">') && datasetContent.includes('<h1>{dataset.title}</h1>');
   check('Explorador Obsidian: Cero Títulos Duplicados', !hasDuplicateHeader, 'Contexto e index.md suministran el título principal');
 
-  // Comprobar altura acotada zero-scroll
   const hasZeroScrollConstraint = cssContent.includes('calc(100vh - var(--header-height)');
   check('Explorador Obsidian: Viewport Bounded (Zero Scroll)', hasZeroScrollConstraint, 'Layout restringe scroll a los paneles internos');
 } else {
@@ -174,7 +176,6 @@ if (fs.existsSync(datasetSlugFile) && fs.existsSync(themeCssFile)) {
 const i18nFile = path.join(rootDir, 'src/lib/i18n.ts');
 if (fs.existsSync(i18nFile)) {
   const content = fs.readFileSync(i18nFile, 'utf-8');
-  // Extraer claves de translations ES y EN
   const esMatch = content.match(/es:\s*\{([\s\S]*?)\n\s*\},/);
   const enMatch = content.match(/en:\s*\{([\s\S]*?)\n\s*\}/);
 
@@ -196,7 +197,7 @@ if (fs.existsSync(i18nFile)) {
     const missingInEs = enKeys.filter(k => !esKeys.includes(k));
 
     const i18nParity = missingInEn.length === 0 && missingInEs.length === 0;
-    const details = i18nParity 
+    const details = i18nParity
       ? `Paridad completa (${esKeys.length} claves verificadas en ES y EN)`
       : `Faltan en EN: [${missingInEn.join(', ')}], Faltan en ES: [${missingInEs.join(', ')}]`;
 
@@ -208,18 +209,54 @@ if (fs.existsSync(i18nFile)) {
   check('Paridad i18n: src/lib/i18n.ts', false, 'No existe src/lib/i18n.ts');
 }
 
-// 7. Contexto para LLMs (llms.txt)
-const llmsTxt = fs.existsSync(path.join(rootDir, 'src/pages/llms.txt.ts'));
-const llmsFullTxt = fs.existsSync(path.join(rootDir, 'src/pages/llms-full.txt.ts'));
-check('Exposición LLM: llms.txt & llms-full.txt', llmsTxt && llmsFullTxt, 'Endpoints estáticos listos para indexación por agentes LLM');
-
-// 8. Protocolo de Descubrimiento Soberano: /.well-known/datamesh.json & /.well-known/okf.json
-const wellKnownDatamesh = fs.existsSync(path.join(rootDir, 'public/.well-known/datamesh.json'));
-const wellKnownOkf = fs.existsSync(path.join(rootDir, 'public/.well-known/okf.json'));
+// 7. Contexto para LLMs (llms.txt) y Semántica W3C DCAT JSON-LD
+const llmsTxtPath = path.join(rootDir, 'src/pages/llms.txt.ts');
+const llmsFullTxtPath = path.join(rootDir, 'src/pages/llms-full.txt.ts');
+const catalogLibPath = path.join(rootDir, 'src/lib/catalog.ts');
+const llmsExists = fs.existsSync(llmsTxtPath) && fs.existsSync(llmsFullTxtPath);
+const hasDcatJsonLdEmbed =
+  fs.existsSync(datasetSlugFile) &&
+  fs.readFileSync(datasetSlugFile, 'utf-8').includes('application/ld+json') &&
+  fs.existsSync(catalogLibPath) &&
+  fs.readFileSync(catalogLibPath, 'utf-8').includes('toDcatJsonLd');
 check(
-  'Descubrimiento Soberano: .well-known/datamesh.json & okf.json',
-  wellKnownDatamesh && wellKnownOkf,
-  'Manifiestos normativos WellKnownDiscovery v0.2.2 expuestos para resolución automática'
+  'Exposición LLM & W3C DCAT JSON-LD: llms.txt & llms-full.txt',
+  llmsExists && hasDcatJsonLdEmbed,
+  llmsExists && hasDcatJsonLdEmbed
+    ? 'Endpoints estáticos llms.txt/llms-full.txt y W3C DCAT JSON-LD incrustado en /datasets/[slug] listos para agentes LLM y crawlers'
+    : 'Faltan endpoints llms.txt o embedding W3C DCAT JSON-LD en datasets/[slug].astro'
+);
+
+// 8. Protocolo de Descubrimiento Soberano: /.well-known/okf.json & /.well-known/datamesh.json
+const wellKnownDatameshPath = path.join(rootDir, 'public/.well-known/datamesh.json');
+const wellKnownOkfPath = path.join(rootDir, 'public/.well-known/okf.json');
+let wellKnownValid = false;
+let wellKnownDetails = 'Faltan manifiestos /.well-known/okf.json o datamesh.json';
+
+if (fs.existsSync(wellKnownDatameshPath) && fs.existsSync(wellKnownOkfPath)) {
+  try {
+    const okfJson = JSON.parse(fs.readFileSync(wellKnownOkfPath, 'utf-8'));
+    const dmJson = JSON.parse(fs.readFileSync(wellKnownDatameshPath, 'utf-8'));
+    const isManifestV03 = (m) =>
+      m &&
+      m.schema_version === '0.3.0' &&
+      m['@context'] === 'https://openknowledgeformat.org/ns/v0.3.jsonld' &&
+      m.protocol === 'OKF/ODKF v0.3' &&
+      m.capabilities?.w3c_translation === true &&
+      m.capabilities?.tool_contracts === true;
+    wellKnownValid = isManifestV03(okfJson) && isManifestV03(dmJson);
+    wellKnownDetails = wellKnownValid
+      ? 'Manifiestos normativos WellKnownDiscovery v0.3.0 (OKF/ODKF v0.3, w3c_translation, tool_contracts) expuestos para resolución automática'
+      : 'Manifiestos .well-known presentes pero incompletos para OKF/ODKF v0.3';
+  } catch (e) {
+    wellKnownDetails = `Error JSON en manifiestos .well-known: ${e.message}`;
+  }
+}
+
+check(
+  'Descubrimiento Soberano: .well-known/okf.json & datamesh.json',
+  wellKnownValid,
+  wellKnownDetails
 );
 
 // Resumen de Resultados

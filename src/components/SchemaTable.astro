@@ -14,7 +14,7 @@ const fields = resource.schema?.fields || [];
   <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
     {resource.policy && (
       <span style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-success);">
-        policy: {resource.policy}
+        policy: {typeof resource.policy === 'string' ? resource.policy : (resource.policy.profile || resource.policy.type || 'odrl')}
       </span>
     )}
   </div>

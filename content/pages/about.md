@@ -26,14 +26,14 @@ A diferencia de los portales tradicionales que concentran copias estáticas en a
    Infraestructura común para búsqueda, validación de integridad criptográfica y consumo directo en bibliotecas de análisis (DuckDB, Pandas, Arrow).
 
 4. **Gobernanza Computacional Federada (Federated Governance)**
-   Estándares globales unificados (**Open Knowledge Format v0.2**), políticas de privacidad *Zero-Microdata* y verificación automatizada mediante linters y pruebas sintácticas.
+   Estándares globales unificados (**Open Knowledge Format OKF/ODKF v0.3**), políticas de privacidad *Zero-Microdata* (W3C ODRL 2.2 / DPV) y verificación automatizada mediante linters y pruebas sintácticas.
 
 ---
 
 ## Estándares Abiertos Utilizados
 
-- **Open Knowledge Format (OKF / ODKF v0.2):** Especificación que norma la estructura de carpetas, metadatos YAML frontmatter y trazabilidad de procedencia.
-- **Frictionless DataPackage:** Especificación sintáctica para definir tablas, columnas, tipos de datos y restricciones.
-- **Interoperabilidad Semántica W3C SKOS / OWL:** Enlaces canónicos a conceptos estandarizados y vocabularios abiertos de Wikidata.
-- **Servicios Remotos OpenAPI 3.x y Herramientas Locales OWL-CLI:** Modelado unificado de APIs y ejecutables CLI bajo contratos sintácticos indexados.
-- **Protocolo llms.txt y Descubrimiento Well-Known (RFC 8615):** Exposición estructurada en texto plano y manifiestos `/.well-known/datamesh.json` para resolución automática por clientes y agentes autónomos.
+- **Open Knowledge Format (OKF/ODKF v0.3):** Especificación YAML-LD W3C (`https://openknowledgeformat.org/ns/v0.3.jsonld`) que norma la estructura de carpetas, metadatos frontmatter, envolvente biyectivo `_extras` y trazabilidad criptográfica de procedencia.
+- **W3C DCAT v3 JSON-LD y Frictionless DataPackage:** Exposición semántica `<script type="application/ld+json">` en cada ficha de dataset junto a contratos tabulares tipados de columnas y restricciones.
+- **Interoperabilidad Semántica W3C SKOS / OWL / QUDT:** Enlaces canónicos a conceptos estandarizados, unidades de medida y vocabularios abiertos de Wikidata.
+- **Servicios Remotos OpenAPI 3.x y Contratos CLI (`okf-cli` / `owl-cli`):** Modelado unificado de APIs y ejecutables CLI bajo contratos sintácticos indexados y gobernados por ODRL.
+- **Protocolo llms.txt y Descubrimiento Well-Known (RFC 8615):** Exposición estructurada en texto plano y manifiestos `/.well-known/okf.json` (con alias `/.well-known/datamesh.json`) para resolución automática por clientes y agentes autónomos.

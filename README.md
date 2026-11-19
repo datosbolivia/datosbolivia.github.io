@@ -1,13 +1,13 @@
 # Catálogo Federado DataMesh Bolivia (`datos-bolivia`)
 
 [![Zenodo DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22986311.svg)](https://doi.org/10.5281/zenodo.22986311)
-[![OKF v0.2](https://img.shields.io/badge/standard-OKF%20%2F%20ODKF%20v0.2-blue)](docs/especificacion_knowledge.md)
+[![OKF/ODKF v0.3](https://img.shields.io/badge/standard-OKF%20%2F%20ODKF%20v0.3-blue)](docs/especificacion_knowledge.md)
 [![PWA Ready](https://img.shields.io/badge/PWA-offline--ready-green)](public/manifest.webmanifest)
 [![Astro](https://img.shields.io/badge/built%20with-Astro-ff5d01.svg)](https://astro.build)
 
 Bienvenido al Registro Central y Portal de Datos Abiertos de la red **DataMesh Bolivia**, administrado por la comunidad **`datos-bolivia`**. 
 
-Este repositorio actúa como el índice principal de descubrimiento para que investigadores, analistas ciudadanos y **Agentes de Inteligencia Artificial (LLMs)** puedan encontrar, verificar y consultar conjuntos de datos públicos soberanos bajo los estándares abiertos **Open Knowledge Format (OKF v0.2)** y **Frictionless DataPackage**.
+Este repositorio actúa como el índice principal de descubrimiento para que investigadores, analistas ciudadanos y **Agentes de Inteligencia Artificial (LLMs)** puedan encontrar, verificar y consultar conjuntos de datos públicos soberanos bajo los estándares abiertos **Open Knowledge Format (OKF/ODKF v0.3)**, **W3C DCAT v3 JSON-LD** (con preservación biyectiva `_extras`), contratos **`okf-cli` / OpenAPI** y **Frictionless DataPackage**.
 
 ---
 
@@ -16,14 +16,16 @@ Este repositorio actúa como el índice principal de descubrimiento para que inv
 La aplicación web está estructurada bajo 5 rutas consolidadas y amigables:
 
 1. **`/` (Inicio)**: Resumen del ecosistema, métricas de nodos federados y acceso directo a los datasets destacados.
-2. **`/datasets`**: Explorador y buscador en tiempo real del catálogo, con fichas detalladas por dataset en `/datasets/[slug]` (esquemas tabulares, columnas, tipos de datos, conceptos SKOS y enlaces de descarga).
-3. **`/about`**: Fundamentos del proyecto, enlace formal al **Whitepaper oficial en Zenodo** ([DOI: 10.5281/zenodo.22986311](https://doi.org/10.5281/zenodo.22986311)), información sobre la **Primera Charla Comunitaria** y principios de la organización `datos-bolivia`.
-4. **`/docs`**: Especificación técnica normativa ODKF v0.2, guías de gobernanza y Registros de Decisión de Arquitectura (**ADRs**).
+2. **`/datasets`**: Explorador y buscador en tiempo real del catálogo, con fichas detalladas por dataset en `/datasets/[slug]` (esquemas tabulares, columnas, tipos de datos, conceptos SKOS, enlaces de descarga y JSON-LD **W3C DCAT v3** incrustado con `_extras`).
+3. **`/about`**: Fundamentos del proyecto y principios de la organización `datos-bolivia`.
+4. **`/docs`**: Especificación técnica normativa OKF/ODKF v0.3, guías de gobernanza y Registros de Decisión de Arquitectura (**ADRs**).
 5. **`/download`**: Centro de distribución multiplataforma: instalación directa como **Progressive Web App (PWA)** y descarga de la **Aplicación de Escritorio (Electron)** con capacidades extendidas de cómputo local.
 
-### Rutas para Agentes de Inteligencia Artificial
+### Rutas para Agentes de Inteligencia Artificial y Descubrimiento Semántico
+- **`/.well-known/okf.json`** (y fallback `/.well-known/datamesh.json`): Manifiesto de descubrimiento RFC 8615 (`schema_version: "0.3.0"`, `@context: "https://openknowledgeformat.org/ns/v0.3.jsonld"`, capacidades `w3c_translation` y `tool_contracts`).
 - **`/llms.txt`**: Manifiesto canónico según el estándar [llmstxt.org](https://llmstxt.org) para descubrimiento semántico por LLMs.
-- **`/llms-full.txt`**: Compendio exhaustivo con todos los esquemas y metadatos concatenados para prompts de contexto largo.
+- **`/llms-full.txt`**: Compendio exhaustivo con todos los esquemas, contratos, políticas ODRL y metadatos concatenados para prompts de contexto largo.
+- **`/datasets/[slug]` (`<script type="application/ld+json">`)**: Manifiesto **W3C DCAT v3 JSON-LD** por dataset con distribuciones y preservación `_extras`.
 - **`/raw/[...slug]`**: Endpoint que expone los archivos Markdown originales intactos con `Content-Type: text/markdown; charset=utf-8`.
 
 ---

@@ -295,6 +295,29 @@ if (activeTarget.startsWith('tab-resource-')) {
     <div class="obsidian-doc-viewport" id="doc-viewport">
       <!-- 1. TAB CONTEXTO PRINCIPAL (index.md) -->
       <div class={`obsidian-file-tab ${activeTarget === 'tab-index' ? 'active' : ''}`} id="tab-index">
+        <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center;">
+          <span>OKF/ODKF v0.3</span>
+          <span>•</span>
+          <span>{dataset.type}</span>
+          {dataset.nature && (
+            <>
+              <span>/</span>
+              <span>{dataset.nature}</span>
+            </>
+          )}
+          {dataset.authenticity_status && (
+            <>
+              <span>•</span>
+              <span>{dataset.authenticity_status}</span>
+            </>
+          )}
+          {dataset.contracts.length > 0 && (
+            <>
+              <span>•</span>
+              <span>{dataset.contracts.map((c) => c.binary ? `${c.type}:${c.binary}` : c.type).join(' / ')}</span>
+            </>
+          )}
+        </div>
         {(dataset.spatial || dataset.temporal || dataset.quality) && (
           <div style="background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; font-size: 0.8rem; display: flex; flex-wrap: wrap; gap: 1.25rem;">
             {dataset.spatial && (

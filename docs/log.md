@@ -1,5 +1,12 @@
 # Bitácora de Ingeniería y Arquitectura del Portal
 
+## 2026-11-18
+- Migración integral del portal a **OKF/ODKF v0.3**: actualización normativa de `docs/especificacion_knowledge.md` y registro de `docs/decisiones/0007-adopcion-okf-v03-w3c-dcat-extras-y-contratos-cli.md`.
+- Actualización de `astro.config.mjs` para enlazar `@datosbolivia/datamesh-client` v0.3.0 desde `../datamesh-sdk/bindings/typescript/dist/index.js` tanto en `dev` como en `build` con fallback a `node_modules/@datosbolivia/datamesh-client`.
+- Actualización de manifiestos RFC 8615 `public/.well-known/okf.json` y `public/.well-known/datamesh.json` a `schema_version: "0.3.0"`, `@context: "https://openknowledgeformat.org/ns/v0.3.jsonld"`, `protocol: "OKF/ODKF v0.3"` y capacidades `w3c_translation: true`, `tool_contracts: true`.
+- Soporte en `src/lib/catalog.ts` para claves W3C YAML-LD CURIE (`@type`, `dcat:*`, `dcterms:*`, `prov:wasDerivedFrom`, `odrl:hasPolicy`), envolvente biyectivo `_extras`, `nature`, `authenticity_status`, contratos `okf-cli`/`openapi` y helper `toDcatJsonLd` para incrustar `<script type="application/ld+json">` en `/datasets/[slug]`.
+- Actualización de `scripts/lint-okf.mjs` y `scripts/audit-portal.mjs` a OKF/ODKF v0.3 manteniendo los 8 portones normativos de auditoría.
+
 ## 2026-11-06
 - Generación de rutas estáticas canónicas por recurso `/datasets/{slug}/{resource}` (ej. `/datasets/bo-combustible/{resource}`) en `src/pages/datasets/[slug]/[...doc].astro` con sincronización de URL en el explorador Obsidian mediante `history.pushState` y navegación de historial `popstate`.
 - Creación del componente reutilizable `src/components/DatasetExplorerView.astro` unificando la navegación tipo Obsidian, selección de pestañas activas e hidratación SSG.

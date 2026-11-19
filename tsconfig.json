@@ -13,6 +13,7 @@
       "@/*": ["src/*"],
       "@datosbolivia/datamesh-client": [
         "../datamesh-sdk/bindings/typescript/src/index.ts",
+        "node_modules/@datosbolivia/datamesh-client/dist/index.d.ts",
         "node_modules/@datosbolivia/datamesh-client/bindings/typescript/dist/index.d.ts"
       ]
     }

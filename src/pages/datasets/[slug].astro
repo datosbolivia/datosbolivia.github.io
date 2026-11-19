@@ -1,7 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import DatasetExplorerView from '../../components/DatasetExplorerView.astro';
-import { getAllDatasets } from '../../lib/catalog';
+import { getAllDatasets, toDcatJsonLd } from '../../lib/catalog';
+import { config } from '../../../portal.config';
 
 export function getStaticPaths() {
   const datasets = getAllDatasets();
@@ -12,9 +13,13 @@ export function getStaticPaths() {
 }
 
 const { dataset } = Astro.props;
+const dcatJsonLd = toDcatJsonLd(dataset, config.site.url);
 ---
 
 <BaseLayout title={dataset.title} description={dataset.description} fullWidth={true} noFooter={true}>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(dcatJsonLd).replace(/</g, '\\u003c')} />
+  </Fragment>
   <!-- Contenedor obsidian-layout delegado a vista de explorador -->
   <DatasetExplorerView dataset={dataset} activeTarget="tab-index" />
 </BaseLayout>

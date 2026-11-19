@@ -1,15 +1,16 @@
 {
-  "schema_version": "0.2.2",
+  "@context": "https://openknowledgeformat.org/ns/v0.3.jsonld",
+  "schema_version": "0.3.0",
   "service": "catalogo-datamesh",
-  "version": "0.2.2-rc.2",
-  "protocol": "OKF/ODKF v0.2",
+  "version": "0.3.0",
+  "protocol": "OKF/ODKF v0.3",
   "catalog": {
     "name": "catalogo_datamesh_bolivia",
     "title": "Datos Bolivia",
     "type": "okf",
     "catalog_url": "https://datos-bolivia.github.io/llms.txt",
     "api_endpoint": "https://datos-bolivia.github.io",
-    "description": "Portal catálogo de Datos Abiertos de Bolivia conforme al estándar OKF/ODKF v0.2"
+    "description": "Portal catálogo de Datos Abiertos de Bolivia conforme al estándar OKF/ODKF v0.3"
   },
   "auth": {
     "type": "none",
@@ -20,6 +21,8 @@
     "sql_query": false,
     "knowledge_graph": true,
     "catalog": true,
+    "w3c_translation": true,
+    "tool_contracts": true,
     "mcp": false,
     "proxy": false
   },

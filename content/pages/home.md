@@ -6,7 +6,7 @@ tagline: "Ecosistema federado de datos abiertos para la comunidad y Agentes de I
 
 Bienvenido al catálogo oficial de la red **DataMesh Bolivia**, administrado por la iniciativa comunitaria **datos-bolivia**.
 
-Esta plataforma conecta instituciones, fuentes estadísticas, registros de geociencias, finanzas, transporte y demografía bajo estándares abiertos de conocimiento (**Open Knowledge Format v0.2** y **Frictionless DataPackage**).
+Esta plataforma conecta instituciones, fuentes estadísticas, registros de geociencias, finanzas, transporte y demografía bajo estándares abiertos de conocimiento (**Open Knowledge Format OKF/ODKF v0.3**, **W3C DCAT JSON-LD** y **Frictionless DataPackage**).
 
 ### Características Fundacionales
 - **Interoperabilidad Semántica**: Enlaces a vocabularios W3C SKOS y entidades de Wikidata.

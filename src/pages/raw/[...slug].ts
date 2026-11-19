@@ -9,9 +9,15 @@ function getFilesRecursively(dir: string, baseDir: string = dir): Array<{ slug: 
   const list = fs.readdirSync(dir, { withFileTypes: true });
   for (const item of list) {
     const fullPath = path.join(dir, item.name);
-    if (item.isDirectory()) {
+    let stat: fs.Stats;
+    try {
+      stat = fs.statSync(fullPath);
+    } catch {
+      continue;
+    }
+    if (stat.isDirectory()) {
       results = results.concat(getFilesRecursively(fullPath, baseDir));
-    } else {
+    } else if (stat.isFile()) {
       const relPath = path.relative(baseDir, fullPath);
       results.push({ slug: relPath, fullPath });
     }

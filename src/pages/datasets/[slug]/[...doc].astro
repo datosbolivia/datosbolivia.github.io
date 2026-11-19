@@ -1,7 +1,8 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import DatasetExplorerView from '../../../components/DatasetExplorerView.astro';
-import { getAllDatasets, getAllDatasetReferenceDocs, cleanResourceIdentifier } from '../../../lib/catalog';
+import { getAllDatasets, getAllDatasetReferenceDocs, cleanResourceIdentifier, toDcatJsonLd } from '../../../lib/catalog';
+import { config } from '../../../../portal.config';
 
 export function getStaticPaths() {
   const allDocs = getAllDatasetReferenceDocs();
@@ -50,8 +51,12 @@ const doc = (Astro.props as any).doc;
 const pageTitle = kind === 'resource' 
   ? `${resource?.title || resource?.name || 'Recurso'} — ${dataset.title}` 
   : `${doc?.title || 'Documento'} — ${dataset.title}`;
+const dcatJsonLd = toDcatJsonLd(dataset, config.site.url);
 ---
 
 <BaseLayout title={pageTitle} description={dataset.description} fullWidth={true} noFooter={true}>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(dcatJsonLd).replace(/</g, '\\u003c')} />
+  </Fragment>
   <DatasetExplorerView dataset={dataset} activeTarget={activeTarget} />
 </BaseLayout>
